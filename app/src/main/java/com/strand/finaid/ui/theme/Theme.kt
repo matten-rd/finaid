@@ -1,19 +1,22 @@
 package com.strand.finaid.ui.theme
 
-import android.app.Activity
+import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.ViewCompat
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.strand.finaid.ui.theme.settings.AppTheme
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import java.io.IOException
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -52,13 +55,13 @@ fun FinaidTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            (view.context as Activity).window.statusBarColor = colorScheme.primary.toArgb()
-            ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars = darkTheme
-        }
-    }
+//    val view = LocalView.current
+//    if (!view.isInEditMode) {
+//        SideEffect {
+//            (view.context as Activity).window.statusBarColor = colorScheme.primary.toArgb()
+//            ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars = darkTheme
+//        }
+//    }
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -66,3 +69,49 @@ fun FinaidTheme(
         content = content
     )
 }
+
+@Composable
+fun isAppInDarkTheme(): Boolean {
+    val theme by rememberThemePreference()
+    return when (theme) {
+        AppTheme.Light -> false
+        AppTheme.Dark -> true
+        AppTheme.Auto -> isSystemInDarkTheme()
+    }
+}
+
+
+@Composable
+fun rememberThemePreference(): MutableState<AppTheme> {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val themeKey = intPreferencesKey("ThemeKey")
+    val state = remember {
+        context.dataStore.data
+            .catch { e ->
+                if (e is IOException) emit(emptyPreferences()) else throw e
+            }
+            .map { preferences ->
+                AppTheme.fromOrdinal(preferences[themeKey])
+            }
+    }.collectAsState(initial = AppTheme.Auto)
+
+    return remember {
+        object : MutableState<AppTheme> {
+            override var value: AppTheme
+                get() = state.value
+                set(value) {
+                    scope.launch {
+                        context.dataStore.edit { preferences ->
+                            preferences[themeKey] = value.ordinal
+                        }
+                    }
+                }
+
+            override fun component1(): AppTheme = value
+            override fun component2(): (AppTheme) -> Unit = { value = it }
+        }
+    }
+}
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_settings")

@@ -1,28 +1,55 @@
 package com.strand.finaid
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.strand.finaid.ui.components.FinaidFAB
+import com.strand.finaid.ui.navigation.FinaidBottomNavigation
+import com.strand.finaid.ui.screenspec.ScreenSpec
+import com.strand.finaid.ui.screenspec.SplashScreenSpec
 import com.strand.finaid.ui.theme.FinaidTheme
+import com.strand.finaid.ui.theme.isAppInDarkTheme
+import dagger.hilt.android.AndroidEntryPoint
 
-class MainActivity : ComponentActivity() {
+@AndroidEntryPoint
+class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
-            FinaidTheme {
-                // A surface container using the 'background' color from the theme
+            val darkTheme = isAppInDarkTheme()
+            val systemUiController = rememberSystemUiController()
+            SideEffect {
+                systemUiController.setSystemBarsColor(Color.Transparent, !darkTheme)
+            }
+
+            FinaidTheme(darkTheme = darkTheme) {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .imePadding(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    FinaidApp()
                 }
             }
         }
@@ -30,14 +57,78 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
+fun FinaidApp() {
+    val appState = rememberAppState()
+    val navController = appState.navController
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    val bottomSheetState = appState.bottomSheetState
+    val scope = appState.coroutineScope
+
+    ModalBottomSheetLayout(
+        sheetState = bottomSheetState,
+        sheetContent = {
+            if (navBackStackEntry != null) {
+                ScreenSpec.allScreens[currentDestination?.route]
+                    ?.BottomSheetContent(bottomSheetState, navBackStackEntry!!, scope)
+            } else {
+                Spacer(modifier = Modifier.height(1.dp)) // Used to fix anchor error with empty content
+            }
+        },
+        sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+        scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
+    ) {
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = appState.snackbarHostState,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
+            bottomBar = {
+                FinaidBottomNavigation(navController = navController)
+            },
+            floatingActionButton = {
+                FinaidFAB(currentDestination = currentDestination, navController = navController)
+            }
+        ) { innerPadding ->
+            AnimatedNavHost(
+                navController = navController,
+                startDestination = SplashScreenSpec.route,
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                ScreenSpec.allScreens.values.forEach { screen ->
+                    composable(
+                        route = screen.route,
+                        arguments = screen.arguments,
+                        enterTransition = screen.enterTransition,
+                        exitTransition = screen.exitTransition,
+                        popEnterTransition = screen.popEnterTransition,
+                        popExitTransition = screen.popExitTransition
+                    ) { navBackStackEntry ->
+                        screen.Content(
+                            navController,
+                            navBackStackEntry,
+                            bottomSheetState,
+                            scope
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    FinaidTheme {
-        Greeting("Android")
-    }
+fun Modifier.topBarPadding() = composed {
+    this.padding(
+        WindowInsets.statusBars
+            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+            .asPaddingValues()
+    )
 }
