@@ -3,10 +3,7 @@ package com.strand.finaid.model.service.impl
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.*
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.firestore.ktx.toObjects
@@ -67,78 +64,85 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         val newMonthKeyDataDocRef = transactionKeyDataCollectionRef.document(transaction.date.yearMonthFormat)
 
         Firebase.firestore.runTransaction { transactionRun ->
-            // Get documents
-            val transactionSnapshot = transactionRun.get(transactionDocRef)
-            val allTimeKeyDataSnapshot = transactionRun.get(allTimeKeyDataDocRef)
-            val newMonthKeyDataSnapshot = transactionRun.get(newMonthKeyDataDocRef)
-            val currentMonthKeyDataReference = if (transactionSnapshot.exists()) {
-                val currentTransactionYearMonth = transactionSnapshot.getDate("date")!!.yearMonthFormat
-                val currentMonthKeyDataDocRef = transactionKeyDataCollectionRef.document(currentTransactionYearMonth)
-                transactionRun.get(currentMonthKeyDataDocRef).reference
+            // Get previous transaction if update
+            val prevTransactionSnapshot = transactionRun.get(transactionDocRef)
+
+            val prevMonthKeyDataReference = if (prevTransactionSnapshot.exists()) {
+                val prevTransactionYearMonth = prevTransactionSnapshot.getDate("date")!!.yearMonthFormat
+                val prevMonthKeyDataDocRef = transactionKeyDataCollectionRef.document(prevTransactionYearMonth)
+                transactionRun.get(prevMonthKeyDataDocRef).reference
             } else null
 
-            // Get current amount
-            val currentAmount = if (transactionSnapshot.exists()) transactionSnapshot.getDouble("amount")!! else 0.0
+            // Get previous amount and categoryId
+            val prevTransaction = if (prevTransactionSnapshot.exists()) prevTransactionSnapshot.toObject<Transaction>() else null
+            val prevAmount = prevTransaction?.amount?.toDouble() ?: 0.0
+            val prevCategoryId = prevTransaction?.category?.id
+
+            // Get new amount and categoryId
+            val newAmount = transaction.amount.toDouble()
+            val newCategoryId = transaction.category.id
 
             // NOTE FOR BELOW CODE LOGIC
-            // currentAmount = old, transaction.amount = new
-            // therefore we should always subtract currentAmount and add transaction.amount
+            // We should always subtract prevAmount and add newAmount
+            // And most often prevMonth will be the same as newMonth
 
-            // CURRENT MONTH
-            if (currentMonthKeyDataReference != null) {
-                transactionRun.update(currentMonthKeyDataReference, mapOf(
-                    "net" to FieldValue.increment(-currentAmount),
-                    "expense" to FieldValue.increment(if (currentAmount < 0) -currentAmount else 0.0),
-                    "income" to FieldValue.increment(if (currentAmount >= 0) -currentAmount else 0.0)
-                ))
+            // PREV MONTH - remove the current transaction if update
+            if (prevMonthKeyDataReference != null) {
+                transactionRun.set(prevMonthKeyDataReference, mapOf(
+                    "net" to FieldValue.increment(-prevAmount),
+                    "expense" to FieldValue.increment(if (prevAmount < 0) -prevAmount else 0.0),
+                    "income" to FieldValue.increment(if (prevAmount >= 0) -prevAmount else 0.0)
+                ) + if (prevCategoryId != null) mapOf(prevCategoryId to FieldValue.increment(-prevAmount)) else emptyMap(),
+                    SetOptions.merge()
+                )
             }
 
-            // NEW MONTH
-            if (newMonthKeyDataSnapshot.exists()) {
-                transactionRun.update(newMonthKeyDataDocRef, mapOf(
-                    "net" to FieldValue.increment(transaction.amount.toDouble()),
-                    "expense" to FieldValue.increment(if (transaction.amount < 0) transaction.amount.toDouble() else 0.0),
-                    "income" to FieldValue.increment(if (transaction.amount >= 0) transaction.amount.toDouble() else 0.0)
-                ))
-            } else
-                // Initialize this month document if it does not exist
-                transactionRun.set(newMonthKeyDataDocRef, hashMapOf(
-                    "net" to transaction.amount,
-                    "expense" to if (transaction.amount < 0) transaction.amount else 0,
-                    "income" to if (transaction.amount >= 0) transaction.amount else 0
-                ))
-
+            // NEW MONTH - add the new/updated transaction
+            transactionRun.set(newMonthKeyDataDocRef, mapOf(
+                "net" to FieldValue.increment(newAmount),
+                "expense" to FieldValue.increment(if (newAmount < 0) newAmount else 0.0),
+                "income" to FieldValue.increment(if (newAmount >= 0) newAmount else 0.0),
+                newCategoryId to FieldValue.increment(newAmount)
+            ), SetOptions.merge())
 
             // ALL TIME
             // Determine the all time income and expense updates
             val allTimeUpdates = when {
-                currentAmount >= 0 && transaction.amount >= 0 ->
-                    mapOf("income" to FieldValue.increment(transaction.amount - currentAmount))
+                prevAmount >= 0 && newAmount >= 0 ->
+                    mapOf("income" to FieldValue.increment(newAmount - prevAmount))
 
-                currentAmount >= 0 && transaction.amount < 0 ->
-                    mapOf("income" to FieldValue.increment(-currentAmount), "expense" to FieldValue.increment(transaction.amount.toDouble()))
+                prevAmount >= 0 && newAmount < 0 ->
+                    mapOf("income" to FieldValue.increment(-prevAmount), "expense" to FieldValue.increment(newAmount))
 
-                currentAmount < 0 && transaction.amount >= 0 ->
-                    mapOf("income" to FieldValue.increment(transaction.amount.toDouble()), "expense" to FieldValue.increment(-currentAmount))
+                prevAmount < 0 && newAmount >= 0 ->
+                    mapOf("income" to FieldValue.increment(newAmount), "expense" to FieldValue.increment(-prevAmount))
 
-                currentAmount < 0 && transaction.amount < 0 ->
-                    mapOf("expense" to FieldValue.increment(transaction.amount - currentAmount))
+                prevAmount < 0 && newAmount < 0 ->
+                    mapOf("expense" to FieldValue.increment(newAmount - prevAmount))
 
                 else -> emptyMap()
             }
             // Update all time key data
-            if (allTimeKeyDataSnapshot.exists())
-                transactionRun.update(
+            if (newCategoryId == prevCategoryId) {
+                transactionRun.set(
                     allTimeKeyDataDocRef,
-                    mutableMapOf("net" to FieldValue.increment(transaction.amount - currentAmount)) + allTimeUpdates
+                    mapOf(
+                        "net" to FieldValue.increment(newAmount - prevAmount),
+                        newCategoryId to FieldValue.increment(newAmount - prevAmount)
+                    ) + allTimeUpdates,
+                    SetOptions.merge()
                 )
-            else
-                // Initialize all time document if it does not exist
-                transactionRun.set(allTimeKeyDataDocRef, hashMapOf(
-                    "net" to transaction.amount,
-                    "expense" to if (transaction.amount < 0) transaction.amount else 0,
-                    "income" to if (transaction.amount >= 0) transaction.amount else 0
-                ))
+            } else {
+                transactionRun.set(
+                    allTimeKeyDataDocRef,
+                    mapOf(
+                        "net" to FieldValue.increment(newAmount - prevAmount),
+                        newCategoryId to FieldValue.increment(newAmount)
+                    ) + allTimeUpdates
+                            + if (prevCategoryId != null) mapOf(prevCategoryId to FieldValue.increment(-prevAmount)) else emptyMap(),
+                    SetOptions.merge()
+                )
+            }
 
             // Set the transaction document
             transactionRun.set(transactionDocRef, transaction)
