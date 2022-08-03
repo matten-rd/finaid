@@ -21,6 +21,7 @@
 
     <string name="transaction_removed">Transaktionen flyttades till papperskorgen.</string>
     <string name="transaction_permanently_deleted">Transaktionen togs bort permanent.</string>
+    <string name="transaction_restored">Transaktionen återskapdes.</string>
     <string name="save">Spara</string>
     <string name="category_saved">Kategori sparad.</string>
     <string name="category_removed">Kategorin flyttades till papperskorgen.</string>

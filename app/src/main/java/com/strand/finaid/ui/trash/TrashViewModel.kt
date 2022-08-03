@@ -116,4 +116,10 @@ class TrashViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = Result.Loading
         )
+
+    fun restoreTransactionFromTrash(transaction: TransactionUiState) {
+        storageService.restoreTransactionFromTrash(accountService.getUserId(), transaction.id) { error ->
+            if (error == null) SnackbarManager.showMessage(R.string.transaction_restored) else onError(error)
+        }
+    }
 }

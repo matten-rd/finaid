@@ -13,6 +13,7 @@ interface StorageService {
     fun saveTransaction(userId: String, transaction: Transaction, onResult: (Throwable?) -> Unit)
     fun getTransaction(userId: String, transactionId: String, onError: (Throwable) -> Unit, onSuccess: (Transaction?) -> Unit)
     fun moveTransactionToTrash(userId: String, transactionId: String, onResult: (Throwable?) -> Unit)
+    fun restoreTransactionFromTrash(userId: String, transactionId: String, onResult: (Throwable?) -> Unit)
     fun deleteTransactionPermanently(userId: String, transactionId: String, onResult: (Throwable?) -> Unit)
     fun getLimitedNumberOfTransactions(numberOfTransactions: Int, userId: String, onError: (Throwable) -> Unit, onSuccess: (List<Transaction?>) -> Unit)
     fun paginateTransactions(userId: String, pageSize: Int): Flow<PagingData<Transaction>>

@@ -63,14 +63,13 @@ fun TrashScreen(
             count = viewModel.trashTypes.size,
             state = pagerState
         ) { page ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 when (page) {
                     TrashType.Savings.ordinal -> SavingsTrashScreen()
-                    TrashType.Transactions.ordinal -> TransactionsTrashScreen(transactions = transactions)
+                    TrashType.Transactions.ordinal -> TransactionsTrashScreen(
+                        transactions = transactions,
+                        onRestoreClick = viewModel::restoreTransactionFromTrash
+                    )
                     TrashType.Categories.ordinal -> CategoryTrashScreen(
                         uiState = viewModel.categoryUiState,
                         setIsCategoryRestoreDialogOpen = viewModel::setIsCategoryRestoreDialogOpen,
@@ -95,7 +94,8 @@ fun SavingsTrashScreen() {
 
 @Composable
 fun TransactionsTrashScreen(
-    transactions: Result<List<TransactionUiState>>
+    transactions: Result<List<TransactionUiState>>,
+    onRestoreClick: (TransactionUiState) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (transactions) {
@@ -114,7 +114,7 @@ fun TransactionsTrashScreen(
                                     .padding(horizontal = 8.dp),
                                 transaction = transactionItem,
                                 onEditClick = {  },
-                                onDeleteClick = {  }
+                                onDeleteClick = onRestoreClick
                             )
                         }
                     }
@@ -135,7 +135,7 @@ fun CategoryTrashScreen(
     onRestoreClick: (CategoryUi) -> Unit,
     onPermanentlyDeleteClick: (CategoryUi) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(uiState.deletedCategories) { deletedCategory ->
                 TrashCategoryItem(

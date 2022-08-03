@@ -170,16 +170,78 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         transactionId: String,
         onResult: (Throwable?) -> Unit
     ) {
-        // TODO: Update transactionsKeyData allTime and current month
-        userId.userDocument
-            .collection(TransactionsCollection)
-            .document(transactionId)
-            .update(DeletedField, true)
-            .addOnCompleteListener { task -> onResult(task.exception) }
+        val transactionDocRef = userId.userDocument.collection(TransactionsCollection).document(transactionId)
+        val transactionKeyDataCollectionRef = userId.userDocument.collection(TransactionsKeyDataCollection)
+        val allTimeKeyDataDocRef = transactionKeyDataCollectionRef.document("allTime")
+
+        Firebase.firestore.runTransaction { transactionRun ->
+            // Get transaction
+            val transactionSnapshot = transactionRun.get(transactionDocRef)
+            val transaction = transactionSnapshot.toObject<Transaction>()!!
+
+            val transactionYearMonth = transaction.date.yearMonthFormat
+            val monthKeyDataDocRef = transactionKeyDataCollectionRef.document(transactionYearMonth)
+            val monthKeyDataReference = transactionRun.get(monthKeyDataDocRef).reference
+
+            // Get amount and categoryId
+            val amount = transaction.amount.toDouble()
+            val categoryId = transaction.category.id
+
+            val updates = mapOf(
+                "net" to FieldValue.increment(-amount),
+                "expense" to FieldValue.increment(if (amount < 0) -amount else 0.0),
+                "income" to FieldValue.increment(if (amount >= 0) -amount else 0.0),
+                categoryId to FieldValue.increment(-amount)
+            )
+            // MONTH
+            transactionRun.set(monthKeyDataReference, updates, SetOptions.merge())
+            // ALL TIME
+            transactionRun.set(allTimeKeyDataDocRef, updates, SetOptions.merge())
+            // Update the transaction document
+            transactionRun.update(transactionDocRef, DeletedField, true)
+            null
+        }.addOnCompleteListener { task -> onResult(task.exception) }
+    }
+
+    override fun restoreTransactionFromTrash(
+        userId: String,
+        transactionId: String,
+        onResult: (Throwable?) -> Unit
+    ) {
+        val transactionDocRef = userId.userDocument.collection(TransactionsCollection).document(transactionId)
+        val transactionKeyDataCollectionRef = userId.userDocument.collection(TransactionsKeyDataCollection)
+        val allTimeKeyDataDocRef = transactionKeyDataCollectionRef.document("allTime")
+
+        Firebase.firestore.runTransaction { transactionRun ->
+            // Get transaction
+            val transactionSnapshot = transactionRun.get(transactionDocRef)
+            val transaction = transactionSnapshot.toObject<Transaction>()!!
+
+            val transactionYearMonth = transaction.date.yearMonthFormat
+            val monthKeyDataDocRef = transactionKeyDataCollectionRef.document(transactionYearMonth)
+            val monthKeyDataReference = transactionRun.get(monthKeyDataDocRef).reference
+
+            // Get amount and categoryId
+            val amount = transaction.amount.toDouble()
+            val categoryId = transaction.category.id
+
+            val updates = mapOf(
+                "net" to FieldValue.increment(amount),
+                "expense" to FieldValue.increment(if (amount < 0) amount else 0.0),
+                "income" to FieldValue.increment(if (amount >= 0) amount else 0.0),
+                categoryId to FieldValue.increment(amount)
+            )
+            // MONTH
+            transactionRun.set(monthKeyDataReference, updates, SetOptions.merge())
+            // ALL TIME
+            transactionRun.set(allTimeKeyDataDocRef, updates, SetOptions.merge())
+            // Update the transaction document
+            transactionRun.update(transactionDocRef, DeletedField, false)
+            null
+        }.addOnCompleteListener { task -> onResult(task.exception) }
     }
 
     override fun deleteTransactionPermanently(userId: String, transactionId: String, onResult: (Throwable?) -> Unit) {
-        // TODO: Update transactionsKeyData allTime and current month
         userId.userDocument
             .collection(TransactionsCollection)
             .document(transactionId)
@@ -215,6 +277,9 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         }.flow
     }
 
+    /**
+     * Categories
+     */
     override fun addCategoriesListener(userId: String, deleted: Boolean): Flow<Result<QuerySnapshot>> {
         val query = userId.userDocument
             .collection(CategoriesCollection)
@@ -223,9 +288,6 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         return query.snapshotFlow()
     }
 
-    /**
-     * Categories
-     */
     override fun getCategories(userId: String, onError: (Throwable) -> Unit, onSuccess: (FirebaseCategory) -> Unit) {
         userId.userDocument
             .collection(CategoriesCollection)
