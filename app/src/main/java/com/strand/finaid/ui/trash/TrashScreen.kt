@@ -25,7 +25,9 @@ import com.google.accompanist.pager.rememberPagerState
 import com.strand.finaid.model.Result
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
+import com.strand.finaid.ui.components.SavingsAccountItem
 import com.strand.finaid.ui.components.TransactionItem
+import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.transactions.CategoryUi
 import com.strand.finaid.ui.transactions.TransactionUiState
 import kotlinx.coroutines.launch
@@ -37,6 +39,7 @@ fun TrashScreen(
     val pagerState = rememberPagerState()
     val scope = rememberCoroutineScope()
     val transactions by viewModel.transactions.collectAsState()
+    val savingsAccounts by viewModel.savingsAccounts.collectAsState()
 
     val indicator = @Composable { tabPositions: List<TabPosition> ->
         TabIndicator(
@@ -65,7 +68,10 @@ fun TrashScreen(
         ) { page ->
             Column(modifier = Modifier.fillMaxSize()) {
                 when (page) {
-                    TrashType.Savings.ordinal -> SavingsTrashScreen()
+                    TrashType.Savings.ordinal -> SavingsTrashScreen(
+                        savingsAccounts = savingsAccounts,
+                        onRestoreClick = viewModel::restoreSavingsAccountFromTrash
+                    )
                     TrashType.Transactions.ordinal -> TransactionsTrashScreen(
                         transactions = transactions,
                         onRestoreClick = viewModel::restoreTransactionFromTrash
@@ -86,9 +92,36 @@ fun TrashScreen(
 
 
 @Composable
-fun SavingsTrashScreen() {
+fun SavingsTrashScreen(
+    savingsAccounts: Result<List<SavingsAccountUiState>>,
+    onRestoreClick: (SavingsAccountUiState) -> Unit
+) {
     Column(modifier = Modifier.fillMaxSize()) {
-
+        when (savingsAccounts) {
+            is Result.Success -> {
+                if (savingsAccounts.data.isNullOrEmpty())
+                    Text(text = "Empty Content")
+                else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        items(savingsAccounts.data, key = { it.id }) { transactionItem ->
+                            SavingsAccountItem(
+                                modifier = Modifier
+                                    .animateItemPlacement()
+                                    .padding(horizontal = 8.dp),
+                                savingsAccount = transactionItem,
+                                onEditClick = {  },
+                                onDeleteClick = onRestoreClick
+                            )
+                        }
+                    }
+                }
+            }
+            is Result.Error -> { FullScreenError() }
+            Result.Loading -> { FullScreenLoading() }
+        }
     }
 }
 
@@ -135,7 +168,9 @@ fun CategoryTrashScreen(
     onRestoreClick: (CategoryUi) -> Unit,
     onPermanentlyDeleteClick: (CategoryUi) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(16.dp)) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(uiState.deletedCategories) { deletedCategory ->
                 TrashCategoryItem(

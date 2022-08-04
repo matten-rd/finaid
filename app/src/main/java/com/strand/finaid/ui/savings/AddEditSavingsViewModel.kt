@@ -18,6 +18,7 @@ import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.util.*
 import javax.inject.Inject
 
@@ -26,7 +27,8 @@ data class AddEditSavingsAccountUiState(
     val name: String = "",
     val bank: String = "",
     val amount: String = "",
-    val color: Color? = null
+    val color: Color? = null,
+    val deleted: Boolean = false
 ) {
     fun toSavingsAccount(): SavingsAccount? {
         return if (color != null && amount.toIntOrNull() != null)
@@ -35,7 +37,9 @@ data class AddEditSavingsAccountUiState(
                 name = name,
                 bank = bank,
                 hexCode = String.format("%06X", color.toArgb() and 0xFFFFFF),
-                amount = amount.toInt()
+                amount = amount.toInt(),
+                lastModified = Date.from(Instant.now()),
+                deleted = deleted
             )
         else null
     }
@@ -47,7 +51,7 @@ class AddEditSavingsViewModel @Inject constructor(
     logService: LogService,
     private val storageService: StorageService,
     private val accountService: AccountService
-) : FinaidViewModel(logService,) {
+) : FinaidViewModel(logService) {
 
     var isEditMode by mutableStateOf(false)
         private set
@@ -112,9 +116,9 @@ class AddEditSavingsViewModel @Inject constructor(
 
     fun onDeleteSavingsAccountClick(savingsAccountId: String) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.deleteSavingsAccount(accountService.getUserId(), savingsAccountId) { error ->
+            storageService.moveSavingsAccountToTrash(accountService.getUserId(), savingsAccountId) { error ->
                 if (error == null)
-                    SnackbarManager.showMessage(R.string.savingsaccount_deleted)
+                    SnackbarManager.showMessage(R.string.savingsaccount_removed)
                 else
                     onError(error)
             }

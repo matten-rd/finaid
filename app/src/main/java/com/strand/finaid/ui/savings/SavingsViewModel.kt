@@ -57,11 +57,11 @@ class SavingsViewModel @Inject constructor(
             initialValue = Result.Loading
         )
 
-    fun onDeleteSavingsAccountClick(savingsAccountId: String) {
+    fun onDeleteSavingsAccountClick(savingsAccount: SavingsAccountUiState) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.deleteSavingsAccount(accountService.getUserId(), savingsAccountId) { error ->
+            storageService.moveSavingsAccountToTrash(accountService.getUserId(), savingsAccount.id) { error ->
                 if (error == null)
-                    SnackbarManager.showMessage(R.string.savingsaccount_deleted)
+                    SnackbarManager.showMessage(R.string.savingsaccount_removed)
                 else
                     onError(error)
             }

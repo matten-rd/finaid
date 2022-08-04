@@ -1,14 +1,10 @@
 package com.strand.finaid.ui.savings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -17,6 +13,7 @@ import com.strand.finaid.model.Result
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.SavingsAccountItem
+import com.strand.finaid.ui.components.SegmentedButton
 
 @Composable
 fun SavingsScreen(
@@ -25,37 +22,38 @@ fun SavingsScreen(
 ) {
     val savingsAccounts by viewModel.savingsAccounts.collectAsState()
     val openDialog = remember { mutableStateOf(false) }
-    val selectedSavingsAccountId = remember { mutableStateOf<String?>(null) }
+    val selectedSavingsAccount = remember { mutableStateOf<SavingsAccountUiState?>(null) }
 
     // Use intermediate variable to enable smart cast and ensure that it has the same value in the condition and the when branches
     when (val s = savingsAccounts) {
         is Result.Success -> {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
+                item { SavingsGraph() }
                 items(s.data!!, key = { it.id }) { savingsAccountItem ->
                     SavingsAccountItem(
-                        modifier = Modifier.animateItemPlacement(),
+                        modifier = Modifier
+                            .animateItemPlacement()
+                            .padding(horizontal = 8.dp),
                         savingsAccount = savingsAccountItem,
                         onEditClick = navigateToEditScreen,
                         onDeleteClick = {
-                            selectedSavingsAccountId.value = it
+                            selectedSavingsAccount.value = it
                             openDialog.value = true
                         }
                     )
                 }
+                item { Spacer(modifier = Modifier.height(128.dp)) }
             }
         }
         is Result.Error -> { FullScreenError() }
         Result.Loading -> { FullScreenLoading() }
     }
 
-
     if (openDialog.value) {
-        selectedSavingsAccountId.value?.let { savingsAccountId ->
+        selectedSavingsAccount.value?.let { savingsAccount ->
             AlertDialog(
                 onDismissRequest = { openDialog.value = false },
                 title = { Text(text = "Radera sparkontot?") },
@@ -68,12 +66,36 @@ fun SavingsScreen(
                 confirmButton = {
                     FilledTonalButton(
                         onClick = {
-                            viewModel.onDeleteSavingsAccountClick(savingsAccountId)
+                            viewModel.onDeleteSavingsAccountClick(savingsAccount)
                             openDialog.value = false
                         }
                     ) { Text(text = "Radera") }
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun SavingsGraph() {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Card(
+            shape = RoundedCornerShape(28.dp)
+        ) {
+            SegmentedButton(
+                modifier = Modifier.padding(12.dp),
+                items = listOf("Konto", "År"),
+                selectedIndex = 0,
+                indexChanged = {  }
+            )
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp),
+            shape = RoundedCornerShape(28.dp)
+        ) {
+
         }
     }
 }

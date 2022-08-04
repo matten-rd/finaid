@@ -26,9 +26,11 @@ interface StorageService {
     fun getDeletedCategories(userId: String, onError: (Throwable) -> Unit, onSuccess: (FirebaseCategory) -> Unit)
     fun restoreCategoryFromTrash(userId: String, categoryId: String, onResult: (Throwable?) -> Unit)
 
-    fun addSavingsListener(userId: String): Flow<Result<QuerySnapshot>>
+    fun addSavingsListener(userId: String, deleted: Boolean = false): Flow<Result<QuerySnapshot>>
     fun saveSavingsAccount(userId: String, savingsAccount: SavingsAccount, onResult: (Throwable?) -> Unit)
     fun getSavingsAccount(userId: String, savingsAccountId: String, onError: (Throwable) -> Unit, onSuccess: (SavingsAccount?) -> Unit)
-    fun deleteSavingsAccount(userId: String, savingsAccountId: String, onResult: (Throwable?) -> Unit)
+    fun moveSavingsAccountToTrash(userId: String, savingsAccountId: String, onResult: (Throwable?) -> Unit)
+    fun restoreSavingsAccountFromTrash(userId: String, savingsAccountId: String, onResult: (Throwable?) -> Unit)
+    fun deleteSavingsAccountPermanently(userId: String, savingsAccountId: String, onResult: (Throwable?) -> Unit)
     fun getLimitedNumberOfSavingsAccounts(numberOfAccounts: Int, userId: String, onError: (Throwable) -> Unit, onSuccess: (List<SavingsAccount?>) -> Unit)
 }

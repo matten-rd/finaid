@@ -273,7 +273,6 @@ class AddEditTransactionViewModel @Inject constructor(
     }
 
     fun saveTransaction(onSuccess: () -> Unit) {
-        // TODO: Check if isEditMode and call save/update accordingly
         val transaction = uiState.toTransaction(transactionType.value)
 
         if (transaction != null) {

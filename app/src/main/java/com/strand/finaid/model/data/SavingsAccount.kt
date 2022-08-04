@@ -13,7 +13,9 @@ data class SavingsAccount(
     val name: String,
     val bank: String,
     val hexCode: String,
-    val amount: Int
+    val amount: Int,
+    val lastModified: Date,
+    val deleted: Boolean
 ) {
     fun toSavingsAccountUiState(): SavingsAccountUiState {
         return SavingsAccountUiState(

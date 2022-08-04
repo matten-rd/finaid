@@ -9,11 +9,13 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.toObjects
 import com.strand.finaid.R
 import com.strand.finaid.model.Result
+import com.strand.finaid.model.data.SavingsAccount
 import com.strand.finaid.model.data.Transaction
 import com.strand.finaid.model.service.AccountService
 import com.strand.finaid.model.service.LogService
 import com.strand.finaid.model.service.StorageService
 import com.strand.finaid.ui.FinaidViewModel
+import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.transactions.CategoryUi
 import com.strand.finaid.ui.transactions.TransactionUiState
@@ -120,6 +122,35 @@ class TrashViewModel @Inject constructor(
     fun restoreTransactionFromTrash(transaction: TransactionUiState) {
         storageService.restoreTransactionFromTrash(accountService.getUserId(), transaction.id) { error ->
             if (error == null) SnackbarManager.showMessage(R.string.transaction_restored) else onError(error)
+        }
+    }
+
+    private val savingsAccountResponse: Flow<Result<List<SavingsAccountUiState>>> = storageService
+        .addSavingsListener(accountService.getUserId(), deleted = true)
+        .map { res ->
+            when (res) {
+                is Result.Success -> {
+                    Result.Success(
+                        res.data?.toObjects<SavingsAccount>()?.map { it.toSavingsAccountUiState() })
+                }
+                is Result.Loading -> { Result.Loading }
+                is Result.Error -> {
+                    onError(res.exception)
+                    res
+                }
+            }
+        }
+
+    val savingsAccounts: StateFlow<Result<List<SavingsAccountUiState>>> = savingsAccountResponse
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = Result.Loading
+        )
+
+    fun restoreSavingsAccountFromTrash(savingsAccount: SavingsAccountUiState) {
+        storageService.restoreSavingsAccountFromTrash(accountService.getUserId(), savingsAccount.id) { error ->
+            if (error == null) SnackbarManager.showMessage(R.string.savingsaccount_restored) else onError(error)
         }
     }
 }

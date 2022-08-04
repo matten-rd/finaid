@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -32,12 +33,14 @@ import androidx.compose.ui.unit.dp
 import com.strand.finaid.ext.formatAmount
 import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.transactions.TransactionUiState
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
 fun TransactionItem(
     modifier: Modifier = Modifier,
     cardColors: CardColors = CardDefaults.cardColors(),
+    shape: Shape = RoundedCornerShape(16.dp),
     transaction: TransactionUiState,
     onEditClick: (String) -> Unit,
     onDeleteClick: (TransactionUiState) -> Unit
@@ -45,6 +48,7 @@ fun TransactionItem(
     SwipeableBaseItem(
         modifier = modifier,
         cardColors = cardColors,
+        shape = shape,
         icon = transaction.icon,
         color = transaction.color,
         header = transaction.memo,
@@ -59,20 +63,22 @@ fun TransactionItem(
 fun SavingsAccountItem(
     modifier: Modifier = Modifier,
     cardColors: CardColors = CardDefaults.cardColors(),
+    shape: Shape = RoundedCornerShape(16.dp),
     savingsAccount: SavingsAccountUiState,
     onEditClick: (String) -> Unit,
-    onDeleteClick: (String) -> Unit
+    onDeleteClick: (SavingsAccountUiState) -> Unit
 ) {
     SwipeableBaseItem(
         modifier = modifier,
         cardColors = cardColors,
+        shape = shape,
         icon = savingsAccount.icon,
         color = savingsAccount.color,
         header = savingsAccount.name,
         subhead = savingsAccount.bank,
         amount = savingsAccount.amount,
         onEditClick = { onEditClick(savingsAccount.id) },
-        onDeleteClick = { onDeleteClick(savingsAccount.id) }
+        onDeleteClick = { onDeleteClick(savingsAccount) }
     )
 }
 
@@ -81,6 +87,7 @@ fun SavingsAccountItem(
 private fun SwipeableBaseItem(
     modifier: Modifier = Modifier,
     cardColors: CardColors = CardDefaults.cardColors(),
+    shape: Shape = RoundedCornerShape(16.dp),
     icon: ImageVector,
     color: Color,
     header: String,
@@ -89,6 +96,7 @@ private fun SwipeableBaseItem(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
     val swipeableState = rememberSwipeableState(initialValue = 0)
     val sizePx = with(LocalDensity.current) { 72.dp.toPx() }
     val anchors = mapOf(0f to 0, -sizePx to 1, sizePx to 2)
@@ -111,7 +119,10 @@ private fun SwipeableBaseItem(
                 .clip(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.errorContainer)
                 .size(48.dp)
-                .clickable { onDeleteClick() },
+                .clickable {
+                    onDeleteClick()
+                    scope.launch { swipeableState.animateTo(0) }
+                },
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -140,6 +151,7 @@ private fun SwipeableBaseItem(
 
         BaseItem(
             modifier = modifier.offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) },
+            shape = shape,
             icon = icon,
             color = color,
             header = header,
@@ -155,6 +167,7 @@ private fun SwipeableBaseItem(
 private fun BaseItem(
     modifier: Modifier = Modifier,
     cardColors: CardColors = CardDefaults.cardColors(),
+    shape: Shape = RoundedCornerShape(16.dp),
     icon: ImageVector,
     color: Color,
     header: String,
@@ -170,7 +183,7 @@ private fun BaseItem(
     Card(
         modifier = modifier.fillMaxWidth(),
         onClick = onEditClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = shape,
         colors = CardDefaults.cardColors(containerColor = cardContainerColor)
     ) {
         Row(

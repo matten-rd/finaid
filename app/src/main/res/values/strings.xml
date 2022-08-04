@@ -7,26 +7,32 @@
     <string name="screen_transactions">Transaktioner</string>
     <string name="screen_profile">Profil</string>
     <string name="screen_search">Sök</string>
+    <string name="landing">Håll koll på din ekonomi</string>
 
     <string name="generic_error">Något gick fel. Försök igen.</string>
-    <string name="recovery_email_sent">Återställningsmail skickat till din email.</string>
+    <string name="form_error">Fyll i alla fält först.</string>
     <string name="email_error">Fyll i en giltig mailaddress.</string>
     <string name="password_match_error">Lösenorden måste matcha.</string>
+
     <string name="sign_in">Logga in</string>
-    <string name="already_have_account">Har du redan ett konto?</string>
     <string name="create_account">Skapa konto</string>
-    <string name="landing">Håll koll på din ekonomi</string>
     <string name="forgot_password">Glömt lösenord?</string>
     <string name="no_account_yet">Inget konto?</string>
+    <string name="already_have_account">Har du redan ett konto?</string>
+    <string name="recovery_email_sent">Återställningsmail skickat till din email.</string>
+
+    <string name="save">Spara</string>
 
     <string name="transaction_removed">Transaktionen flyttades till papperskorgen.</string>
     <string name="transaction_permanently_deleted">Transaktionen togs bort permanent.</string>
     <string name="transaction_restored">Transaktionen återskapdes.</string>
-    <string name="save">Spara</string>
+
     <string name="category_saved">Kategori sparad.</string>
     <string name="category_removed">Kategorin flyttades till papperskorgen.</string>
     <string name="category_permanently_deleted">Kategorin togs bort permanent.</string>
     <string name="category_restored">Kategorin återskapades.</string>
-    <string name="form_error">Fyll i alla fält först.</string>
-    <string name="savingsaccount_deleted">Sparkontot raderades.</string>
+
+    <string name="savingsaccount_permanently_deleted">Sparkontot togs bort permanent.</string>
+    <string name="savingsaccount_removed">Sparkontot flyttades till papperskorgen.</string>
+    <string name="savingsaccount_restored">Sparkontot återskapades.</string>
 </resources>

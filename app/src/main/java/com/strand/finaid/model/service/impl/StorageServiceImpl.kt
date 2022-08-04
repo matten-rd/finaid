@@ -377,10 +377,10 @@ class StorageServiceImpl @Inject constructor() : StorageService {
     /**
      * Savings
      */
-    override fun addSavingsListener(userId: String): Flow<Result<QuerySnapshot>> {
+    override fun addSavingsListener(userId: String, deleted: Boolean): Flow<Result<QuerySnapshot>> {
         val query = userId.userDocument
             .collection(SavingsCollection)
-            .orderBy("bank")
+            .whereEqualTo(DeletedField, deleted)
 
         return query.snapshotFlow()
     }
@@ -411,7 +411,31 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             .addOnSuccessListener { result -> onSuccess(result.toObject()) }
     }
 
-    override fun deleteSavingsAccount(
+    override fun moveSavingsAccountToTrash(
+        userId: String,
+        savingsAccountId: String,
+        onResult: (Throwable?) -> Unit
+    ) {
+        userId.userDocument
+            .collection(SavingsCollection)
+            .document(savingsAccountId)
+            .update(DeletedField, true)
+            .addOnCompleteListener { task -> onResult(task.exception) }
+    }
+
+    override fun restoreSavingsAccountFromTrash(
+        userId: String,
+        savingsAccountId: String,
+        onResult: (Throwable?) -> Unit
+    ) {
+        userId.userDocument
+            .collection(SavingsCollection)
+            .document(savingsAccountId)
+            .update(DeletedField, false)
+            .addOnCompleteListener { task -> onResult(task.exception) }
+    }
+
+    override fun deleteSavingsAccountPermanently(
         userId: String,
         savingsAccountId: String,
         onResult: (Throwable?) -> Unit
