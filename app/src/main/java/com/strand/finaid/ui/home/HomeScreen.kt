@@ -11,8 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.strand.finaid.ext.formatAmount
-import com.strand.finaid.ui.components.HomeScreenSavingsAccountItem
-import com.strand.finaid.ui.components.HomeScreenTransactionItem
+import com.strand.finaid.ui.components.list_items.HomeScreenSavingsAccountItem
+import com.strand.finaid.ui.components.list_items.HomeScreenTransactionItem
 
 
 @Composable

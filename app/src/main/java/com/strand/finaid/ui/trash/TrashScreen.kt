@@ -25,8 +25,8 @@ import com.google.accompanist.pager.rememberPagerState
 import com.strand.finaid.model.Result
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
-import com.strand.finaid.ui.components.SavingsAccountItem
-import com.strand.finaid.ui.components.TransactionItem
+import com.strand.finaid.ui.components.list_items.SavingsAccountItem
+import com.strand.finaid.ui.components.list_items.TransactionItem
 import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.transactions.CategoryUi
 import com.strand.finaid.ui.transactions.TransactionUiState

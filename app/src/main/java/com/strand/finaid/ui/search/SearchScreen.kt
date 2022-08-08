@@ -20,7 +20,7 @@ import androidx.paging.compose.items
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.SegmentedButton
-import com.strand.finaid.ui.components.TransactionItem
+import com.strand.finaid.ui.components.list_items.TransactionItem
 import com.strand.finaid.ui.transactions.CategoryUi
 import com.strand.finaid.ui.transactions.TransactionUiState
 
@@ -104,9 +104,8 @@ private fun SearchTransactionsContent(
                         TransactionItem(
                             modifier = Modifier.animateItemPlacement(),
                             transaction = transactionItem,
-                            onEditClick = {},
-                            onDeleteClick = {}
-                        )
+                            onEditClick = {}
+                        ) {}
                     }
                 }
                 item { Spacer(modifier = Modifier.height(16.dp)) }

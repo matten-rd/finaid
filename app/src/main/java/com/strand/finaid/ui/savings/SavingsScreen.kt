@@ -12,8 +12,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.strand.finaid.model.Result
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
-import com.strand.finaid.ui.components.SavingsAccountItem
 import com.strand.finaid.ui.components.SegmentedButton
+import com.strand.finaid.ui.components.list_items.SavingsAccountItem
 
 @Composable
 fun SavingsScreen(
@@ -34,16 +34,13 @@ fun SavingsScreen(
                 item { SavingsGraph() }
                 items(s.data!!, key = { it.id }) { savingsAccountItem ->
                     SavingsAccountItem(
-                        modifier = Modifier
-                            .animateItemPlacement()
-                            .padding(horizontal = 8.dp),
+                        modifier = Modifier.animateItemPlacement(),
                         savingsAccount = savingsAccountItem,
-                        onEditClick = navigateToEditScreen,
-                        onDeleteClick = {
-                            selectedSavingsAccount.value = it
-                            openDialog.value = true
-                        }
-                    )
+                        onEditClick = navigateToEditScreen
+                    ) {
+                        selectedSavingsAccount.value = it
+                        openDialog.value = true
+                    }
                 }
                 item { Spacer(modifier = Modifier.height(128.dp)) }
             }

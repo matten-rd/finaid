@@ -18,7 +18,7 @@ import com.strand.finaid.model.Result
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.SegmentedButton
-import com.strand.finaid.ui.components.TransactionItem
+import com.strand.finaid.ui.components.list_items.TransactionItem
 
 @Composable
 fun TransactionsScreen(
@@ -99,9 +99,7 @@ private fun TransactionsScreenContent(
         }
         items(transactions, key = { it.id }) { transactionItem ->
             TransactionItem(
-                modifier = Modifier
-                    .animateItemPlacement()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.animateItemPlacement(),
                 transaction = transactionItem,
                 onEditClick = onEditClick,
                 onDeleteClick = onDeleteClick
