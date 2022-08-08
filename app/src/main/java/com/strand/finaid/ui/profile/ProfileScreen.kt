@@ -12,8 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.strand.finaid.ui.theme.rememberThemePreference
-import com.strand.finaid.ui.theme.settings.AppTheme
+import com.strand.finaid.preferences.rememberThemePreference
+import com.strand.finaid.ui.theme.AppTheme
 
 @Composable
 fun ProfileScreen(
