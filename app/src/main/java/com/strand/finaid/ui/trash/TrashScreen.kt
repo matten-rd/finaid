@@ -25,8 +25,7 @@ import com.google.accompanist.pager.rememberPagerState
 import com.strand.finaid.model.Result
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
-import com.strand.finaid.ui.components.list_items.SavingsAccountItem
-import com.strand.finaid.ui.components.list_items.TransactionItem
+import com.strand.finaid.ui.components.list_items.BaseItem
 import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.transactions.CategoryUi
 import com.strand.finaid.ui.transactions.TransactionUiState
@@ -34,17 +33,23 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun TrashScreen(
-    viewModel: TrashViewModel = hiltViewModel()
+    viewModel: TrashViewModel = hiltViewModel(),
+    openSheet: () -> Unit
 ) {
-    val pagerState = rememberPagerState()
+    val initialPage = viewModel.selectedTrashType.ordinal
+    val pagerState = rememberPagerState(initialPage = initialPage)
     val scope = rememberCoroutineScope()
     val transactions by viewModel.transactions.collectAsState()
     val savingsAccounts by viewModel.savingsAccounts.collectAsState()
 
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            viewModel.onSelectedTrashTypeChange(page)
+        }
+    }
+
     val indicator = @Composable { tabPositions: List<TabPosition> ->
-        TabIndicator(
-            Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage])
-        )
+        TabIndicator(modifier = Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]))
     }
     
     Column(modifier = Modifier.fillMaxSize()) {
@@ -70,14 +75,26 @@ fun TrashScreen(
                 when (page) {
                     TrashType.Savings.ordinal -> SavingsTrashScreen(
                         savingsAccounts = savingsAccounts,
-                        onRestoreClick = viewModel::restoreSavingsAccountFromTrash
+                        uiState = viewModel.trashSavingsAccountsUiState,
+                        openSheet = openSheet,
+                        setIsSavingsAccountRestoreDialogOpen = viewModel::setIsSavingsAccountRestoreDialogOpen,
+                        setIsSavingsAccountDeleteDialogOpen = viewModel::setIsSavingsAccountDeleteDialogOpen,
+                        setSelectedSavingsAccount = viewModel::setSelectedSavingsAccount,
+                        onRestoreClick = viewModel::restoreSavingsAccountFromTrash,
+                        onPermanentlyDeleteClick = viewModel::permanentlyDeleteSavingsAccount
                     )
                     TrashType.Transactions.ordinal -> TransactionsTrashScreen(
                         transactions = transactions,
-                        onRestoreClick = viewModel::restoreTransactionFromTrash
+                        uiState = viewModel.trashTransactionsUiState,
+                        openSheet = openSheet,
+                        setIsTransactionRestoreDialogOpen = viewModel::setIsTransactionRestoreDialogOpen,
+                        setIsTransactionDeleteDialogOpen = viewModel::setIsTransactionDeleteDialogOpen,
+                        setSelectedTransaction = viewModel::setSelectedTransaction,
+                        onRestoreClick = viewModel::restoreTransactionFromTrash,
+                        onPermanentlyDeleteClick = viewModel::permanentlyDeleteTransaction
                     )
                     TrashType.Categories.ordinal -> CategoryTrashScreen(
-                        uiState = viewModel.categoryUiState,
+                        uiState = viewModel.trashCategoryUiState,
                         setIsCategoryRestoreDialogOpen = viewModel::setIsCategoryRestoreDialogOpen,
                         setIsCategoryDeleteDialogOpen = viewModel::setIsCategoryDeleteDialogOpen,
                         setSelectedCategory = viewModel::setSelectedCategory,
@@ -94,7 +111,13 @@ fun TrashScreen(
 @Composable
 fun SavingsTrashScreen(
     savingsAccounts: Result<List<SavingsAccountUiState>>,
-    onRestoreClick: (SavingsAccountUiState) -> Unit
+    uiState: TrashSavingsAccountsUiState,
+    openSheet: () -> Unit,
+    setIsSavingsAccountRestoreDialogOpen: (Boolean) -> Unit,
+    setIsSavingsAccountDeleteDialogOpen: (Boolean) -> Unit,
+    setSelectedSavingsAccount: (SavingsAccountUiState) -> Unit,
+    onRestoreClick: (SavingsAccountUiState) -> Unit,
+    onPermanentlyDeleteClick: (SavingsAccountUiState) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (savingsAccounts) {
@@ -106,15 +129,18 @@ fun SavingsTrashScreen(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        items(savingsAccounts.data, key = { it.id }) { transactionItem ->
-                            SavingsAccountItem(
-                                modifier = Modifier
-                                    .animateItemPlacement()
-                                    .padding(horizontal = 8.dp),
-                                savingsAccount = transactionItem,
-                                onEditClick = {  },
-                                onDeleteClick = onRestoreClick
-                            )
+                        items(savingsAccounts.data, key = { it.id }) { savingsAccount ->
+                            BaseItem(
+                                modifier = Modifier.animateItemPlacement(),
+                                icon = savingsAccount.icon,
+                                color = savingsAccount.color,
+                                header = savingsAccount.name,
+                                subhead = savingsAccount.bank,
+                                amount = savingsAccount.amount
+                            ) {
+                                setSelectedSavingsAccount(savingsAccount)
+                                openSheet()
+                            }
                         }
                     }
                 }
@@ -123,12 +149,64 @@ fun SavingsTrashScreen(
             Result.Loading -> { FullScreenLoading() }
         }
     }
+
+    if (uiState.isRestoreDialogOpen) {
+        uiState.selectedSavingsAccount?.let { savingsAccount ->
+            AlertDialog(
+                onDismissRequest = { setIsSavingsAccountRestoreDialogOpen(false) },
+                title = { Text(text = "Återskapa sparkontot?") },
+                text = { Text(text = "Att återskapa sparkontot gör det tillgängligt igen.") },
+                dismissButton = {
+                    TextButton(onClick = { setIsSavingsAccountRestoreDialogOpen(false)}) {
+                        Text(text = "Avbryt")
+                    }
+                },
+                confirmButton = {
+                    FilledTonalButton(
+                        onClick = {
+                            onRestoreClick(savingsAccount)
+                            setIsSavingsAccountRestoreDialogOpen(false)
+                        }
+                    ) { Text(text = "Återskapa") }
+                }
+            )
+        }
+    }
+
+    if (uiState.isDeleteDialogOpen) {
+        uiState.selectedSavingsAccount?.let { savingsAccount ->
+            AlertDialog(
+                onDismissRequest = { setIsSavingsAccountDeleteDialogOpen(false) },
+                title = { Text(text = "Är du säker?") },
+                text = { Text(text = "Sparkontot raderas permanent.") },
+                dismissButton = {
+                    TextButton(onClick = { setIsSavingsAccountDeleteDialogOpen(false)}) {
+                        Text(text = "Avbryt")
+                    }
+                },
+                confirmButton = {
+                    FilledTonalButton(
+                        onClick = {
+                            onPermanentlyDeleteClick(savingsAccount)
+                            setIsSavingsAccountDeleteDialogOpen(false)
+                        }
+                    ) { Text(text = "Radera") }
+                }
+            )
+        }
+    }
 }
 
 @Composable
 fun TransactionsTrashScreen(
     transactions: Result<List<TransactionUiState>>,
-    onRestoreClick: (TransactionUiState) -> Unit
+    uiState: TrashTransactionsUiState,
+    openSheet: () -> Unit,
+    setIsTransactionRestoreDialogOpen: (Boolean) -> Unit,
+    setIsTransactionDeleteDialogOpen: (Boolean) -> Unit,
+    setSelectedTransaction: (TransactionUiState) -> Unit,
+    onRestoreClick: (TransactionUiState) -> Unit,
+    onPermanentlyDeleteClick: (TransactionUiState) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (transactions) {
@@ -141,14 +219,17 @@ fun TransactionsTrashScreen(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         items(transactions.data, key = { it.id }) { transactionItem ->
-                            TransactionItem(
-                                modifier = Modifier
-                                    .animateItemPlacement()
-                                    .padding(horizontal = 8.dp),
-                                transaction = transactionItem,
-                                onEditClick = {  },
-                                onDeleteClick = onRestoreClick
-                            )
+                            BaseItem(
+                                modifier = Modifier.animateItemPlacement(),
+                                icon = transactionItem.icon,
+                                color = transactionItem.color,
+                                header = transactionItem.memo,
+                                subhead = "${transactionItem.date} \u2022 ${transactionItem.category}",
+                                amount = transactionItem.amount
+                            ) {
+                                setSelectedTransaction(transactionItem)
+                                openSheet()
+                            }
                         }
                     }
                 }
@@ -157,11 +238,57 @@ fun TransactionsTrashScreen(
             Result.Loading -> { FullScreenLoading() }
         }
     }
+
+    if (uiState.isRestoreDialogOpen) {
+        uiState.selectedTransaction?.let { transaction ->
+            AlertDialog(
+                onDismissRequest = { setIsTransactionRestoreDialogOpen(false) },
+                title = { Text(text = "Återskapa transaktionen?") },
+                text = { Text(text = "Att återskapa transaktionen gör den tillgänglig igen.") },
+                dismissButton = {
+                    TextButton(onClick = { setIsTransactionRestoreDialogOpen(false)}) {
+                        Text(text = "Avbryt")
+                    }
+                },
+                confirmButton = {
+                    FilledTonalButton(
+                        onClick = {
+                            onRestoreClick(transaction)
+                            setIsTransactionRestoreDialogOpen(false)
+                        }
+                    ) { Text(text = "Återskapa") }
+                }
+            )
+        }
+    }
+
+    if (uiState.isDeleteDialogOpen) {
+        uiState.selectedTransaction?.let { transaction ->
+            AlertDialog(
+                onDismissRequest = { setIsTransactionDeleteDialogOpen(false) },
+                title = { Text(text = "Är du säker?") },
+                text = { Text(text = "Transaktionen raderas permanent.") },
+                dismissButton = {
+                    TextButton(onClick = { setIsTransactionDeleteDialogOpen(false)}) {
+                        Text(text = "Avbryt")
+                    }
+                },
+                confirmButton = {
+                    FilledTonalButton(
+                        onClick = {
+                            onPermanentlyDeleteClick(transaction)
+                            setIsTransactionDeleteDialogOpen(false)
+                        }
+                    ) { Text(text = "Radera") }
+                }
+            )
+        }
+    }
 }
 
 @Composable
 fun CategoryTrashScreen(
-    uiState: CategoryUiState,
+    uiState: TrashCategoryUiState,
     setIsCategoryRestoreDialogOpen: (Boolean) -> Unit,
     setIsCategoryDeleteDialogOpen: (Boolean) -> Unit,
     setSelectedCategory: (CategoryUi) -> Unit,

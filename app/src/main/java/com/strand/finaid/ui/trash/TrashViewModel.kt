@@ -30,18 +30,23 @@ enum class TrashType(val title: String) {
     Categories("Kategorier")
 }
 
-data class CategoryUiState(
+data class TrashCategoryUiState(
     val isRestoreDialogOpen: Boolean = false,
     val isDeleteDialogOpen: Boolean = false,
     val selectedCategory: CategoryUi? = null,
     val deletedCategories: SnapshotStateList<CategoryUi> = mutableStateListOf()
 )
 
-data class TransactionsUiState(
+data class TrashTransactionsUiState(
     val isRestoreDialogOpen: Boolean = false,
     val isDeleteDialogOpen: Boolean = false,
-    val selectedTransaction: CategoryUi? = null,
-    val deletedTransactions: SnapshotStateList<CategoryUi> = mutableStateListOf()
+    val selectedTransaction: TransactionUiState? = null
+)
+
+data class TrashSavingsAccountsUiState(
+    val isRestoreDialogOpen: Boolean = false,
+    val isDeleteDialogOpen: Boolean = false,
+    val selectedSavingsAccount: SavingsAccountUiState? = null
 )
 
 @HiltViewModel
@@ -53,31 +58,41 @@ class TrashViewModel @Inject constructor(
 
     val trashTypes = TrashType.values().map { it.title }
 
-    var categoryUiState by mutableStateOf(CategoryUiState())
+    var selectedTrashType by mutableStateOf(TrashType.Savings)
         private set
 
+    fun onSelectedTrashTypeChange(newValue: Int) {
+        selectedTrashType = TrashType.values()[newValue]
+    }
+
+    /**
+     * Categories
+     */
+    var trashCategoryUiState by mutableStateOf(TrashCategoryUiState())
+        private set
+
+    fun setIsCategoryRestoreDialogOpen(newValue: Boolean) {
+        trashCategoryUiState = trashCategoryUiState.copy(isRestoreDialogOpen = newValue)
+    }
+
+    fun setIsCategoryDeleteDialogOpen(newValue: Boolean) {
+        trashCategoryUiState = trashCategoryUiState.copy(isDeleteDialogOpen = newValue)
+    }
+
+    fun setSelectedCategory(newValue: CategoryUi) {
+        trashCategoryUiState = trashCategoryUiState.copy(selectedCategory = newValue)
+    }
+
     private fun getDeletedCategories() {
-        categoryUiState.deletedCategories.clear()
+        trashCategoryUiState.deletedCategories.clear()
         viewModelScope.launch(showErrorExceptionHandler) {
             storageService.getDeletedCategories(accountService.getUserId(), ::onError) { category ->
-                categoryUiState.deletedCategories.add(category.toCategoryUi())
+                trashCategoryUiState.deletedCategories.add(category.toCategoryUi())
             }
         }
     }
 
     init { getDeletedCategories() }
-
-    fun setIsCategoryRestoreDialogOpen(newValue: Boolean) {
-        categoryUiState = categoryUiState.copy(isRestoreDialogOpen = newValue)
-    }
-
-    fun setIsCategoryDeleteDialogOpen(newValue: Boolean) {
-        categoryUiState = categoryUiState.copy(isDeleteDialogOpen = newValue)
-    }
-
-    fun setSelectedCategory(newValue: CategoryUi) {
-        categoryUiState = categoryUiState.copy(selectedCategory = newValue)
-    }
 
     fun restoreCategoryFromTrash(category: CategoryUi) {
         storageService.restoreCategoryFromTrash(accountService.getUserId(), category.id) { error ->
@@ -95,6 +110,24 @@ class TrashViewModel @Inject constructor(
                 getDeletedCategories()
             } else { onError(error) }
         }
+    }
+
+    /**
+     * Transactions
+     */
+    var trashTransactionsUiState by mutableStateOf(TrashTransactionsUiState())
+        private set
+
+    fun setIsTransactionRestoreDialogOpen(newValue: Boolean) {
+        trashTransactionsUiState = trashTransactionsUiState.copy(isRestoreDialogOpen = newValue)
+    }
+
+    fun setIsTransactionDeleteDialogOpen(newValue: Boolean) {
+        trashTransactionsUiState = trashTransactionsUiState.copy(isDeleteDialogOpen = newValue)
+    }
+
+    fun setSelectedTransaction(newValue: TransactionUiState) {
+        trashTransactionsUiState = trashTransactionsUiState.copy(selectedTransaction = newValue)
     }
 
     private val transactionResult: Flow<Result<List<TransactionUiState>>> = storageService
@@ -125,6 +158,30 @@ class TrashViewModel @Inject constructor(
         }
     }
 
+    fun permanentlyDeleteTransaction(transaction: TransactionUiState) {
+        storageService.deleteTransactionPermanently(accountService.getUserId(), transaction.id) { error ->
+            if (error == null) SnackbarManager.showMessage(R.string.transaction_permanently_deleted) else onError(error)
+        }
+    }
+
+    /**
+     * Savings
+     */
+    var trashSavingsAccountsUiState by mutableStateOf(TrashSavingsAccountsUiState())
+        private set
+
+    fun setIsSavingsAccountRestoreDialogOpen(newValue: Boolean) {
+        trashSavingsAccountsUiState = trashSavingsAccountsUiState.copy(isRestoreDialogOpen = newValue)
+    }
+
+    fun setIsSavingsAccountDeleteDialogOpen(newValue: Boolean) {
+        trashSavingsAccountsUiState = trashSavingsAccountsUiState.copy(isDeleteDialogOpen = newValue)
+    }
+
+    fun setSelectedSavingsAccount(newValue: SavingsAccountUiState) {
+        trashSavingsAccountsUiState = trashSavingsAccountsUiState.copy(selectedSavingsAccount = newValue)
+    }
+
     private val savingsAccountResponse: Flow<Result<List<SavingsAccountUiState>>> = storageService
         .addSavingsListener(accountService.getUserId(), deleted = true)
         .map { res ->
@@ -151,6 +208,12 @@ class TrashViewModel @Inject constructor(
     fun restoreSavingsAccountFromTrash(savingsAccount: SavingsAccountUiState) {
         storageService.restoreSavingsAccountFromTrash(accountService.getUserId(), savingsAccount.id) { error ->
             if (error == null) SnackbarManager.showMessage(R.string.savingsaccount_restored) else onError(error)
+        }
+    }
+
+    fun permanentlyDeleteSavingsAccount(savingsAccount: SavingsAccountUiState) {
+        storageService.deleteSavingsAccountPermanently(accountService.getUserId(), savingsAccount.id) { error ->
+            if (error == null) SnackbarManager.showMessage(R.string.savingsaccount_permanently_deleted) else onError(error)
         }
     }
 }

@@ -2,6 +2,7 @@ package com.strand.finaid.ui.components.list_items
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -156,7 +157,7 @@ internal fun BaseItem(
                         )
                     }
                     Column(
-                        modifier = Modifier.fillMaxHeight(),
+                        modifier = Modifier.height(IntrinsicSize.Max),
                         verticalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Text(
@@ -272,6 +273,23 @@ private fun HomeScreenBaseListItem(
             Text(text = "${amount.formatAmount()} kr", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.width(4.dp))
         }
+    }
+}
+
+@Composable
+fun IconListItem(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().height(48.dp)
+            .clickable(onClick = onClick).padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(imageVector = icon, contentDescription = null)
+        Spacer(modifier = Modifier.size(16.dp))
+        Text(text = text)
     }
 }
 
