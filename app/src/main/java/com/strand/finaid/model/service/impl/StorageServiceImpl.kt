@@ -18,6 +18,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.*
 import javax.inject.Inject
 
@@ -68,7 +69,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             val prevTransactionSnapshot = transactionRun.get(transactionDocRef)
 
             val prevMonthKeyDataReference = if (prevTransactionSnapshot.exists()) {
-                val prevTransactionYearMonth = prevTransactionSnapshot.getDate("date")!!.yearMonthFormat
+                val prevTransactionYearMonth = prevTransactionSnapshot.getDate(DateField)!!.yearMonthFormat
                 val prevMonthKeyDataDocRef = transactionKeyDataCollectionRef.document(prevTransactionYearMonth)
                 transactionRun.get(prevMonthKeyDataDocRef).reference
             } else null
@@ -89,9 +90,9 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             // PREV MONTH - remove the current transaction if update
             if (prevMonthKeyDataReference != null) {
                 transactionRun.set(prevMonthKeyDataReference, mapOf(
-                    "net" to FieldValue.increment(-prevAmount),
-                    "expense" to FieldValue.increment(if (prevAmount < 0) -prevAmount else 0.0),
-                    "income" to FieldValue.increment(if (prevAmount >= 0) -prevAmount else 0.0)
+                    NetField to FieldValue.increment(-prevAmount),
+                    ExpenseField to FieldValue.increment(if (prevAmount < 0) -prevAmount else 0.0),
+                    IncomeField to FieldValue.increment(if (prevAmount >= 0) -prevAmount else 0.0)
                 ) + if (prevCategoryId != null) mapOf(prevCategoryId to FieldValue.increment(-prevAmount)) else emptyMap(),
                     SetOptions.merge()
                 )
@@ -99,9 +100,9 @@ class StorageServiceImpl @Inject constructor() : StorageService {
 
             // NEW MONTH - add the new/updated transaction
             transactionRun.set(newMonthKeyDataDocRef, mapOf(
-                "net" to FieldValue.increment(newAmount),
-                "expense" to FieldValue.increment(if (newAmount < 0) newAmount else 0.0),
-                "income" to FieldValue.increment(if (newAmount >= 0) newAmount else 0.0),
+                NetField to FieldValue.increment(newAmount),
+                ExpenseField to FieldValue.increment(if (newAmount < 0) newAmount else 0.0),
+                IncomeField to FieldValue.increment(if (newAmount >= 0) newAmount else 0.0),
                 newCategoryId to FieldValue.increment(newAmount)
             ), SetOptions.merge())
 
@@ -109,16 +110,16 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             // Determine the all time income and expense updates
             val allTimeUpdates = when {
                 prevAmount >= 0 && newAmount >= 0 ->
-                    mapOf("income" to FieldValue.increment(newAmount - prevAmount))
+                    mapOf(IncomeField to FieldValue.increment(newAmount - prevAmount))
 
                 prevAmount >= 0 && newAmount < 0 ->
-                    mapOf("income" to FieldValue.increment(-prevAmount), "expense" to FieldValue.increment(newAmount))
+                    mapOf(IncomeField to FieldValue.increment(-prevAmount), ExpenseField to FieldValue.increment(newAmount))
 
                 prevAmount < 0 && newAmount >= 0 ->
-                    mapOf("income" to FieldValue.increment(newAmount), "expense" to FieldValue.increment(-prevAmount))
+                    mapOf(IncomeField to FieldValue.increment(newAmount), ExpenseField to FieldValue.increment(-prevAmount))
 
                 prevAmount < 0 && newAmount < 0 ->
-                    mapOf("expense" to FieldValue.increment(newAmount - prevAmount))
+                    mapOf(ExpenseField to FieldValue.increment(newAmount - prevAmount))
 
                 else -> emptyMap()
             }
@@ -127,7 +128,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
                 transactionRun.set(
                     allTimeKeyDataDocRef,
                     mapOf(
-                        "net" to FieldValue.increment(newAmount - prevAmount),
+                        NetField to FieldValue.increment(newAmount - prevAmount),
                         newCategoryId to FieldValue.increment(newAmount - prevAmount)
                     ) + allTimeUpdates,
                     SetOptions.merge()
@@ -136,7 +137,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
                 transactionRun.set(
                     allTimeKeyDataDocRef,
                     mapOf(
-                        "net" to FieldValue.increment(newAmount - prevAmount),
+                        NetField to FieldValue.increment(newAmount - prevAmount),
                         newCategoryId to FieldValue.increment(newAmount)
                     ) + allTimeUpdates
                             + if (prevCategoryId != null) mapOf(prevCategoryId to FieldValue.increment(-prevAmount)) else emptyMap(),
@@ -188,9 +189,9 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             val categoryId = transaction.category.id
 
             val updates = mapOf(
-                "net" to FieldValue.increment(-amount),
-                "expense" to FieldValue.increment(if (amount < 0) -amount else 0.0),
-                "income" to FieldValue.increment(if (amount >= 0) -amount else 0.0),
+                NetField to FieldValue.increment(-amount),
+                ExpenseField to FieldValue.increment(if (amount < 0) -amount else 0.0),
+                IncomeField to FieldValue.increment(if (amount >= 0) -amount else 0.0),
                 categoryId to FieldValue.increment(-amount)
             )
             // MONTH
@@ -198,7 +199,11 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             // ALL TIME
             transactionRun.set(allTimeKeyDataDocRef, updates, SetOptions.merge())
             // Update the transaction document
-            transactionRun.update(transactionDocRef, DeletedField, true)
+            val transactionUpdates = mapOf(
+                DeletedField to true,
+                LastModifiedField to Date.from(Instant.now())
+            )
+            transactionRun.update(transactionDocRef, transactionUpdates)
             null
         }.addOnCompleteListener { task -> onResult(task.exception) }
     }
@@ -226,9 +231,9 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             val categoryId = transaction.category.id
 
             val updates = mapOf(
-                "net" to FieldValue.increment(amount),
-                "expense" to FieldValue.increment(if (amount < 0) amount else 0.0),
-                "income" to FieldValue.increment(if (amount >= 0) amount else 0.0),
+                NetField to FieldValue.increment(amount),
+                ExpenseField to FieldValue.increment(if (amount < 0) amount else 0.0),
+                IncomeField to FieldValue.increment(if (amount >= 0) amount else 0.0),
                 categoryId to FieldValue.increment(amount)
             )
             // MONTH
@@ -236,7 +241,11 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             // ALL TIME
             transactionRun.set(allTimeKeyDataDocRef, updates, SetOptions.merge())
             // Update the transaction document
-            transactionRun.update(transactionDocRef, DeletedField, false)
+            val transactionUpdates = mapOf(
+                DeletedField to false,
+                LastModifiedField to Date.from(Instant.now())
+            )
+            transactionRun.update(transactionDocRef, transactionUpdates)
             null
         }.addOnCompleteListener { task -> onResult(task.exception) }
     }
@@ -257,7 +266,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
     ) {
         userId.userDocument
             .collection(TransactionsCollection)
-            .orderBy("date", Query.Direction.DESCENDING)
+            .orderBy(DateField, Query.Direction.DESCENDING)
             .whereEqualTo(DeletedField, false)
             .limit(numberOfTransactions.toLong())
             .get()
@@ -416,10 +425,14 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         savingsAccountId: String,
         onResult: (Throwable?) -> Unit
     ) {
+        val savingsAccountUpdates = mapOf(
+            DeletedField to true,
+            LastModifiedField to Date.from(Instant.now())
+        )
         userId.userDocument
             .collection(SavingsCollection)
             .document(savingsAccountId)
-            .update(DeletedField, true)
+            .update(savingsAccountUpdates)
             .addOnCompleteListener { task -> onResult(task.exception) }
     }
 
@@ -428,10 +441,14 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         savingsAccountId: String,
         onResult: (Throwable?) -> Unit
     ) {
+        val savingsAccountUpdates = mapOf(
+            DeletedField to false,
+            LastModifiedField to Date.from(Instant.now())
+        )
         userId.userDocument
             .collection(SavingsCollection)
             .document(savingsAccountId)
-            .update(DeletedField, false)
+            .update(savingsAccountUpdates)
             .addOnCompleteListener { task -> onResult(task.exception) }
     }
 
@@ -455,7 +472,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
     ) {
         userId.userDocument
             .collection(SavingsCollection)
-            .orderBy("amount")
+            .orderBy(AmountField)
             .limit(numberOfAccounts.toLong())
             .get()
             .addOnFailureListener { error -> onError(error) }
@@ -471,5 +488,11 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         private const val CategoriesCollection = "categories"
 
         private const val DeletedField = "deleted"
+        private const val LastModifiedField = "lastModified"
+        private const val DateField = "date"
+        private const val NetField = "net"
+        private const val IncomeField = "income"
+        private const val ExpenseField = "expense"
+        private const val AmountField = "amount"
     }
 }
