@@ -1,6 +1,7 @@
 package com.strand.finaid.ui.trash
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
@@ -19,7 +20,7 @@ fun TrashBottomSheet(
     bottomSheetState: ModalBottomSheetState,
     scope: CoroutineScope
 ) {
-    Column(modifier = Modifier.padding(vertical = 16.dp)) {
+    Column(modifier = Modifier.padding(top = 16.dp).navigationBarsPadding()) {
         IconListItem(icon = Icons.Default.Restore, text = "Återställ") {
             when (viewModel.selectedTrashType) {
                 TrashType.Savings -> viewModel.setIsSavingsAccountRestoreDialogOpen(true)

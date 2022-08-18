@@ -15,8 +15,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.strand.finaid.R
 import com.strand.finaid.ui.components.BaseBottomSheet
-import com.strand.finaid.ui.components.textfield.FinaidTextField
 import com.strand.finaid.ui.components.SegmentedButton
+import com.strand.finaid.ui.components.textfield.FinaidTextField
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -96,7 +96,7 @@ fun TransactionsSortBottomSheet(
         onClose = onClose
     ) {
         Column(
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             SegmentedButton(

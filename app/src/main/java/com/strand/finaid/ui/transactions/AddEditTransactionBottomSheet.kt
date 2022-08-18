@@ -70,7 +70,7 @@ private fun CategoryBottomSheetContent(
         onClose = onClose
     ) {
         Column(
-            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 24.dp),
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp).navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

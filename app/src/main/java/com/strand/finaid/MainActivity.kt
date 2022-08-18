@@ -83,7 +83,7 @@ fun FinaidApp() {
             snackbarHost = {
                 SnackbarHost(
                     hostState = appState.snackbarHostState,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.navigationBarsPadding()
                 ) { data ->
                     Snackbar(
                         snackbarData = data,
