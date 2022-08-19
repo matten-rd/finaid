@@ -8,9 +8,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.rounded.DeleteForever
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Restore
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -383,7 +383,7 @@ private fun TrashCategoryItem(
         Row {
             Spacer(modifier = Modifier.width(12.dp))
             Icon(
-                imageVector = Icons.Filled.Circle,
+                imageVector = Icons.Default.Circle,
                 contentDescription = null,
                 tint = category.color
             )
@@ -392,7 +392,7 @@ private fun TrashCategoryItem(
         }
         Box {
             IconButton(onClick = { menuExpanded = true }) {
-                Icon(imageVector = Icons.Rounded.MoreVert, contentDescription = null)
+                Icon(imageVector = Icons.Default.MoreVert, contentDescription = null)
             }
 
             DropdownMenu(
@@ -407,7 +407,7 @@ private fun TrashCategoryItem(
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Rounded.Restore,
+                            imageVector = Icons.Default.Restore,
                             contentDescription = null
                         )
                     }
@@ -420,7 +420,7 @@ private fun TrashCategoryItem(
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Rounded.DeleteForever,
+                            imageVector = Icons.Default.DeleteForever,
                             contentDescription = null
                         )
                     }

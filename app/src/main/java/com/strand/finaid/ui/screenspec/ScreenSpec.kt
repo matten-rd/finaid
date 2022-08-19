@@ -77,6 +77,7 @@ sealed interface BottomNavScreenSpec : ScreenSpec {
     }
 
     val icon: ImageVector
+    val selectedIcon: ImageVector
 
     @get:StringRes
     val resourceId: Int

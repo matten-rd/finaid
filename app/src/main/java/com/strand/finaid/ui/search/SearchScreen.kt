@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.rounded.Sort
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -37,7 +37,7 @@ fun SearchScreen(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             OutlinedIconButton(onClick = { /*TODO*/ }) {
-                Icon(imageVector = Icons.Rounded.Sort, contentDescription = null)
+                Icon(imageVector = Icons.Default.Sort, contentDescription = null)
             }
             SegmentedButton(
                 items = viewModel.searchScreens,
@@ -70,7 +70,7 @@ private fun SearchTransactionsContent(
                 label = { Text(text = category.name) },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Filled.Circle,
+                        imageVector = Icons.Default.Circle,
                         contentDescription = null,
                         modifier = Modifier.size(FilterChipDefaults.IconSize),
                         tint = category.color
@@ -78,7 +78,7 @@ private fun SearchTransactionsContent(
                 },
                 selectedIcon = {
                     Icon(
-                        imageVector = Icons.Filled.Done,
+                        imageVector = Icons.Default.Done,
                         contentDescription = null,
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                     )

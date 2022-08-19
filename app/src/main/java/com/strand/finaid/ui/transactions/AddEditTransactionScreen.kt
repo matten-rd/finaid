@@ -141,7 +141,7 @@ private fun AddEditTransactionContent(
             value = category?.name ?: "",
             onClick = showBottomSheet,
             label = stringResource(id = R.string.select_category),
-            leadingIcon = category?.let { { Icon(imageVector = Icons.Filled.Circle, contentDescription = null, tint = it.color) } },
+            leadingIcon = category?.let { { Icon(imageVector = Icons.Default.Circle, contentDescription = null, tint = it.color) } },
             trailingIcon = { Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null) }
         )
         FinaidTextField(

@@ -6,11 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,8 +47,7 @@ fun CategoryBottomSheet(
         onEditCategoryClick = { category ->
             viewModel.setEditCategoryDialog(category)
             scope.launch { bottomSheetState.hide() }
-        },
-        onClose = { scope.launch { bottomSheetState.hide() } }
+        }
     )
 }
 
@@ -65,15 +60,11 @@ private fun CategoryBottomSheetContent(
     onCreateCategoryClick: () -> Unit,
     onDeleteCategoryClick: (CategoryUi) -> Unit,
     onEditCategoryClick: (CategoryUi) -> Unit,
-    onClose: () -> Unit
 ) {
-    BaseBottomSheet(
-        title = stringResource(id = R.string.select_category),
-        onClose = onClose
-    ) {
+    BaseBottomSheet(title = stringResource(id = R.string.select_category)) {
         Column(
             modifier = Modifier
-                .padding(start = 8.dp, end = 8.dp, top = 8.dp)
+                .padding(horizontal = 8.dp)
                 .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -90,14 +81,16 @@ private fun CategoryBottomSheetContent(
                     }
                 else
                     Text(text = "Inga kategorier än!") // TODO: Add image to illustrate empty
-
             }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 8.dp), horizontalArrangement = Arrangement.End) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
                 FilledTonalButton(onClick = onCreateCategoryClick) {
                     Icon(
-                        imageVector = Icons.Rounded.Add,
+                        imageVector = Icons.Default.Add,
                         contentDescription = null,
                         modifier = Modifier.size(ButtonDefaults.IconSize)
                     )
@@ -136,7 +129,7 @@ private fun CategoryItem(
         Row {
             Spacer(modifier = Modifier.width(12.dp))
             Icon(
-                imageVector = Icons.Filled.Circle,
+                imageVector = Icons.Default.Circle,
                 contentDescription = null,
                 tint = category.color
             )
@@ -150,7 +143,7 @@ private fun CategoryItem(
         Box {
             IconButton(onClick = { menuExpanded = true }) {
                 Icon(
-                    Icons.Rounded.MoreVert,
+                    Icons.Default.MoreVert,
                     contentDescription = null,
                     tint = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else LocalContentColor.current
                 )
@@ -165,7 +158,7 @@ private fun CategoryItem(
                         menuExpanded = false
                         onEditCategoryClick(category)
                     },
-                    leadingIcon = { Icon(imageVector = Icons.Rounded.Edit, contentDescription = null) }
+                    leadingIcon = { Icon(imageVector = Icons.Default.Edit, contentDescription = null) }
                 )
                 DropdownMenuItem(
                     text = { Text(text = stringResource(id = R.string.delete)) },
@@ -173,7 +166,7 @@ private fun CategoryItem(
                         menuExpanded = false
                         onDeleteCategoryClick(category)
                     },
-                    leadingIcon = { Icon(imageVector = Icons.Rounded.Delete, contentDescription = null) }
+                    leadingIcon = { Icon(imageVector = Icons.Default.Delete, contentDescription = null) }
                 )
             }
         }

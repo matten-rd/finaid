@@ -4,8 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Logout
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -48,15 +48,15 @@ fun ProfileScreen(
         ) {
             ProfileScreenCard(onClick = { viewModel.setIsThemeSelectionDialogOpen(true) }) {
                 Text(text = stringResource(id = R.string.select_theme), style = MaterialTheme.typography.titleLarge)
-                Icon(imageVector = Icons.Rounded.ChevronRight, contentDescription = null)
+                Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
             }
             ProfileScreenCard(onClick = navigateToTrash) {
                 Text(text = stringResource(id = R.string.screen_trash), style = MaterialTheme.typography.titleLarge)
-                Icon(imageVector = Icons.Rounded.ChevronRight, contentDescription = null)
+                Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
             }
             ProfileScreenCard(onClick = { /*TODO: Change password*/ }) {
                 Text(text = stringResource(id = R.string.change_password), style = MaterialTheme.typography.titleLarge)
-                Icon(imageVector = Icons.Rounded.ChevronRight, contentDescription = null)
+                Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
             }
         }
 
@@ -65,7 +65,7 @@ fun ProfileScreen(
             onClick = { viewModel.onSignOutClick(onSuccess = navigateToLanding) }
         ) {
             Icon(
-                imageVector = Icons.Rounded.Logout,
+                imageVector = Icons.Default.Logout,
                 contentDescription = null,
                 modifier = Modifier.size(ButtonDefaults.IconSize)
             )

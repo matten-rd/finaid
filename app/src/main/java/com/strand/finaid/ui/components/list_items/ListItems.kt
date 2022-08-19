@@ -10,9 +10,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,7 +50,7 @@ fun TransactionItem(
         onStartClick = { /*TODO*/ },
         onEndClick = { onDeleteClick(transaction) },
         hiddenIconEnd = Icons.Default.Delete,
-        hiddenIconStart = Icons.Rounded.ContentCopy,
+        hiddenIconStart = Icons.Default.ContentCopy,
         endBackgroundColor = MaterialTheme.colorScheme.error
     ) {
         BaseItem(
@@ -86,7 +86,7 @@ fun SavingsAccountItem(
         onStartClick = { /*TODO*/ },
         onEndClick = { onDeleteClick(savingsAccount) },
         hiddenIconEnd = Icons.Default.Delete,
-        hiddenIconStart = Icons.Rounded.ContentCopy,
+        hiddenIconStart = Icons.Default.ContentCopy,
         endBackgroundColor = MaterialTheme.colorScheme.error
     ) {
         BaseItem(
@@ -151,7 +151,7 @@ internal fun BaseItem(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = if (multiSelected) Icons.Rounded.Check else icon,
+                            imageVector = if (multiSelected) Icons.Default.Check else icon,
                             contentDescription = null,
                             tint = if (color.luminance() < 0.5) Color.White else Color.Black,
                         )

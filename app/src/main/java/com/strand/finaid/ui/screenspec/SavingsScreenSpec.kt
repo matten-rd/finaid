@@ -8,8 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Wallet
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Wallet
+import androidx.compose.material.icons.outlined.Wallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,7 +28,8 @@ import com.strand.finaid.ui.savings.SavingsScreen
 import kotlinx.coroutines.CoroutineScope
 
 object SavingsScreenSpec : BottomNavScreenSpec {
-    override val icon: ImageVector = Icons.Rounded.Wallet
+    override val icon: ImageVector = Icons.Outlined.Wallet
+    override val selectedIcon: ImageVector = Icons.Default.Wallet
     override val resourceId: Int = R.string.screen_savings
     override val route: String = "main/savings"
 
@@ -69,7 +71,7 @@ object SavingsScreenSpec : BottomNavScreenSpec {
             onClick = { navController.navigate(AddEditSavingsScreenSpec.cleanRoute) },
             containerColor = MaterialTheme.colorScheme.tertiaryContainer
         ) {
-            Icon(imageVector = Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(36.dp))
+            Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(36.dp))
         }
     }
 

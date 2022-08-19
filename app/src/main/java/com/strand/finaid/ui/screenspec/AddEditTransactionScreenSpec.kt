@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -52,13 +52,13 @@ object AddEditTransactionScreenSpec : ScreenSpec {
                     title = { Text(text = stringResource(id = if (viewModel.isEditMode) R.string.edit_transaction else R.string.add_transaction)) },
                     navigationIcon = {
                         IconButton(onClick = { navController.navigateUp() }) {
-                            Icon(imageVector = Icons.Rounded.Close, contentDescription = null)
+                            Icon(imageVector = Icons.Default.Close, contentDescription = null)
                         }
                     },
                     actions = {
                         if (viewModel.isEditMode) {
                             IconButton(onClick = { /*TODO*/ }) {
-                                Icon(imageVector = Icons.Rounded.ContentCopy, contentDescription = null)
+                                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null)
                             }
                             IconButton(onClick = { viewModel.setIsDeleteTransactionDialogOpen(true) }) {
                                 Icon(imageVector = Icons.Default.Delete, contentDescription = null)

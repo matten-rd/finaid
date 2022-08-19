@@ -4,7 +4,7 @@ import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.DateRange
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -32,7 +32,7 @@ fun DateTextField(
         modifier = modifier,
         value = currentDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
         label = stringResource(id = R.string.select_date),
-        leadingIcon = { Icon(imageVector = Icons.Rounded.DateRange, contentDescription = null) }
+        leadingIcon = { Icon(imageVector = Icons.Default.DateRange, contentDescription = null) }
     ) {
         datePicker.show()
     }
@@ -91,13 +91,10 @@ fun TransactionsSortBottomSheet(
     selectedSortOrder: SortOrder,
     onSelectedSortOrder: (Int) -> Unit
 ) {
-    BaseBottomSheet(
-        title = stringResource(id = R.string.sort_by),
-        onClose = onClose
-    ) {
+    BaseBottomSheet(title = stringResource(id = R.string.sort_by)) {
         Column(
             modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                .padding(horizontal = 16.dp)
                 .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {

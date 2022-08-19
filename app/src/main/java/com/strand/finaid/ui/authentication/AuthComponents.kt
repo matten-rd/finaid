@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -115,7 +115,7 @@ fun Password(
         errorMessage = passwordState.getError(),
         trailingIcon = {
             IconButton(onClick = { passwordHidden = !passwordHidden }) {
-                val visibilityIcon = if (passwordHidden) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff
+                val visibilityIcon = if (passwordHidden) Icons.Default.Visibility else Icons.Default.VisibilityOff
                 Icon(imageVector = visibilityIcon, contentDescription = null)
             }
         }

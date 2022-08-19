@@ -3,7 +3,7 @@ package com.strand.finaid.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -46,7 +46,7 @@ internal fun SegmentedButton(
             ) {
                 if (index == selectedIndex) {
                     Icon(
-                        imageVector = Icons.Rounded.Check,
+                        imageVector = Icons.Default.Check,
                         contentDescription = null,
                         modifier = Modifier.size(ButtonDefaults.IconSize)
                     )

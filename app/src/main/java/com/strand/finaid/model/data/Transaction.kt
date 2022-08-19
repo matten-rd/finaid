@@ -2,8 +2,8 @@ package com.strand.finaid.model.data
 
 import android.graphics.Color.parseColor
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AttachMoney
-import androidx.compose.material.icons.rounded.MoneyOff
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.MoneyOff
 import androidx.compose.ui.graphics.Color
 import com.google.firebase.firestore.Exclude
 import com.strand.finaid.NoArg
@@ -28,7 +28,7 @@ data class Transaction(
     fun toTransactionUiState(): TransactionUiState {
         return TransactionUiState(
             id = id,
-            icon = if (amount > 0) Icons.Rounded.AttachMoney else Icons.Rounded.MoneyOff,
+            icon = if (amount > 0) Icons.Default.AttachMoney else Icons.Default.MoneyOff,
             color = Color(parseColor("#${category.hexCode}")),
             amount = amount,
             memo = memo,

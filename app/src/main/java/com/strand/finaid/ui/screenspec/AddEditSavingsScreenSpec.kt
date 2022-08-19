@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -47,7 +47,7 @@ object AddEditSavingsScreenSpec : ScreenSpec {
                     title = { Text(text = stringResource(id = if (viewModel.isEditMode) R.string.edit_savingsaccount else R.string.add_savingsaccount)) },
                     navigationIcon = {
                         IconButton(onClick = { navController.navigateUp() }) {
-                            Icon(imageVector = Icons.Rounded.Close, contentDescription = null)
+                            Icon(imageVector = Icons.Default.Close, contentDescription = null)
                         }
                     },
                     actions = {

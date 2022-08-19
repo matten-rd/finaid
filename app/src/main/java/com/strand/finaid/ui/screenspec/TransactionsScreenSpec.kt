@@ -8,8 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.CurrencyExchange
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.outlined.CurrencyExchange
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -32,7 +33,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 object TransactionsScreenSpec : BottomNavScreenSpec {
-    override val icon: ImageVector = Icons.Rounded.CurrencyExchange
+    override val icon: ImageVector = Icons.Outlined.CurrencyExchange
+    override val selectedIcon: ImageVector = Icons.Default.CurrencyExchange
     override val resourceId: Int = R.string.screen_transactions
     override val route: String = "main/transactions"
 
@@ -77,7 +79,7 @@ object TransactionsScreenSpec : BottomNavScreenSpec {
             onClick = { navController.navigate(AddEditTransactionScreenSpec.cleanRoute) },
             containerColor = MaterialTheme.colorScheme.tertiaryContainer
         ) {
-            Icon(imageVector = Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(36.dp))
+            Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(36.dp))
         }
     }
 

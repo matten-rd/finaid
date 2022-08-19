@@ -29,10 +29,11 @@ fun FinaidBottomNavigation(
         Column {
             NavigationBar {
                 BottomNavScreenSpec.bottomNavItems.forEach { screen ->
+                    val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
                     NavigationBarItem(
-                        icon = { Icon(imageVector = screen.icon, contentDescription = null) },
+                        icon = { Icon(imageVector = if (selected) screen.selectedIcon else screen.icon, contentDescription = null) },
                         label = { Text(text = stringResource(id = screen.resourceId)) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                        selected = selected,
                         onClick = {
                             navController.navigate(screen.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {

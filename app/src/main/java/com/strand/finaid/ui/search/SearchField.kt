@@ -6,7 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -57,7 +57,7 @@ fun SearchFieldDecorationBox(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onNavigateUp) {
-            Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = null)
+            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
         }
         Box(
             modifier = Modifier.weight(1f),

@@ -8,7 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.rounded.Sort
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -123,7 +123,7 @@ private fun FilterRow(
         item { Spacer(modifier = Modifier.width(0.dp)) }
         item {
             IconButton(onClick = openSortSheet) {
-                Icon(imageVector = Icons.Rounded.Sort, contentDescription = null)
+                Icon(imageVector = Icons.Default.Sort, contentDescription = null)
             }
         }
         items(categories, key = { it.id }) { category ->
@@ -134,7 +134,7 @@ private fun FilterRow(
                 label = { Text(text = category.name) },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Filled.Circle,
+                        imageVector = Icons.Default.Circle,
                         contentDescription = null,
                         modifier = Modifier.size(FilterChipDefaults.IconSize),
                         tint = category.color
@@ -142,7 +142,7 @@ private fun FilterRow(
                 },
                 selectedIcon = {
                     Icon(
-                        imageVector = Icons.Filled.Done,
+                        imageVector = Icons.Default.Done,
                         contentDescription = null,
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                     )

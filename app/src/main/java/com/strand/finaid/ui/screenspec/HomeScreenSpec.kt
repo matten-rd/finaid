@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
@@ -26,7 +27,8 @@ import com.strand.finaid.ui.navigation.materialFadeThroughOut
 import kotlinx.coroutines.CoroutineScope
 
 object HomeScreenSpec : BottomNavScreenSpec {
-    override val icon: ImageVector = Icons.Rounded.Home
+    override val icon: ImageVector = Icons.Outlined.Home
+    override val selectedIcon: ImageVector = Icons.Default.Home
     override val resourceId: Int = R.string.screen_home
     override val route: String = "main/home"
 

@@ -1,7 +1,7 @@
 package com.strand.finaid.ui.savings
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Wallet
+import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 data class SavingsAccountUiState(
     val id: String,
-    val icon: ImageVector = Icons.Rounded.Wallet,
+    val icon: ImageVector = Icons.Default.Wallet,
     val color: Color,
     val amount: Int,
     val name: String,
