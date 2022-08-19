@@ -18,10 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import com.strand.finaid.R
 import com.strand.finaid.model.Result
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
@@ -154,11 +156,11 @@ fun SavingsTrashScreen(
         uiState.selectedSavingsAccount?.let { savingsAccount ->
             AlertDialog(
                 onDismissRequest = { setIsSavingsAccountRestoreDialogOpen(false) },
-                title = { Text(text = "Återskapa sparkontot?") },
-                text = { Text(text = "Att återskapa sparkontot gör det tillgängligt igen.") },
+                title = { Text(text = stringResource(id = R.string.restore_savingsaccount)) },
+                text = { Text(text = stringResource(id = R.string.savingsaccount_is_restored)) },
                 dismissButton = {
                     TextButton(onClick = { setIsSavingsAccountRestoreDialogOpen(false)}) {
-                        Text(text = "Avbryt")
+                        Text(text = stringResource(id = R.string.cancel))
                     }
                 },
                 confirmButton = {
@@ -167,7 +169,7 @@ fun SavingsTrashScreen(
                             onRestoreClick(savingsAccount)
                             setIsSavingsAccountRestoreDialogOpen(false)
                         }
-                    ) { Text(text = "Återskapa") }
+                    ) { Text(text = stringResource(id = R.string.restore)) }
                 }
             )
         }
@@ -177,11 +179,11 @@ fun SavingsTrashScreen(
         uiState.selectedSavingsAccount?.let { savingsAccount ->
             AlertDialog(
                 onDismissRequest = { setIsSavingsAccountDeleteDialogOpen(false) },
-                title = { Text(text = "Är du säker?") },
-                text = { Text(text = "Sparkontot raderas permanent.") },
+                title = { Text(text = stringResource(id = R.string.delete_savingsaccount)) },
+                text = { Text(text = stringResource(id = R.string.savingsaccount_will_be_permanently_deleted)) },
                 dismissButton = {
                     TextButton(onClick = { setIsSavingsAccountDeleteDialogOpen(false)}) {
-                        Text(text = "Avbryt")
+                        Text(text = stringResource(id = R.string.cancel))
                     }
                 },
                 confirmButton = {
@@ -190,7 +192,7 @@ fun SavingsTrashScreen(
                             onPermanentlyDeleteClick(savingsAccount)
                             setIsSavingsAccountDeleteDialogOpen(false)
                         }
-                    ) { Text(text = "Radera") }
+                    ) { Text(text = stringResource(id = R.string.delete)) }
                 }
             )
         }
@@ -243,11 +245,11 @@ fun TransactionsTrashScreen(
         uiState.selectedTransaction?.let { transaction ->
             AlertDialog(
                 onDismissRequest = { setIsTransactionRestoreDialogOpen(false) },
-                title = { Text(text = "Återskapa transaktionen?") },
-                text = { Text(text = "Att återskapa transaktionen gör den tillgänglig igen.") },
+                title = { Text(text = stringResource(id = R.string.restore_transaction)) },
+                text = { Text(text = stringResource(id = R.string.transaction_is_restored)) },
                 dismissButton = {
                     TextButton(onClick = { setIsTransactionRestoreDialogOpen(false)}) {
-                        Text(text = "Avbryt")
+                        Text(text = stringResource(id = R.string.cancel))
                     }
                 },
                 confirmButton = {
@@ -256,7 +258,7 @@ fun TransactionsTrashScreen(
                             onRestoreClick(transaction)
                             setIsTransactionRestoreDialogOpen(false)
                         }
-                    ) { Text(text = "Återskapa") }
+                    ) { Text(text = stringResource(id = R.string.restore)) }
                 }
             )
         }
@@ -266,11 +268,11 @@ fun TransactionsTrashScreen(
         uiState.selectedTransaction?.let { transaction ->
             AlertDialog(
                 onDismissRequest = { setIsTransactionDeleteDialogOpen(false) },
-                title = { Text(text = "Är du säker?") },
-                text = { Text(text = "Transaktionen raderas permanent.") },
+                title = { Text(text = stringResource(id = R.string.delete_transaction)) },
+                text = { Text(text = stringResource(id = R.string.transaction_will_be_permanently_deleted)) },
                 dismissButton = {
                     TextButton(onClick = { setIsTransactionDeleteDialogOpen(false)}) {
-                        Text(text = "Avbryt")
+                        Text(text = stringResource(id = R.string.cancel))
                     }
                 },
                 confirmButton = {
@@ -279,7 +281,7 @@ fun TransactionsTrashScreen(
                             onPermanentlyDeleteClick(transaction)
                             setIsTransactionDeleteDialogOpen(false)
                         }
-                    ) { Text(text = "Radera") }
+                    ) { Text(text = stringResource(id = R.string.delete)) }
                 }
             )
         }
@@ -319,11 +321,11 @@ fun CategoryTrashScreen(
         uiState.selectedCategory?.let { category ->
             AlertDialog(
                 onDismissRequest = { setIsCategoryRestoreDialogOpen(false) },
-                title = { Text(text = "Återskapa kategorin?") },
-                text = { Text(text = "Att återskapa kategorin gör den tillgänglig igen.") },
+                title = { Text(text = stringResource(id = R.string.restore_category)) },
+                text = { Text(text = stringResource(id = R.string.category_is_restored)) },
                 dismissButton = {
                     TextButton(onClick = { setIsCategoryRestoreDialogOpen(false)}) {
-                        Text(text = "Avbryt")
+                        Text(text = stringResource(id = R.string.cancel))
                     }
                 },
                 confirmButton = {
@@ -332,7 +334,7 @@ fun CategoryTrashScreen(
                             onRestoreClick(category)
                             setIsCategoryRestoreDialogOpen(false)
                         }
-                    ) { Text(text = "Återskapa") }
+                    ) { Text(text = stringResource(id = R.string.restore)) }
                 }
             )
         }
@@ -342,11 +344,11 @@ fun CategoryTrashScreen(
         uiState.selectedCategory?.let { category ->
             AlertDialog(
                 onDismissRequest = { setIsCategoryDeleteDialogOpen(false) },
-                title = { Text(text = "Radera kategorin?") },
-                text = { Text(text = "Kategorin raderas permanent.") },
+                title = { Text(text = stringResource(id = R.string.delete_category)) },
+                text = { Text(text = stringResource(id = R.string.category_will_be_permanently_deleted)) },
                 dismissButton = {
                     TextButton(onClick = { setIsCategoryDeleteDialogOpen(false)}) {
-                        Text(text = "Avbryt")
+                        Text(text = stringResource(id = R.string.cancel))
                     }
                 },
                 confirmButton = {
@@ -355,7 +357,7 @@ fun CategoryTrashScreen(
                             onPermanentlyDeleteClick(category)
                             setIsCategoryDeleteDialogOpen(false)
                         }
-                    ) { Text(text = "Radera") }
+                    ) { Text(text = stringResource(id = R.string.delete)) }
                 }
             )
         }
@@ -398,7 +400,7 @@ private fun TrashCategoryItem(
                 onDismissRequest = { menuExpanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Återskapa") },
+                    text = { Text(text = stringResource(id = R.string.restore)) },
                     onClick = {
                         openRestoreDialog()
                         menuExpanded = false
@@ -411,7 +413,7 @@ private fun TrashCategoryItem(
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("Ta bort") },
+                    text = { Text(text = stringResource(id = R.string.delete)) },
                     onClick = {
                         openDeleteDialog()
                         menuExpanded = false

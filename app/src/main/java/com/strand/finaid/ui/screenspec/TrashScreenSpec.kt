@@ -8,9 +8,11 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import com.strand.finaid.R
 import com.strand.finaid.topBarPadding
 import com.strand.finaid.ui.trash.TrashBottomSheet
 import com.strand.finaid.ui.trash.TrashScreen
@@ -34,7 +36,7 @@ object TrashScreenSpec : ScreenSpec {
             topBar = {
                 SmallTopAppBar(
                     modifier = Modifier.topBarPadding(),
-                    title = { Text("Papperskorgen") },
+                    title = { Text(stringResource(id = R.string.screen_trash)) },
                     navigationIcon = {
                         IconButton(onClick = { navController.navigateUp() }) {
                             Icon(imageVector = Icons.Rounded.ArrowBack, contentDescription = null)

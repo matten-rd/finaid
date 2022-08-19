@@ -32,7 +32,7 @@ fun FinaidLogin(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Email(emailState = viewModel.emailState)
-            Password(passwordState = viewModel.passwordState, label = "Lösenord")
+            Password(passwordState = viewModel.passwordState, label = stringResource(id = R.string.password))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

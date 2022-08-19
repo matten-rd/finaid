@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.strand.finaid.R
 import com.strand.finaid.preferences.rememberThemePreference
 import com.strand.finaid.ui.theme.AppTheme
 
@@ -41,20 +43,19 @@ fun ProfileScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             ProfileScreenCard(onClick = { viewModel.setIsThemeSelectionDialogOpen(true) }) {
-                Text(text = "Välj tema", style = MaterialTheme.typography.titleLarge)
+                Text(text = stringResource(id = R.string.select_theme), style = MaterialTheme.typography.titleLarge)
                 Icon(imageVector = Icons.Rounded.ChevronRight, contentDescription = null)
             }
             ProfileScreenCard(onClick = navigateToTrash) {
-                Text(text = "Papperskorgen", style = MaterialTheme.typography.titleLarge)
+                Text(text = stringResource(id = R.string.screen_trash), style = MaterialTheme.typography.titleLarge)
                 Icon(imageVector = Icons.Rounded.ChevronRight, contentDescription = null)
             }
             ProfileScreenCard(onClick = { /*TODO: Change password*/ }) {
-                Text(text = "Byt lösenord", style = MaterialTheme.typography.titleLarge)
+                Text(text = stringResource(id = R.string.change_password), style = MaterialTheme.typography.titleLarge)
                 Icon(imageVector = Icons.Rounded.ChevronRight, contentDescription = null)
             }
         }
@@ -69,7 +70,7 @@ fun ProfileScreen(
                 modifier = Modifier.size(ButtonDefaults.IconSize)
             )
             Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-            Text(text = "Logga ut")
+            Text(text = stringResource(id = R.string.sign_out))
         }
     }
 }
@@ -108,13 +109,13 @@ private fun ThemeSelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Välj tema") },
+        title = { Text(text = stringResource(id = R.string.select_theme)) },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(text = "Avbryt") }
+            TextButton(onClick = onDismiss) { Text(text = stringResource(id = R.string.cancel)) }
         },
         confirmButton = {
             FilledTonalButton(onClick = { onConfirmed(selectedOption) }) {
-                Text(text = "Spara")
+                Text(text = stringResource(id = R.string.save))
             }
         },
         text = {

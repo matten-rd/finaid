@@ -33,11 +33,11 @@ fun AddEditSavingsScreen(
     if (viewModel.isDeleteSavingsAccountDialogOpen) {
         AlertDialog(
             onDismissRequest = { viewModel.setIsDeleteSavingsAccountDialogOpen(false) },
-            title = { Text(text = "Radera sparkontot?") },
-            text = { Text(text = "Att radera det här sparkontot tar bort det permanent.") },
+            title = { Text(text = stringResource(id = R.string.delete_savingsaccount)) },
+            text = { Text(text = stringResource(id = R.string.savingsaccount_will_be_moved_to_trash)) },
             dismissButton = {
                 TextButton(onClick = { viewModel.setIsDeleteSavingsAccountDialogOpen(false) }) {
-                    Text(text = "Avbryt")
+                    Text(text = stringResource(id = R.string.cancel))
                 }
             },
             confirmButton = {
@@ -47,7 +47,7 @@ fun AddEditSavingsScreen(
                         viewModel.setIsDeleteSavingsAccountDialogOpen(false)
                         navigateUp()
                     }
-                ) { Text(text = "Radera") }
+                ) { Text(text = stringResource(id = R.string.delete)) }
             }
         )
     }
@@ -62,26 +62,26 @@ fun AddEditSavingsScreen(
             modifier = Modifier.fillMaxWidth(),
             value = uiState.name,
             onValueChange = viewModel::onNameChange,
-            label = "Kontonamn",
+            label = stringResource(id = R.string.account_name),
             imeAction = ImeAction.Next
         )
         FinaidTextField(
             modifier = Modifier.fillMaxWidth(),
             value = uiState.bank,
             onValueChange = viewModel::onBankChange,
-            label = "Bank",
+            label = stringResource(id = R.string.bank),
             imeAction = ImeAction.Next
         )
         FinaidTextField(
             modifier = Modifier.fillMaxWidth(),
             value = uiState.amount,
             onValueChange = viewModel::onAmountChange,
-            label = "Pengar på kontot",
+            label = stringResource(id = R.string.money_in_account),
             keyboardType = KeyboardType.Number
         )
         Card(shape = RoundedCornerShape(8.dp)) {
             Column(Modifier.padding(12.dp)) {
-                Text(text = "Välj färg", style = MaterialTheme.typography.labelLarge)
+                Text(text = stringResource(id = R.string.select_color), style = MaterialTheme.typography.bodySmall)
                 Spacer(modifier = Modifier.height(8.dp))
                 ColorPicker(
                     modifier = Modifier.fillMaxWidth(),

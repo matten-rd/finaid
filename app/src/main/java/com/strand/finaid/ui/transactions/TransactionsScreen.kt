@@ -12,8 +12,10 @@ import androidx.compose.material.icons.rounded.Sort
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.strand.finaid.R
 import com.strand.finaid.model.Result
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
@@ -58,11 +60,11 @@ fun TransactionsScreen(
         selectedTransaction.value?.let { transaction ->
             AlertDialog(
                 onDismissRequest = { openDialog.value = false },
-                title = { Text(text = "Radera transaktionen?") },
-                text = { Text(text = "Att radera den här transaktionen tar bort den permanent.") },
+                title = { Text(text = stringResource(id = R.string.delete_transaction)) },
+                text = { Text(text = stringResource(id = R.string.transaction_will_be_moved_to_trash)) },
                 dismissButton = {
                     TextButton(onClick = { openDialog.value = false }) {
-                        Text(text = "Avbryt")
+                        Text(text = stringResource(id = R.string.cancel))
                     }
                 },
                 confirmButton = {
@@ -71,7 +73,7 @@ fun TransactionsScreen(
                             viewModel.onDeleteTransactionClick(transaction)
                             openDialog.value = false
                         }
-                    ) { Text(text = "Radera") }
+                    ) { Text(text = stringResource(id = R.string.delete)) }
                 }
             )
         }

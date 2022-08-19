@@ -29,8 +29,8 @@ fun FinaidSignUp(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Email(emailState = viewModel.emailState)
-            Password(passwordState = viewModel.passwordState, label = "Lösenord")
-            Password(passwordState = viewModel.confirmPasswordState, label = "Bekräfta lösenord")
+            Password(passwordState = viewModel.passwordState, label = stringResource(id = R.string.password))
+            Password(passwordState = viewModel.confirmPasswordState, label = stringResource(id = R.string.confirm_password))
 
             Button(
                 modifier = Modifier.fillMaxWidth(),

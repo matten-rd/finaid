@@ -7,8 +7,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.strand.finaid.R
 import com.strand.finaid.model.Result
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
@@ -53,11 +55,11 @@ fun SavingsScreen(
         selectedSavingsAccount.value?.let { savingsAccount ->
             AlertDialog(
                 onDismissRequest = { openDialog.value = false },
-                title = { Text(text = "Radera sparkontot?") },
-                text = { Text(text = "Att radera det här sparkontot tar bort det permanent.") },
+                title = { Text(text = stringResource(id = R.string.delete_savingsaccount)) },
+                text = { Text(text = stringResource(id = R.string.savingsaccount_will_be_moved_to_trash)) },
                 dismissButton = {
                     TextButton(onClick = { openDialog.value = false }) {
-                        Text(text = "Avbryt")
+                        Text(text = stringResource(id = R.string.cancel))
                     }
                 },
                 confirmButton = {
@@ -66,7 +68,7 @@ fun SavingsScreen(
                             viewModel.onDeleteSavingsAccountClick(savingsAccount)
                             openDialog.value = false
                         }
-                    ) { Text(text = "Radera") }
+                    ) { Text(text = stringResource(id = R.string.delete)) }
                 }
             )
         }

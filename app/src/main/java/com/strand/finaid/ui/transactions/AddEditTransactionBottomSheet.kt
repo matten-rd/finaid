@@ -16,7 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.strand.finaid.R
 import com.strand.finaid.ui.components.BaseBottomSheet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -66,11 +68,13 @@ private fun CategoryBottomSheetContent(
     onClose: () -> Unit
 ) {
     BaseBottomSheet(
-        title = "Välj kategori",
+        title = stringResource(id = R.string.select_category),
         onClose = onClose
     ) {
         Column(
-            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp).navigationBarsPadding(),
+            modifier = Modifier
+                .padding(start = 8.dp, end = 8.dp, top = 8.dp)
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -98,7 +102,7 @@ private fun CategoryBottomSheetContent(
                         modifier = Modifier.size(ButtonDefaults.IconSize)
                     )
                     Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(text = "Lägg till ny kategori")
+                    Text(text = stringResource(id = R.string.add_category))
                 }
             }
         }
@@ -156,7 +160,7 @@ private fun CategoryItem(
                 onDismissRequest = { menuExpanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Redigera") },
+                    text = { Text(text = stringResource(id = R.string.edit)) },
                     onClick = {
                         menuExpanded = false
                         onEditCategoryClick(category)
@@ -164,7 +168,7 @@ private fun CategoryItem(
                     leadingIcon = { Icon(imageVector = Icons.Rounded.Edit, contentDescription = null) }
                 )
                 DropdownMenuItem(
-                    text = { Text("Ta bort") },
+                    text = { Text(text = stringResource(id = R.string.delete)) },
                     onClick = {
                         menuExpanded = false
                         onDeleteCategoryClick(category)

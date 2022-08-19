@@ -12,11 +12,13 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.navArgument
+import com.strand.finaid.R
 import com.strand.finaid.topBarPadding
 import com.strand.finaid.ui.navigation.materialSharedAxisZIn
 import com.strand.finaid.ui.navigation.materialSharedAxisZOut
@@ -42,7 +44,7 @@ object AddEditSavingsScreenSpec : ScreenSpec {
             topBar = {
                 SmallTopAppBar(
                     modifier = Modifier.topBarPadding(),
-                    title = { Text(text = if (viewModel.isEditMode) "Redigera sparkonto" else "Lägg till sparkonto") },
+                    title = { Text(text = stringResource(id = if (viewModel.isEditMode) R.string.edit_savingsaccount else R.string.add_savingsaccount)) },
                     navigationIcon = {
                         IconButton(onClick = { navController.navigateUp() }) {
                             Icon(imageVector = Icons.Rounded.Close, contentDescription = null)

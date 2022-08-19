@@ -31,7 +31,7 @@ fun DateTextField(
     ReadonlyTextField(
         modifier = modifier,
         value = currentDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-        label = "Välj datum",
+        label = stringResource(id = R.string.select_date),
         leadingIcon = { Icon(imageVector = Icons.Rounded.DateRange, contentDescription = null) }
     ) {
         datePicker.show()
@@ -92,11 +92,13 @@ fun TransactionsSortBottomSheet(
     onSelectedSortOrder: (Int) -> Unit
 ) {
     BaseBottomSheet(
-        title = "Sortera efter",
+        title = stringResource(id = R.string.sort_by),
         onClose = onClose
     ) {
         Column(
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).navigationBarsPadding(),
+            modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             SegmentedButton(

@@ -8,8 +8,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.strand.finaid.R
 import com.strand.finaid.ext.formatAmount
 import com.strand.finaid.ui.components.list_items.HomeScreenSavingsAccountItem
 import com.strand.finaid.ui.components.list_items.HomeScreenTransactionItem
@@ -33,7 +35,7 @@ fun HomeScreen(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
         HomeScreenCard(
-            header = "Ditt sparande",
+            header = stringResource(id = R.string.your_savings),
             amount = 123456,
             onShowMoreClick = onNavigateToSavings
         ) {
@@ -43,7 +45,7 @@ fun HomeScreen(
         }
 
         HomeScreenCard(
-            header = "Totalt netto",
+            header = stringResource(id = R.string.total_net),
             amount = 12345,
             onShowMoreClick = onNavigateToTransactions
         ) {
@@ -97,7 +99,7 @@ private fun HomeScreenCard(
                 horizontalArrangement = Arrangement.End
             ) {
                 OutlinedButton(onClick = onShowMoreClick) {
-                    Text(text = "Visa mer")
+                    Text(text = stringResource(id = R.string.show_more))
                 }
             }
         }

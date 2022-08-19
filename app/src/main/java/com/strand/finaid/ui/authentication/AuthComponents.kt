@@ -21,6 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.firebase.auth.GoogleAuthProvider
+import com.strand.finaid.R
 import com.strand.finaid.ui.components.textfield.FinaidTextField
 import com.strand.finaid.ui.components.textfield.TextFieldState
 
@@ -59,13 +61,13 @@ fun AuthProviders(
             modifier = Modifier.fillMaxWidth(),
             onClick = { viewModel.onOneTapSignInWithGoogleClick(onSuccess = { launch(it) }) }
         ) {
-            Text(text = "Fortsätt med Google")
+            Text(text = stringResource(id = R.string.continue_with_google))
         }
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(),
             onClick = { /*TODO*/ }
         ) {
-            Text(text = "Fortsätt som gäst")
+            Text(text = stringResource(id = R.string.continue_as_guest))
         }
     }
 }

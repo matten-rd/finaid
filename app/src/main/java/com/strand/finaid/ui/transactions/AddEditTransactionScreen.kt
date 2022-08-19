@@ -55,16 +55,16 @@ fun AddEditTransactionScreen(
         deleteCategoryDialogUiState.category?.let { category ->
             AlertDialog(
                 onDismissRequest = { viewModel.setConfirmDeleteCategoryAlertDialogUiState(false) },
-                title = { Text(text = "Flytta kategorin till papperskorgen?") },
-                text = { Text(text = "Kategorin flyttas till papperskorgen. Det är möjligt att återskapa den senare.") },
+                title = { Text(text = stringResource(id = R.string.delete_category)) },
+                text = { Text(text = stringResource(id = R.string.category_will_be_moved_to_trash)) },
                 dismissButton = {
                     TextButton(onClick = { viewModel.setConfirmDeleteCategoryAlertDialogUiState(false) }) {
-                        Text(text = "Avbryt")
+                        Text(text = stringResource(id = R.string.cancel))
                     }
                 },
                 confirmButton = {
                     FilledTonalButton(onClick = { viewModel.moveTransactionCategoryToTrash(category) }) {
-                        Text(text = "Radera")
+                        Text(text = stringResource(id = R.string.delete))
                     }
                 }
             )
@@ -74,11 +74,11 @@ fun AddEditTransactionScreen(
     if (viewModel.isDeleteTransactionDialogOpen) {
         AlertDialog(
             onDismissRequest = { viewModel.setIsDeleteTransactionDialogOpen(false) },
-            title = { Text(text = "Radera transaktionen?") },
-            text = { Text(text = "Att radera den här transaktionen tar bort den permanent.") },
+            title = { Text(text = stringResource(id = R.string.delete_transaction)) },
+            text = { Text(text = stringResource(id = R.string.transaction_will_be_moved_to_trash)) },
             dismissButton = {
                 TextButton(onClick = { viewModel.setIsDeleteTransactionDialogOpen(false) }) {
-                    Text(text = "Avbryt")
+                    Text(text = stringResource(id = R.string.cancel))
                 }
             },
             confirmButton = {
@@ -88,7 +88,7 @@ fun AddEditTransactionScreen(
                         viewModel.setIsDeleteTransactionDialogOpen(false)
                         navigateUp()
                     }
-                ) { Text(text = "Radera") }
+                ) { Text(text = stringResource(id = R.string.delete)) }
             }
         )
     }
@@ -115,7 +115,7 @@ fun AddEditTransactionScreen(
             onMemoChange = viewModel::onMemoChange,
             onAmountChange = viewModel::onAmountChange,
             onDateChange = viewModel::onDateChange,
-            amountLabel = if (transactionType == TransactionType.Expense) "Utgift" else "Inkomst",
+            amountLabel = stringResource(id = if (transactionType == TransactionType.Expense) R.string.expense else R.string.income),
             showBottomSheet = openSheet,
             onSaveClick = { viewModel.saveTransaction(navigateUp) }
         )
@@ -140,7 +140,7 @@ private fun AddEditTransactionContent(
             modifier = Modifier.fillMaxWidth(),
             value = category?.name ?: "",
             onClick = showBottomSheet,
-            label = "Välj kategori",
+            label = stringResource(id = R.string.select_category),
             leadingIcon = category?.let { { Icon(imageVector = Icons.Filled.Circle, contentDescription = null, tint = it.color) } },
             trailingIcon = { Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null) }
         )
@@ -156,7 +156,7 @@ private fun AddEditTransactionContent(
             modifier = Modifier.fillMaxWidth(),
             value = memo,
             onValueChange = onMemoChange,
-            label = "Kommentar"
+            label = stringResource(id = R.string.memo)
         )
         DateTextField(
             modifier = Modifier.fillMaxWidth(),
@@ -186,19 +186,19 @@ private fun AddEditCategoryDialog(
             FilledTonalButton(
                 onClick = addTransactionCategory,
                 enabled = remember(uiState) { uiState.name.isNotBlank() && uiState.color != null }
-            ) { Text(text = "Spara") }
+            ) { Text(text = stringResource(id = R.string.save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(text = "Avbryt") }
+            TextButton(onClick = onDismiss) { Text(text = stringResource(id = R.string.cancel)) }
         },
-        title = { Text(text = if (uiState.isEdit) "Redigera kategori" else "Lägg till kategori") },
+        title = { Text(text = stringResource(id = if (uiState.isEdit) R.string.edit_category else R.string.add_category)) },
         text = {
             Column {
                 FinaidTextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = uiState.name,
                     onValueChange = onCategoryNameChange,
-                    label = "Kategori"
+                    label = stringResource(id = R.string.category)
                 )
 
                 ColorPicker(
@@ -210,7 +210,7 @@ private fun AddEditCategoryDialog(
                 )
 
                 Text(
-                    text = "Varning: Färgen redan vald i en annan kategori.",
+                    text = stringResource(id = R.string.warning_color_already_selected),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier

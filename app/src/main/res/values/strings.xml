@@ -8,6 +8,7 @@
     <string name="screen_profile">Profil</string>
     <string name="screen_search">Sök</string>
     <string name="landing">Håll koll på din ekonomi</string>
+    <string name="screen_trash">Papperskorgen</string>
 
     <string name="generic_error">Något gick fel. Försök igen.</string>
     <string name="form_error">Fyll i alla fält först.</string>
@@ -15,24 +16,76 @@
     <string name="password_match_error">Lösenorden måste matcha.</string>
 
     <string name="sign_in">Logga in</string>
+    <string name="sign_out">Logga ut</string>
     <string name="create_account">Skapa konto</string>
+    <string name="password">Lösenord</string>
+    <string name="confirm_password">Bekräfta lösenord</string>
     <string name="forgot_password">Glömt lösenord?</string>
+    <string name="change_password">Byt lösenord</string>
     <string name="no_account_yet">Inget konto?</string>
     <string name="already_have_account">Har du redan ett konto?</string>
     <string name="recovery_email_sent">Återställningsmail skickat till din email.</string>
+    <string name="continue_with_google">Fortsätt med Google</string>
+    <string name="continue_as_guest">Fortsätt som gäst</string>
+
+    <string name="expense">Utgift</string>
+    <string name="income">Inkomst</string>
+    <string name="your_savings">Ditt sparande</string>
+    <string name="total_net">Totalt netto</string>
+
+    <string name="memo">Kommentar</string>
+    <string name="category">Kategori</string>
+    <string name="account_name">Kontonamn</string>
+    <string name="bank">Bank</string>
+    <string name="money_in_account">Pengar på kontot</string>
 
     <string name="save">Spara</string>
+    <string name="restore">Återställ</string>
+    <string name="delete_permanently">Ta bort permanent</string>
+    <string name="delete">Ta bort</string>
+    <string name="cancel">Avbryt</string>
+    <string name="edit">Redigera</string>
+    <string name="search">Sök…</string>
+    <string name="show_more">Visa mer</string>
 
+    <string name="add_transaction">Lägg till transaktion</string>
+    <string name="edit_transaction">Redigera transaktion</string>
+    <string name="delete_transaction">Ta bort transaktionen?</string>
+    <string name="transaction_will_be_moved_to_trash">Transaktionen flyttas till papperskorgen. Det är möjligt att återställa den senare.</string>
+    <string name="transaction_will_be_permanently_deleted">Transaktionen tas bort permanent.</string>
+    <string name="restore_transaction">Återställ transaktionen?</string>
+    <string name="transaction_is_restored">Att återställa transaktionen gör den tillgänglig igen.</string>
     <string name="transaction_removed">Transaktionen flyttades till papperskorgen.</string>
     <string name="transaction_permanently_deleted">Transaktionen togs bort permanent.</string>
-    <string name="transaction_restored">Transaktionen återskapdes.</string>
+    <string name="transaction_restored">Transaktionen återställdes.</string>
 
-    <string name="category_saved">Kategori sparad.</string>
+    <string name="add_category">Lägg till kategori</string>
+    <string name="edit_category">Redigera kategori</string>
+    <string name="delete_category">Ta bort kategorin?</string>
+    <string name="category_will_be_moved_to_trash">Kategorin flyttas till papperskorgen. Det är möjligt att återställa den senare.</string>
+    <string name="category_will_be_permanently_deleted">Kategorin tas bort permanent.</string>
+    <string name="restore_category">Återställ kategorin?</string>
+    <string name="category_is_restored">Att återställa kategorin gör den tillgänglig igen.</string>
     <string name="category_removed">Kategorin flyttades till papperskorgen.</string>
     <string name="category_permanently_deleted">Kategorin togs bort permanent.</string>
-    <string name="category_restored">Kategorin återskapades.</string>
+    <string name="category_restored">Kategorin återställdes.</string>
+    <string name="category_saved">Kategori sparad.</string>
 
-    <string name="savingsaccount_permanently_deleted">Sparkontot togs bort permanent.</string>
+    <string name="add_savingsaccount">Lägg till sparkonto</string>
+    <string name="edit_savingsaccount">Redigera sparkonto</string>
+    <string name="delete_savingsaccount">Ta bort sparkontot?</string>
+    <string name="savingsaccount_will_be_moved_to_trash">Sparkontot flyttas till papperskorgen. Det är möjligt att återställa det senare.</string>
+    <string name="savingsaccount_will_be_permanently_deleted">Sparkontot tas bort permanent.</string>
+    <string name="restore_savingsaccount">Återställ sparkontot?</string>
+    <string name="savingsaccount_is_restored">Att återställa sparkontot gör det tillgängligt igen.</string>
     <string name="savingsaccount_removed">Sparkontot flyttades till papperskorgen.</string>
-    <string name="savingsaccount_restored">Sparkontot återskapades.</string>
+    <string name="savingsaccount_permanently_deleted">Sparkontot togs bort permanent.</string>
+    <string name="savingsaccount_restored">Sparkontot återställdes.</string>
+
+    <string name="sort_by">Sortera efter</string>
+    <string name="select_date">Välj datum</string>
+    <string name="select_category">Välj kategori</string>
+    <string name="select_theme">Välj tema</string>
+    <string name="select_color">Välj färg</string>
+    <string name="warning_color_already_selected">Varning: Färgen redan vald i en annan kategori.</string>
 </resources>
