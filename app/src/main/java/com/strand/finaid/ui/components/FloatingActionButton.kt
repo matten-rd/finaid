@@ -13,25 +13,23 @@ import com.strand.finaid.ui.screenspec.BottomNavScreenSpec
 
 @Composable
 fun FinaidFAB(
-    currentDestination: NavDestination?,
-    navController: NavController
+    navController: NavController,
+    currentDestination: NavDestination?
 ) {
-    if (currentDestination?.route in BottomNavScreenSpec.bottomNavItems.map { it.route }) {
-        if (currentDestination != null) {
-            val visible = remember(currentDestination.route) {
-                MutableTransitionState(false)
-                    .apply { targetState = true }
-            }
-            val transition = updateTransition(transitionState = visible, label = "")
-            transition.AnimatedVisibility(
-                visible = { state -> state },
-                enter = scaleIn(),
-                exit = scaleOut()
-            ) {
-                BottomNavScreenSpec.bottomNavItems
-                    .first { it.route == currentDestination.route }
-                    .Fab(navController = navController)
-            }
+    if (currentDestination != null) {
+        val visible = remember(currentDestination.route) {
+            MutableTransitionState(false)
+                .apply { targetState = true }
+        }
+        val transition = updateTransition(transitionState = visible, label = "")
+        transition.AnimatedVisibility(
+            visible = { state -> state },
+            enter = scaleIn(),
+            exit = scaleOut()
+        ) {
+            BottomNavScreenSpec.bottomNavItems
+                .first { it.route == currentDestination.route }
+                .Fab(navController = navController)
         }
     }
 }

@@ -9,8 +9,12 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.strand.finaid.ui.screenspec.BottomNavScreenSpec
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.snackbar.SnackbarMessage.Companion.toMessage
 import kotlinx.coroutines.CoroutineScope
@@ -43,6 +47,15 @@ class FinaidAppState(
             }
         }
     }
+
+    val navBackStackEntry: State<NavBackStackEntry?>
+        @Composable get() = navController.currentBackStackEntryAsState()
+
+    val currentDestination: NavDestination?
+        @Composable get() = navBackStackEntry.value?.destination
+
+    val isBottomNavScreen: Boolean
+        @Composable get() = currentDestination?.route in BottomNavScreenSpec.bottomNavItems.map { it.route }
 
 }
 

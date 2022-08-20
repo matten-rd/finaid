@@ -3,19 +3,19 @@ package com.strand.finaid
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -38,8 +38,9 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val darkTheme = isAppInDarkTheme()
             val systemUiController = rememberSystemUiController()
-            SideEffect {
+            DisposableEffect(systemUiController, darkTheme) {
                 systemUiController.setSystemBarsColor(Color.Transparent, !darkTheme)
+                onDispose {}
             }
 
             FinaidTheme(darkTheme = darkTheme) {
@@ -60,8 +61,8 @@ class MainActivity : AppCompatActivity() {
 fun FinaidApp() {
     val appState = rememberAppState()
     val navController = appState.navController
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    val navBackStackEntry by appState.navBackStackEntry
+    val currentDestination = appState.currentDestination
     val bottomSheetState = appState.bottomSheetState
     val scope = appState.coroutineScope
 
@@ -92,10 +93,24 @@ fun FinaidApp() {
                 }
             },
             bottomBar = {
-                FinaidBottomNavigation(navController = navController)
+                AnimatedVisibility(
+                    visible = appState.isBottomNavScreen,
+                    enter = fadeIn() + slideInVertically { it },
+                    exit = slideOutVertically { it } + fadeOut()
+                ) {
+                    FinaidBottomNavigation(
+                        navController = navController,
+                        currentDestination = currentDestination
+                    )
+                }
             },
             floatingActionButton = {
-                FinaidFAB(currentDestination = currentDestination, navController = navController)
+                if (appState.isBottomNavScreen) {
+                    FinaidFAB(
+                        navController = navController,
+                        currentDestination = currentDestination
+                    )
+                }
             }
         ) { innerPadding ->
             AnimatedNavHost(
