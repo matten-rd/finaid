@@ -2,9 +2,12 @@ package com.strand.finaid.ui.home
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.viewModelScope
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
-import com.strand.finaid.model.service.StorageService
+import com.strand.finaid.data.mappers.asSavingsAccountUiState
+import com.strand.finaid.data.mappers.asTransactionUiState
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
+import com.strand.finaid.data.network.StorageService
+import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.transactions.TransactionUiState
@@ -16,7 +19,8 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     logService: LogService,
     private val storageService: StorageService,
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    private val transactionsRepository: TransactionsRepository
 ) : FinaidViewModel(logService,) {
 
     var transactions = mutableStateListOf<TransactionUiState>()
@@ -27,13 +31,8 @@ class HomeViewModel @Inject constructor(
 
     private fun getTransactions() {
         viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.getLimitedNumberOfTransactions(
-                3, accountService.getUserId(), ::onError
-            ) { items ->
-                items.forEach {
-                    if (it != null) transactions.add(it.toTransactionUiState())
-                }
-            }
+            val trans = transactionsRepository.getLimitedNumberOfTransactions(3)
+            trans.forEach { transaction -> transactions.add(transaction.asTransactionUiState()) }
         }
     }
 
@@ -43,7 +42,7 @@ class HomeViewModel @Inject constructor(
                 3, accountService.getUserId(), ::onError
             ) { items ->
                 items.forEach {
-                    if (it != null) savingsAccounts.add(it.toSavingsAccountUiState())
+                    if (it != null) savingsAccounts.add(it.asSavingsAccountUiState())
                 }
             }
         }

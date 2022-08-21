@@ -21,15 +21,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.strand.finaid.R
-import com.strand.finaid.model.Result
+import com.strand.finaid.data.Result
+import com.strand.finaid.data.models.Category
+import com.strand.finaid.domain.TransactionScreenUiState
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.list_items.BaseItem
 import com.strand.finaid.ui.savings.SavingsAccountUiState
-import com.strand.finaid.ui.transactions.CategoryUi
 import com.strand.finaid.ui.transactions.TransactionUiState
 import kotlinx.coroutines.launch
 
@@ -41,7 +43,7 @@ fun TrashScreen(
     val initialPage = viewModel.selectedTrashType.ordinal
     val pagerState = rememberPagerState(initialPage = initialPage)
     val scope = rememberCoroutineScope()
-    val transactions by viewModel.transactions.collectAsState()
+    val transactions: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
     val savingsAccounts by viewModel.savingsAccounts.collectAsState()
 
     LaunchedEffect(pagerState) {
@@ -201,7 +203,7 @@ fun SavingsTrashScreen(
 
 @Composable
 fun TransactionsTrashScreen(
-    transactions: Result<List<TransactionUiState>>,
+    transactions: TransactionScreenUiState,
     uiState: TrashTransactionsUiState,
     openSheet: () -> Unit,
     setIsTransactionRestoreDialogOpen: (Boolean) -> Unit,
@@ -212,15 +214,17 @@ fun TransactionsTrashScreen(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (transactions) {
-            is Result.Success -> {
-                if (transactions.data.isNullOrEmpty())
+            TransactionScreenUiState.Error -> { FullScreenError() }
+            TransactionScreenUiState.Loading -> { FullScreenLoading() }
+            is TransactionScreenUiState.Success -> {
+                if (transactions.transactions.isNullOrEmpty())
                     Text(text = "Empty Content")
                 else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        items(transactions.data, key = { it.id }) { transactionItem ->
+                        items(transactions.transactions, key = { it.id }) { transactionItem ->
                             BaseItem(
                                 modifier = Modifier.animateItemPlacement(),
                                 icon = transactionItem.icon,
@@ -236,8 +240,6 @@ fun TransactionsTrashScreen(
                     }
                 }
             }
-            is Result.Error -> { FullScreenError() }
-            Result.Loading -> { FullScreenLoading() }
         }
     }
 
@@ -293,9 +295,9 @@ fun CategoryTrashScreen(
     uiState: TrashCategoryUiState,
     setIsCategoryRestoreDialogOpen: (Boolean) -> Unit,
     setIsCategoryDeleteDialogOpen: (Boolean) -> Unit,
-    setSelectedCategory: (CategoryUi) -> Unit,
-    onRestoreClick: (CategoryUi) -> Unit,
-    onPermanentlyDeleteClick: (CategoryUi) -> Unit
+    setSelectedCategory: (Category) -> Unit,
+    onRestoreClick: (Category) -> Unit,
+    onPermanentlyDeleteClick: (Category) -> Unit
 ) {
     Column(modifier = Modifier
         .fillMaxSize()
@@ -366,7 +368,7 @@ fun CategoryTrashScreen(
 
 @Composable
 private fun TrashCategoryItem(
-    category: CategoryUi,
+    category: Category,
     openRestoreDialog: () -> Unit,
     openDeleteDialog: () -> Unit
 ) {

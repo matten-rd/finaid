@@ -7,11 +7,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.toObjects
 import com.strand.finaid.R
-import com.strand.finaid.model.Result
-import com.strand.finaid.model.data.SavingsAccount
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
-import com.strand.finaid.model.service.StorageService
+import com.strand.finaid.data.Result
+import com.strand.finaid.data.mappers.asSavingsAccountUiState
+import com.strand.finaid.data.models.SavingsAccount
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
+import com.strand.finaid.data.network.StorageService
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,7 +41,7 @@ class SavingsViewModel @Inject constructor(
             when (res) {
                 is Result.Success -> {
                     Result.Success(
-                        res.data?.toObjects<SavingsAccount>()?.map { it.toSavingsAccountUiState() })
+                        res.data?.toObjects<SavingsAccount>()?.map { it.asSavingsAccountUiState() })
                 }
                 is Result.Loading -> { Result.Loading }
                 is Result.Error -> {

@@ -8,16 +8,20 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.toObjects
 import com.strand.finaid.R
-import com.strand.finaid.model.Result
-import com.strand.finaid.model.data.SavingsAccount
-import com.strand.finaid.model.data.Transaction
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
-import com.strand.finaid.model.service.StorageService
+import com.strand.finaid.data.Result
+import com.strand.finaid.data.mappers.asCategory
+import com.strand.finaid.data.mappers.asSavingsAccountUiState
+import com.strand.finaid.data.models.Category
+import com.strand.finaid.data.models.SavingsAccount
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
+import com.strand.finaid.data.network.StorageService
+import com.strand.finaid.data.repository.TransactionsRepository
+import com.strand.finaid.domain.TransactionScreenUiState
+import com.strand.finaid.domain.TransactionScreenUiStateUseCase
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.snackbar.SnackbarManager
-import com.strand.finaid.ui.transactions.CategoryUi
 import com.strand.finaid.ui.transactions.TransactionUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -33,8 +37,8 @@ enum class TrashType(val title: String) {
 data class TrashCategoryUiState(
     val isRestoreDialogOpen: Boolean = false,
     val isDeleteDialogOpen: Boolean = false,
-    val selectedCategory: CategoryUi? = null,
-    val deletedCategories: SnapshotStateList<CategoryUi> = mutableStateListOf()
+    val selectedCategory: Category? = null,
+    val deletedCategories: SnapshotStateList<Category> = mutableStateListOf()
 )
 
 data class TrashTransactionsUiState(
@@ -53,7 +57,9 @@ data class TrashSavingsAccountsUiState(
 class TrashViewModel @Inject constructor(
     logService: LogService,
     private val accountService: AccountService,
-    private val storageService: StorageService
+    private val storageService: StorageService,
+    private val transactionsRepository: TransactionsRepository,
+    transactionScreenUiStateUseCase: TransactionScreenUiStateUseCase
 ) : FinaidViewModel(logService) {
 
     val trashTypes = TrashType.values().map { it.title }
@@ -79,7 +85,7 @@ class TrashViewModel @Inject constructor(
         trashCategoryUiState = trashCategoryUiState.copy(isDeleteDialogOpen = newValue)
     }
 
-    fun setSelectedCategory(newValue: CategoryUi) {
+    fun setSelectedCategory(newValue: Category) {
         trashCategoryUiState = trashCategoryUiState.copy(selectedCategory = newValue)
     }
 
@@ -87,14 +93,14 @@ class TrashViewModel @Inject constructor(
         trashCategoryUiState.deletedCategories.clear()
         viewModelScope.launch(showErrorExceptionHandler) {
             storageService.getDeletedCategories(accountService.getUserId(), ::onError) { category ->
-                trashCategoryUiState.deletedCategories.add(category.toCategoryUi())
+                trashCategoryUiState.deletedCategories.add(category.asCategory())
             }
         }
     }
 
     init { getDeletedCategories() }
 
-    fun restoreCategoryFromTrash(category: CategoryUi) {
+    fun restoreCategoryFromTrash(category: Category) {
         storageService.restoreCategoryFromTrash(accountService.getUserId(), category.id) { error ->
             if (error == null) {
                 SnackbarManager.showMessage(R.string.category_restored)
@@ -103,7 +109,7 @@ class TrashViewModel @Inject constructor(
         }
     }
 
-    fun permanentlyDeleteCategory(category: CategoryUi) {
+    fun permanentlyDeleteCategory(category: Category) {
         storageService.deleteTransactionCategoryPermanently(accountService.getUserId(), category.id) { error ->
             if (error == null) {
                 SnackbarManager.showMessage(R.string.category_permanently_deleted)
@@ -130,36 +136,21 @@ class TrashViewModel @Inject constructor(
         trashTransactionsUiState = trashTransactionsUiState.copy(selectedTransaction = newValue)
     }
 
-    private val transactionResult: Flow<Result<List<TransactionUiState>>> = storageService
-        .addTransactionsListener(accountService.getUserId(), deleted = true)
-        .map { result ->
-            when (result) {
-                is Result.Success -> Result.Success(
-                    result.data?.toObjects<Transaction>()?.map { it.toTransactionUiState() }
-                )
-                Result.Loading -> Result.Loading
-                is Result.Error -> {
-                    onError(result.exception)
-                    result
-                }
-            }
-        }
-
-    val transactions: StateFlow<Result<List<TransactionUiState>>> = transactionResult
+    val transactionsUiState: StateFlow<TransactionScreenUiState> = transactionScreenUiStateUseCase()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = Result.Loading
+            initialValue = TransactionScreenUiState.Loading
         )
 
     fun restoreTransactionFromTrash(transaction: TransactionUiState) {
-        storageService.restoreTransactionFromTrash(accountService.getUserId(), transaction.id) { error ->
+        transactionsRepository.restoreTransactionFromTrash(accountService.getUserId(), transaction.id) { error ->
             if (error == null) SnackbarManager.showMessage(R.string.transaction_restored) else onError(error)
         }
     }
 
     fun permanentlyDeleteTransaction(transaction: TransactionUiState) {
-        storageService.deleteTransactionPermanently(accountService.getUserId(), transaction.id) { error ->
+        transactionsRepository.deleteTransactionPermanently(accountService.getUserId(), transaction.id) { error ->
             if (error == null) SnackbarManager.showMessage(R.string.transaction_permanently_deleted) else onError(error)
         }
     }
@@ -188,7 +179,7 @@ class TrashViewModel @Inject constructor(
             when (res) {
                 is Result.Success -> {
                     Result.Success(
-                        res.data?.toObjects<SavingsAccount>()?.map { it.toSavingsAccountUiState() })
+                        res.data?.toObjects<SavingsAccount>()?.map { it.asSavingsAccountUiState() })
                 }
                 is Result.Loading -> { Result.Loading }
                 is Result.Error -> {

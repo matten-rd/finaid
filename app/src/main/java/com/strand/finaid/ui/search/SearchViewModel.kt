@@ -3,18 +3,14 @@ package com.strand.finaid.ui.search
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
-import androidx.paging.cachedIn
-import androidx.paging.filter
-import androidx.paging.map
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
-import com.strand.finaid.model.service.StorageService
+import com.strand.finaid.data.mappers.asCategory
+import com.strand.finaid.data.models.Category
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
+import com.strand.finaid.data.network.StorageService
 import com.strand.finaid.ui.FinaidViewModel
-import com.strand.finaid.ui.transactions.CategoryUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,14 +34,14 @@ class SearchViewModel @Inject constructor(
         searchScreenType.value = SearchScreenType.values()[newValue]
     }
 
-    var categories = mutableStateListOf<CategoryUi>()
+    var categories = mutableStateListOf<Category>()
         private set
 
     private fun getCategories() {
         categories.clear()
         viewModelScope.launch(showErrorExceptionHandler) {
             storageService.getCategories(accountService.getUserId(), ::onError) {
-                categories.add(it.toCategoryUi())
+                categories.add(it.asCategory())
             }
         }
     }
@@ -60,17 +56,5 @@ class SearchViewModel @Inject constructor(
         queryFlow.value = newValue
     }
 
-    val transactionFlow = storageService
-        .paginateTransactions(
-            userId = accountService.getUserId(),
-            pageSize = 20
-        ).map { pagingData ->
-            pagingData.map { transaction -> transaction.toTransactionUiState() }
-        }
-        .cachedIn(viewModelScope)
-        .combine(queryFlow) { pagingData, query ->
-            pagingData.filter { it.memo.contains(query, ignoreCase = true) }
-        }
-        .cachedIn(viewModelScope)
 
 }

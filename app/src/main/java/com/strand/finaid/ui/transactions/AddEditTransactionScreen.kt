@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.strand.finaid.R
+import com.strand.finaid.data.models.Category
 import com.strand.finaid.ui.components.ColorPicker
 import com.strand.finaid.ui.components.SegmentedButton
 import com.strand.finaid.ui.components.textfield.FinaidTextField
@@ -127,7 +128,7 @@ private fun AddEditTransactionContent(
     memo: String,
     amount: String,
     date: LocalDate,
-    category: CategoryUi?,
+    category: Category?,
     onMemoChange: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     onDateChange: (LocalDate) -> Unit,

@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.strand.finaid.R
+import com.strand.finaid.data.models.Category
 import com.strand.finaid.ui.components.BaseBottomSheet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -54,12 +55,12 @@ fun CategoryBottomSheet(
 
 @Composable
 private fun CategoryBottomSheetContent(
-    options: List<CategoryUi>,
-    selectedCategory: CategoryUi?,
-    onCategorySelected: (CategoryUi) -> Unit,
+    options: List<Category>,
+    selectedCategory: Category?,
+    onCategorySelected: (Category) -> Unit,
     onCreateCategoryClick: () -> Unit,
-    onDeleteCategoryClick: (CategoryUi) -> Unit,
-    onEditCategoryClick: (CategoryUi) -> Unit,
+    onDeleteCategoryClick: (Category) -> Unit,
+    onEditCategoryClick: (Category) -> Unit,
 ) {
     BaseBottomSheet(title = stringResource(id = R.string.select_category)) {
         Column(
@@ -104,11 +105,11 @@ private fun CategoryBottomSheetContent(
 
 @Composable
 private fun CategoryItem(
-    category: CategoryUi,
-    onCategorySelected: (CategoryUi) -> Unit,
+    category: Category,
+    onCategorySelected: (Category) -> Unit,
     isSelected: Boolean,
-    onDeleteCategoryClick: (CategoryUi) -> Unit,
-    onEditCategoryClick: (CategoryUi) -> Unit
+    onDeleteCategoryClick: (Category) -> Unit,
+    onEditCategoryClick: (Category) -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val modifier = Modifier

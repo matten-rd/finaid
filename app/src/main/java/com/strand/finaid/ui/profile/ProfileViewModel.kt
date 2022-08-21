@@ -4,8 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
 import com.strand.finaid.ui.FinaidViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -23,16 +23,6 @@ class ProfileViewModel @Inject constructor(
     fun setIsThemeSelectionDialogOpen(newValue: Boolean) {
         isThemeSelectionDialogOpen = newValue
     }
-
-//    val theme = userSettings.themeFlow
-//
-//    fun onThemeSelected(newValue: AppTheme) {
-//        setIsThemeSelectionDialogOpen(false)
-//        viewModelScope.launch {
-//            userSettings.updateSelectedTheme(newValue)
-//        }
-//    }
-
 
     fun onSignOutClick(onSuccess: () -> Unit) {
         viewModelScope.launch {

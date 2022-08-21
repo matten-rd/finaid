@@ -4,21 +4,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.viewModelScope
 import com.strand.finaid.R
+import com.strand.finaid.data.mappers.asAddEditSavingsAccountUiState
+import com.strand.finaid.data.mappers.asSavingsAccount
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
+import com.strand.finaid.data.network.StorageService
 import com.strand.finaid.ext.idFromParameter
-import com.strand.finaid.model.data.SavingsAccount
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
-import com.strand.finaid.model.service.StorageService
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.screenspec.SavingsDefaultAccountId
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.time.Instant
 import java.util.*
 import javax.inject.Inject
 
@@ -29,22 +28,7 @@ data class AddEditSavingsAccountUiState(
     val amount: String = "",
     val color: Color? = null,
     val deleted: Boolean = false
-) {
-    fun toSavingsAccount(): SavingsAccount? {
-        return if (color != null && amount.toIntOrNull() != null)
-            SavingsAccount(
-                id = id,
-                name = name,
-                bank = bank,
-                hexCode = String.format("%06X", color.toArgb() and 0xFFFFFF),
-                amount = amount.toInt(),
-                lastModified = Date.from(Instant.now()),
-                deleted = deleted
-            )
-        else null
-    }
-}
-
+)
 
 @HiltViewModel
 class AddEditSavingsViewModel @Inject constructor(
@@ -64,7 +48,7 @@ class AddEditSavingsViewModel @Inject constructor(
                     accountService.getUserId(), savingsAccountId.idFromParameter(), ::onError
                 ) { savingsAccount ->
                     if (savingsAccount != null) {
-                        uiState.value = savingsAccount.toAddEditSavingsAccountUiState()
+                        uiState.value = savingsAccount.asAddEditSavingsAccountUiState()
                     }
                 }
             }
@@ -96,7 +80,7 @@ class AddEditSavingsViewModel @Inject constructor(
     )
 
     fun saveSavingsAccount(onSuccess: () -> Unit) {
-        val savingsAccount = uiState.value.toSavingsAccount()
+        val savingsAccount = uiState.value.asSavingsAccount()
 
         if (savingsAccount != null) {
             storageService.saveSavingsAccount(accountService.getUserId(), savingsAccount) { error ->

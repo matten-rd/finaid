@@ -1,4 +1,4 @@
-package com.strand.finaid.model.service.impl
+package com.strand.finaid.data.network.impl
 
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.BeginSignInResult
@@ -9,7 +9,7 @@ import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.strand.finaid.model.service.AccountService
+import com.strand.finaid.data.network.AccountService
 import javax.inject.Inject
 import javax.inject.Named
 
