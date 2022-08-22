@@ -10,7 +10,7 @@ import com.strand.finaid.data.mappers.asAddEditSavingsAccountUiState
 import com.strand.finaid.data.mappers.asSavingsAccount
 import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
-import com.strand.finaid.data.network.StorageService
+import com.strand.finaid.data.repository.SavingsRepository
 import com.strand.finaid.ext.idFromParameter
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.screenspec.SavingsDefaultAccountId
@@ -33,8 +33,8 @@ data class AddEditSavingsAccountUiState(
 @HiltViewModel
 class AddEditSavingsViewModel @Inject constructor(
     logService: LogService,
-    private val storageService: StorageService,
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    private val savingsRepository: SavingsRepository
 ) : FinaidViewModel(logService) {
 
     var isEditMode by mutableStateOf(false)
@@ -44,34 +44,29 @@ class AddEditSavingsViewModel @Inject constructor(
         viewModelScope.launch(showErrorExceptionHandler) {
             if (savingsAccountId != SavingsDefaultAccountId) {
                 isEditMode = true
-                storageService.getSavingsAccount(
-                    accountService.getUserId(), savingsAccountId.idFromParameter(), ::onError
-                ) { savingsAccount ->
-                    if (savingsAccount != null) {
-                        uiState.value = savingsAccount.asAddEditSavingsAccountUiState()
-                    }
-                }
+                val savingsAccount = savingsRepository.getSavingsAccountById(savingsAccountId.idFromParameter())
+                uiState = savingsAccount.asAddEditSavingsAccountUiState()
             }
         }
     }
 
-    var uiState = mutableStateOf(AddEditSavingsAccountUiState())
+    var uiState by mutableStateOf(AddEditSavingsAccountUiState())
         private set
 
     fun onNameChange(newValue: String) {
-        uiState.value = uiState.value.copy(name = newValue)
+        uiState = uiState.copy(name = newValue)
     }
 
     fun onBankChange(newValue: String) {
-        uiState.value = uiState.value.copy(bank = newValue)
+        uiState = uiState.copy(bank = newValue)
     }
 
     fun onAmountChange(newValue: String) {
-        uiState.value = uiState.value.copy(amount = newValue)
+        uiState = uiState.copy(amount = newValue)
     }
 
     fun onColorChange(newValue: Color) {
-        uiState.value = uiState.value.copy(color = newValue)
+        uiState = uiState.copy(color = newValue)
     }
 
     val colors = listOf(
@@ -80,10 +75,10 @@ class AddEditSavingsViewModel @Inject constructor(
     )
 
     fun saveSavingsAccount(onSuccess: () -> Unit) {
-        val savingsAccount = uiState.value.asSavingsAccount()
+        val savingsAccount = uiState.asSavingsAccount()
 
         if (savingsAccount != null) {
-            storageService.saveSavingsAccount(accountService.getUserId(), savingsAccount) { error ->
+            savingsRepository.saveSavingsAccount(accountService.getUserId(), savingsAccount) { error ->
                 if (error == null) onSuccess() else onError(error)
             }
         } else {
@@ -100,7 +95,7 @@ class AddEditSavingsViewModel @Inject constructor(
 
     fun onDeleteSavingsAccountClick(savingsAccountId: String) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.moveSavingsAccountToTrash(accountService.getUserId(), savingsAccountId) { error ->
+            savingsRepository.moveSavingsAccountToTrash(accountService.getUserId(), savingsAccountId) { error ->
                 if (error == null)
                     SnackbarManager.showMessage(R.string.savingsaccount_removed)
                 else

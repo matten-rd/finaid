@@ -11,4 +11,7 @@ import dagger.hilt.components.SingletonComponent
 object DaosModule {
     @Provides
     fun provideTransactionsDao(database: FinaidDatabase) = database.transactionsDao()
+
+    @Provides
+    fun provideSavingsDao(database: FinaidDatabase) = database.savingsDao()
 }

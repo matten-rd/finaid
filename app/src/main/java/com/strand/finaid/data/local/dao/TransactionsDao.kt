@@ -50,7 +50,7 @@ interface TransactionsDao {
 
     // DELETE
     @Delete
-    suspend fun deleteTransactionEntity(transaction: TransactionEntity)
+    suspend fun deleteTransactionEntity(entity: TransactionEntity)
 
     @Query("DELETE FROM transactions WHERE transaction_id = :id")
     suspend fun deleteTransactionEntityById(id: String)

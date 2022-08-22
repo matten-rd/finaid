@@ -28,7 +28,7 @@ fun Transaction.asTransactionUiState(): TransactionUiState {
     )
 }
 
-fun Transaction.asEditTransactionUiState(): AddEditTransactionUiState {
+fun Transaction.asAddEditTransactionUiState(): AddEditTransactionUiState {
     return AddEditTransactionUiState(
         id = id,
         memo = memo,

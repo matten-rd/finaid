@@ -6,18 +6,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.ktx.toObjects
 import com.strand.finaid.R
-import com.strand.finaid.data.Result
+import com.strand.finaid.data.local.entities.SavingsAccountEntity
 import com.strand.finaid.data.local.entities.TransactionEntity
 import com.strand.finaid.data.mappers.asCategory
-import com.strand.finaid.data.mappers.asSavingsAccountUiState
 import com.strand.finaid.data.models.Category
-import com.strand.finaid.data.models.SavingsAccount
 import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
 import com.strand.finaid.data.network.StorageService
+import com.strand.finaid.data.repository.SavingsRepository
 import com.strand.finaid.data.repository.TransactionsRepository
+import com.strand.finaid.domain.SavingsScreenUiState
+import com.strand.finaid.domain.SavingsScreenUiStateUseCase
 import com.strand.finaid.domain.TransactionScreenUiState
 import com.strand.finaid.domain.TransactionScreenUiStateUseCase
 import com.strand.finaid.ui.FinaidViewModel
@@ -25,7 +25,9 @@ import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.transactions.TransactionUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -60,7 +62,9 @@ class TrashViewModel @Inject constructor(
     private val accountService: AccountService,
     private val storageService: StorageService,
     private val transactionsRepository: TransactionsRepository,
-    transactionScreenUiStateUseCase: TransactionScreenUiStateUseCase
+    private val savingsRepository: SavingsRepository,
+    transactionScreenUiStateUseCase: TransactionScreenUiStateUseCase,
+    savingsScreenUiStateUseCase: SavingsScreenUiStateUseCase
 ) : FinaidViewModel(logService) {
 
     val trashTypes = TrashType.values().map { it.title }
@@ -70,6 +74,20 @@ class TrashViewModel @Inject constructor(
 
     fun onSelectedTrashTypeChange(newValue: Int) {
         selectedTrashType = TrashType.values()[newValue]
+    }
+
+    fun addListener() {
+        viewModelScope.launch {
+            transactionsRepository.addTransactionsListener(accountService.getUserId(), true, ::onTransactionDocumentEvent)
+            savingsRepository.addSavingsAccountsListener(accountService.getUserId(), true, ::onSavingsAccountDocumentEvent)
+        }
+    }
+
+    fun removeListener() {
+        viewModelScope.launch {
+            transactionsRepository.removeListener()
+            savingsRepository.removeListener()
+        }
     }
 
     /**
@@ -156,17 +174,7 @@ class TrashViewModel @Inject constructor(
         }
     }
 
-    fun addListener() {
-        viewModelScope.launch {
-            transactionsRepository.addTransactionsListener(accountService.getUserId(), true, ::onDocumentEvent)
-        }
-    }
-
-    fun removeListener() {
-        viewModelScope.launch { transactionsRepository.removeListener() }
-    }
-
-    private fun onDocumentEvent(wasDocumentDeleted: Boolean, transaction: TransactionEntity) {
+    private fun onTransactionDocumentEvent(wasDocumentDeleted: Boolean, transaction: TransactionEntity) {
         viewModelScope.launch {
             transactionsRepository.updateLocalDatabase(wasDocumentDeleted, transaction)
         }
@@ -190,38 +198,28 @@ class TrashViewModel @Inject constructor(
         trashSavingsAccountsUiState = trashSavingsAccountsUiState.copy(selectedSavingsAccount = newValue)
     }
 
-    private val savingsAccountResponse: Flow<Result<List<SavingsAccountUiState>>> = storageService
-        .addSavingsListener(accountService.getUserId(), deleted = true)
-        .map { res ->
-            when (res) {
-                is Result.Success -> {
-                    Result.Success(
-                        res.data?.toObjects<SavingsAccount>()?.map { it.asSavingsAccountUiState() })
-                }
-                is Result.Loading -> { Result.Loading }
-                is Result.Error -> {
-                    onError(res.exception)
-                    res
-                }
-            }
-        }
-
-    val savingsAccounts: StateFlow<Result<List<SavingsAccountUiState>>> = savingsAccountResponse
+    val savingsAccountsUiState: StateFlow<SavingsScreenUiState> = savingsScreenUiStateUseCase(deleted = true)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = Result.Loading
+            initialValue = SavingsScreenUiState.Loading
         )
 
     fun restoreSavingsAccountFromTrash(savingsAccount: SavingsAccountUiState) {
-        storageService.restoreSavingsAccountFromTrash(accountService.getUserId(), savingsAccount.id) { error ->
+        savingsRepository.restoreSavingsAccountFromTrash(accountService.getUserId(), savingsAccount.id) { error ->
             if (error == null) SnackbarManager.showMessage(R.string.savingsaccount_restored) else onError(error)
         }
     }
 
     fun permanentlyDeleteSavingsAccount(savingsAccount: SavingsAccountUiState) {
-        storageService.deleteSavingsAccountPermanently(accountService.getUserId(), savingsAccount.id) { error ->
+        savingsRepository.deleteSavingsAccountPermanently(accountService.getUserId(), savingsAccount.id) { error ->
             if (error == null) SnackbarManager.showMessage(R.string.savingsaccount_permanently_deleted) else onError(error)
+        }
+    }
+
+    private fun onSavingsAccountDocumentEvent(wasDocumentDeleted: Boolean, savingsAccount: SavingsAccountEntity) {
+        viewModelScope.launch {
+            savingsRepository.updateLocalDatabase(wasDocumentDeleted, savingsAccount)
         }
     }
 }

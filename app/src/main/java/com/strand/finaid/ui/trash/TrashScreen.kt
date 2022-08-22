@@ -25,8 +25,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.strand.finaid.R
-import com.strand.finaid.data.Result
 import com.strand.finaid.data.models.Category
+import com.strand.finaid.domain.SavingsScreenUiState
 import com.strand.finaid.domain.TransactionScreenUiState
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
@@ -49,7 +49,7 @@ fun TrashScreen(
     val pagerState = rememberPagerState(initialPage = initialPage)
     val scope = rememberCoroutineScope()
     val transactions: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
-    val savingsAccounts by viewModel.savingsAccounts.collectAsState()
+    val savingsAccounts: SavingsScreenUiState by viewModel.savingsAccountsUiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
@@ -119,7 +119,7 @@ fun TrashScreen(
 
 @Composable
 fun SavingsTrashScreen(
-    savingsAccounts: Result<List<SavingsAccountUiState>>,
+    savingsAccounts: SavingsScreenUiState,
     uiState: TrashSavingsAccountsUiState,
     openSheet: () -> Unit,
     setIsSavingsAccountRestoreDialogOpen: (Boolean) -> Unit,
@@ -130,15 +130,17 @@ fun SavingsTrashScreen(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (savingsAccounts) {
-            is Result.Success -> {
-                if (savingsAccounts.data.isNullOrEmpty())
+            SavingsScreenUiState.Error -> { FullScreenError() }
+            SavingsScreenUiState.Loading -> { FullScreenLoading() }
+            is SavingsScreenUiState.Success -> {
+                if (savingsAccounts.savingsAccounts.isNullOrEmpty())
                     Text(text = "Empty Content")
                 else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        items(savingsAccounts.data, key = { it.id }) { savingsAccount ->
+                        items(savingsAccounts.savingsAccounts, key = { it.id }) { savingsAccount ->
                             BaseItem(
                                 modifier = Modifier.animateItemPlacement(),
                                 icon = savingsAccount.icon,
@@ -154,8 +156,6 @@ fun SavingsTrashScreen(
                     }
                 }
             }
-            is Result.Error -> { FullScreenError() }
-            Result.Loading -> { FullScreenLoading() }
         }
     }
 

@@ -4,9 +4,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.viewModelScope
 import com.strand.finaid.data.mappers.asSavingsAccountUiState
 import com.strand.finaid.data.mappers.asTransactionUiState
-import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
-import com.strand.finaid.data.network.StorageService
+import com.strand.finaid.data.repository.SavingsRepository
 import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.savings.SavingsAccountUiState
@@ -18,9 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     logService: LogService,
-    private val storageService: StorageService,
-    private val accountService: AccountService,
-    private val transactionsRepository: TransactionsRepository
+    private val transactionsRepository: TransactionsRepository,
+    private val savingsRepository: SavingsRepository
 ) : FinaidViewModel(logService,) {
 
     var transactions = mutableStateListOf<TransactionUiState>()
@@ -38,16 +36,10 @@ class HomeViewModel @Inject constructor(
 
     private fun getSavingsAccounts() {
         viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.getLimitedNumberOfSavingsAccounts(
-                3, accountService.getUserId(), ::onError
-            ) { items ->
-                items.forEach {
-                    if (it != null) savingsAccounts.add(it.asSavingsAccountUiState())
-                }
-            }
+            val sav = savingsRepository.getLimitedNumberOfSavingsAccounts(3)
+            sav.forEach { savingsAccount -> savingsAccounts.add(savingsAccount.asSavingsAccountUiState()) }
         }
     }
-
 
     init {
         getTransactions()

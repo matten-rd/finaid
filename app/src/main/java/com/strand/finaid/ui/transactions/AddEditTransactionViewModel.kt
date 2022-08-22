@@ -7,8 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
 import com.strand.finaid.R
+import com.strand.finaid.data.mappers.asAddEditTransactionUiState
 import com.strand.finaid.data.mappers.asCategory
-import com.strand.finaid.data.mappers.asEditTransactionUiState
 import com.strand.finaid.data.mappers.asNetworkCategory
 import com.strand.finaid.data.mappers.asTransaction
 import com.strand.finaid.data.models.Category
@@ -105,7 +105,7 @@ class AddEditTransactionViewModel @Inject constructor(
                 isEditMode = true
                 val transaction = transactionsRepository.getTransactionById(transactionId.idFromParameter())
                 transactionType.value = transaction.getTransactionType()
-                uiState = transaction.asEditTransactionUiState()
+                uiState = transaction.asAddEditTransactionUiState()
             }
         }
     }
