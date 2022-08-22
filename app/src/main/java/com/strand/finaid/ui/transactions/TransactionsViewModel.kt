@@ -108,7 +108,8 @@ class TransactionsViewModel @Inject constructor(
 
     fun addListener() {
         viewModelScope.launch {
-            transactionsRepository.addTransactionsListener(accountService.getUserId(), false, ::onDocumentEvent)
+            val lastModifiedDate = transactionsRepository.getLastModifiedDate()
+            transactionsRepository.addTransactionsListener(accountService.getUserId(), lastModifiedDate,false, ::onDocumentEvent)
         }
     }
 

@@ -9,6 +9,7 @@ import com.strand.finaid.data.network.SavingsNetworkDataSource
 import com.strand.finaid.data.repository.SavingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.*
 import javax.inject.Inject
 
 class SavingsRepositoryImpl @Inject constructor(
@@ -31,12 +32,15 @@ class SavingsRepositoryImpl @Inject constructor(
         savingsDao.getLimitedNumberOfSavingsAccountEntities(numberOfTransactions)
             .map { it.asSavingsAccount() }
 
+    override suspend fun getLastModifiedDate(): Date = savingsDao.getLastModifiedDate()
+
     override fun addSavingsAccountsListener(
         userId: String,
+        lastModifiedDate: Date?,
         deleted: Boolean,
         onDocumentEvent: (Boolean, SavingsAccountEntity) -> Unit
     ) {
-        network.addSavingsAccountsListener(userId, deleted, onDocumentEvent)
+        network.addSavingsAccountsListener(userId, lastModifiedDate, deleted, onDocumentEvent)
     }
 
     override fun removeListener() {

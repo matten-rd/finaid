@@ -3,6 +3,7 @@ package com.strand.finaid.data.local.dao
 import androidx.room.*
 import com.strand.finaid.data.local.entities.TransactionEntity
 import kotlinx.coroutines.flow.Flow
+import java.util.*
 
 @Dao
 interface TransactionsDao {
@@ -19,6 +20,9 @@ interface TransactionsDao {
 
     @Query("SELECT * FROM transactions WHERE transaction_deleted = 0 ORDER BY date DESC LIMIT :limit")
     suspend fun getLimitedNumberOfTransactionEntities(limit: Int): List<TransactionEntity>
+
+    @Query("SELECT MAX(lastModified) FROM transactions")
+    suspend fun getLastModifiedDate(): Date
 
     // INSERT/UPDATE SINGLE
     @Insert(onConflict = OnConflictStrategy.IGNORE)

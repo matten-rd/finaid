@@ -25,12 +25,18 @@ class TransactionsNetworkDataSourceImpl @Inject constructor() : TransactionsNetw
 
     override fun addTransactionsListener(
         userId: String,
+        lastModifiedDate: Date?,
         deleted: Boolean,
         onDocumentEvent: (Boolean, TransactionEntity) -> Unit
     ) {
-        val query = userId.userDocument
-            .collection(TransactionsCollection)
-            .whereGreaterThanOrEqualTo(LastModifiedField, Date.from(Instant.parse("2018-11-30T18:35:24.00Z")))
+        val query =
+            if (lastModifiedDate != null)
+                userId.userDocument
+                    .collection(TransactionsCollection)
+                    .whereGreaterThan(LastModifiedField, lastModifiedDate)
+            else
+                userId.userDocument
+                    .collection(TransactionsCollection)
 
         listenerRegistration = query.addSnapshotListener { snapshot, error ->
             if (error != null) return@addSnapshotListener

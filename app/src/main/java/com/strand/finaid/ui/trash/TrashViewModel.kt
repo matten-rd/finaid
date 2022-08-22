@@ -78,8 +78,10 @@ class TrashViewModel @Inject constructor(
 
     fun addListener() {
         viewModelScope.launch {
-            transactionsRepository.addTransactionsListener(accountService.getUserId(), true, ::onTransactionDocumentEvent)
-            savingsRepository.addSavingsAccountsListener(accountService.getUserId(), true, ::onSavingsAccountDocumentEvent)
+            val lastModifiedTransactionDate = transactionsRepository.getLastModifiedDate()
+            val lastModifiedSavingsAccountDate = savingsRepository.getLastModifiedDate()
+            transactionsRepository.addTransactionsListener(accountService.getUserId(), lastModifiedTransactionDate,true, ::onTransactionDocumentEvent)
+            savingsRepository.addSavingsAccountsListener(accountService.getUserId(), lastModifiedSavingsAccountDate,true, ::onSavingsAccountDocumentEvent)
         }
     }
 

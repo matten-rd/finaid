@@ -3,6 +3,7 @@ package com.strand.finaid.data.local.dao
 import androidx.room.*
 import com.strand.finaid.data.local.entities.SavingsAccountEntity
 import kotlinx.coroutines.flow.Flow
+import java.util.*
 
 @Dao
 interface SavingsDao {
@@ -19,6 +20,9 @@ interface SavingsDao {
 
     @Query("SELECT * FROM savings_accounts WHERE deleted = 0 ORDER BY name DESC LIMIT :limit")
     suspend fun getLimitedNumberOfSavingsAccountEntities(limit: Int): List<SavingsAccountEntity>
+
+    @Query("SELECT MAX(lastModified) FROM savings_accounts")
+    suspend fun getLastModifiedDate(): Date
 
     // INSERT/UPDATE SINGLE
     @Insert(onConflict = OnConflictStrategy.IGNORE)

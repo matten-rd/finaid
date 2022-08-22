@@ -23,12 +23,18 @@ class SavingsNetworkDataSourceImpl @Inject constructor() : SavingsNetworkDataSou
 
     override fun addSavingsAccountsListener(
         userId: String,
+        lastModifiedDate: Date?,
         deleted: Boolean,
         onDocumentEvent: (Boolean, SavingsAccountEntity) -> Unit
     ) {
-        val query = userId.userDocument
-            .collection(SavingsCollection)
-            .whereGreaterThanOrEqualTo(LastModifiedField, Date.from(Instant.parse("2018-11-30T18:35:24.00Z")))
+        val query =
+            if (lastModifiedDate != null)
+                userId.userDocument
+                    .collection(SavingsCollection)
+                    .whereGreaterThan(LastModifiedField, lastModifiedDate)
+            else
+                userId.userDocument
+                    .collection(SavingsCollection)
 
         listenerRegistration = query.addSnapshotListener { snapshot, error ->
             if (error != null) return@addSnapshotListener

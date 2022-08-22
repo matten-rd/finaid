@@ -57,7 +57,8 @@ class SavingsViewModel @Inject constructor(
 
     fun addListener() {
         viewModelScope.launch {
-            savingsRepository.addSavingsAccountsListener(accountService.getUserId(), false, ::onDocumentEvent)
+            val lastModifiedDate = savingsRepository.getLastModifiedDate()
+            savingsRepository.addSavingsAccountsListener(accountService.getUserId(), lastModifiedDate,false, ::onDocumentEvent)
         }
     }
 

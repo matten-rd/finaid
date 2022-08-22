@@ -9,6 +9,7 @@ import com.strand.finaid.data.network.TransactionsNetworkDataSource
 import com.strand.finaid.data.repository.TransactionsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.*
 import javax.inject.Inject
 
 class TransactionsRepositoryImpl @Inject constructor(
@@ -31,12 +32,15 @@ class TransactionsRepositoryImpl @Inject constructor(
         transactionsDao.getLimitedNumberOfTransactionEntities(numberOfTransactions)
             .map { it.asTransaction() }
 
+    override suspend fun getLastModifiedDate(): Date = transactionsDao.getLastModifiedDate()
+
     override fun addTransactionsListener(
         userId: String,
+        lastModifiedDate: Date?,
         deleted: Boolean,
         onDocumentEvent: (Boolean, TransactionEntity) -> Unit
     ) {
-        network.addTransactionsListener(userId, deleted, onDocumentEvent)
+        network.addTransactionsListener(userId, lastModifiedDate, deleted, onDocumentEvent)
     }
 
     override fun removeListener() {
