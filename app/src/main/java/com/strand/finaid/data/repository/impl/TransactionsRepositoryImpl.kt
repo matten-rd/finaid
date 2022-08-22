@@ -20,6 +20,10 @@ class TransactionsRepositoryImpl @Inject constructor(
         transactionsDao.getTransactionEntitiesStream()
             .map { it.map(TransactionEntity::asTransaction) }
 
+    override fun getDeletedTransactionsStream(): Flow<List<Transaction>> =
+        transactionsDao.getDeletedTransactionEntitiesStream()
+            .map { it.map(TransactionEntity::asTransaction) }
+
     override suspend fun getTransactionById(transactionId: String): Transaction =
         transactionsDao.getTransactionEntityById(transactionId).asTransaction()
 

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.toObjects
 import com.strand.finaid.R
 import com.strand.finaid.data.Result
+import com.strand.finaid.data.local.entities.TransactionEntity
 import com.strand.finaid.data.mappers.asCategory
 import com.strand.finaid.data.mappers.asSavingsAccountUiState
 import com.strand.finaid.data.models.Category
@@ -136,7 +137,7 @@ class TrashViewModel @Inject constructor(
         trashTransactionsUiState = trashTransactionsUiState.copy(selectedTransaction = newValue)
     }
 
-    val transactionsUiState: StateFlow<TransactionScreenUiState> = transactionScreenUiStateUseCase()
+    val transactionsUiState: StateFlow<TransactionScreenUiState> = transactionScreenUiStateUseCase(deleted = true)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -152,6 +153,22 @@ class TrashViewModel @Inject constructor(
     fun permanentlyDeleteTransaction(transaction: TransactionUiState) {
         transactionsRepository.deleteTransactionPermanently(accountService.getUserId(), transaction.id) { error ->
             if (error == null) SnackbarManager.showMessage(R.string.transaction_permanently_deleted) else onError(error)
+        }
+    }
+
+    fun addListener() {
+        viewModelScope.launch {
+            transactionsRepository.addTransactionsListener(accountService.getUserId(), true, ::onDocumentEvent)
+        }
+    }
+
+    fun removeListener() {
+        viewModelScope.launch { transactionsRepository.removeListener() }
+    }
+
+    private fun onDocumentEvent(wasDocumentDeleted: Boolean, transaction: TransactionEntity) {
+        viewModelScope.launch {
+            transactionsRepository.updateLocalDatabase(wasDocumentDeleted, transaction)
         }
     }
 

@@ -19,8 +19,12 @@ sealed interface TransactionScreenUiState {
 class TransactionScreenUiStateUseCase @Inject constructor(
     private val transactionsRepository: TransactionsRepository
 ) {
-    operator fun invoke(): Flow<TransactionScreenUiState> {
-        val transactionsStream: Flow<List<Transaction>> = transactionsRepository.getTransactionsStream()
+    operator fun invoke(deleted: Boolean = false): Flow<TransactionScreenUiState> {
+        val transactionsStream: Flow<List<Transaction>> =
+            if (deleted)
+                transactionsRepository.getDeletedTransactionsStream()
+            else
+                transactionsRepository.getTransactionsStream()
 
         return transactionsStream
             .asResult()

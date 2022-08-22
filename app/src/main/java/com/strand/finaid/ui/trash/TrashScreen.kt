@@ -40,6 +40,11 @@ fun TrashScreen(
     viewModel: TrashViewModel = hiltViewModel(),
     openSheet: () -> Unit
 ) {
+    DisposableEffect(viewModel) {
+        viewModel.addListener()
+        onDispose { viewModel.removeListener() }
+    }
+
     val initialPage = viewModel.selectedTrashType.ordinal
     val pagerState = rememberPagerState(initialPage = initialPage)
     val scope = rememberCoroutineScope()

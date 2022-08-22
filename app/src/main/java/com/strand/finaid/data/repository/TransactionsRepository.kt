@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface TransactionsRepository {
     fun getTransactionsStream(): Flow<List<Transaction>>
+    fun getDeletedTransactionsStream(): Flow<List<Transaction>>
     suspend fun getTransactionById(transactionId: String): Transaction
     suspend fun getLimitedNumberOfTransactions(numberOfTransactions: Int): List<Transaction>
     fun addTransactionsListener(userId: String, deleted: Boolean = false, onDocumentEvent: (Boolean, TransactionEntity) -> Unit)
