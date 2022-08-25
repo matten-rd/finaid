@@ -1,11 +1,15 @@
 package com.strand.finaid.data.network.module
 
+import com.strand.finaid.data.network.CategoriesNetworkDataSource
 import com.strand.finaid.data.network.SavingsNetworkDataSource
 import com.strand.finaid.data.network.TransactionsNetworkDataSource
+import com.strand.finaid.data.network.impl.CategoriesNetworkDataSourceImpl
 import com.strand.finaid.data.network.impl.SavingsNetworkDataSourceImpl
 import com.strand.finaid.data.network.impl.TransactionsNetworkDataSourceImpl
+import com.strand.finaid.data.repository.CategoriesRepository
 import com.strand.finaid.data.repository.SavingsRepository
 import com.strand.finaid.data.repository.TransactionsRepository
+import com.strand.finaid.data.repository.impl.CategoriesRepositoryImpl
 import com.strand.finaid.data.repository.impl.SavingsRepositoryImpl
 import com.strand.finaid.data.repository.impl.TransactionsRepositoryImpl
 import dagger.Binds
@@ -28,5 +32,11 @@ interface DataModule {
 
     @Binds
     fun bindsSavingsNetworkDataSource(impl: SavingsNetworkDataSourceImpl): SavingsNetworkDataSource
+
+    @Binds
+    fun bindsCategoriesRepository(impl: CategoriesRepositoryImpl): CategoriesRepository
+
+    @Binds
+    fun bindsCategoriesNetworkDataSource(impl: CategoriesNetworkDataSourceImpl): CategoriesNetworkDataSource
 
 }

@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.strand.finaid.R
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.ui.components.BaseBottomSheet
@@ -27,10 +28,12 @@ fun CategoryBottomSheet(
     scope: CoroutineScope
 ) {
     val transactionType by viewModel.transactionType
+    val incomeCategories by viewModel.incomeCategories.collectAsStateWithLifecycle()
+    val expenseCategories by viewModel.expenseCategories.collectAsStateWithLifecycle()
 
     val (options, selectedCategory, onCategorySelected) = when (transactionType) {
-        TransactionType.Income -> Triple(viewModel.incomeCategories, viewModel.uiState.incomeCategory, viewModel::onIncomeCategoryChange)
-        TransactionType.Expense -> Triple(viewModel.expenseCategories, viewModel.uiState.expenseCategory, viewModel::onExpenseCategoryChange)
+        TransactionType.Income -> Triple(incomeCategories, viewModel.uiState.incomeCategory, viewModel::onIncomeCategoryChange)
+        TransactionType.Expense -> Triple(expenseCategories, viewModel.uiState.expenseCategory, viewModel::onExpenseCategoryChange)
     }
 
     CategoryBottomSheetContent(

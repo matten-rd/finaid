@@ -26,7 +26,7 @@ interface SavingsDao {
 
     // INSERT/UPDATE SINGLE
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertOrIgnoresSavingsAccountEntity(entity: SavingsAccountEntity): Long
+    suspend fun insertOrIgnoreSavingsAccountEntity(entity: SavingsAccountEntity): Long
 
     @Update
     suspend fun updateSavingsAccountEntity(entity: SavingsAccountEntity)
@@ -34,7 +34,7 @@ interface SavingsDao {
     @Transaction
     suspend fun upsertSavingsAccountEntity(entity: SavingsAccountEntity) = upsert(
         item = entity,
-        insert = ::insertOrIgnoresSavingsAccountEntity,
+        insert = ::insertOrIgnoreSavingsAccountEntity,
         update = ::updateSavingsAccountEntity
     )
 

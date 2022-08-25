@@ -1,17 +1,18 @@
 package com.strand.finaid.ui.search
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
-import com.strand.finaid.data.mappers.asCategory
+import com.strand.finaid.data.Result
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
-import com.strand.finaid.data.network.StorageService
+import com.strand.finaid.data.repository.CategoriesRepository
 import com.strand.finaid.ui.FinaidViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 enum class SearchScreenType(val title: String) {
@@ -23,7 +24,7 @@ enum class SearchScreenType(val title: String) {
 class SearchViewModel @Inject constructor(
     logService: LogService,
     private val accountService: AccountService,
-    private val storageService: StorageService
+    private val categoriesRepository: CategoriesRepository
 ) : FinaidViewModel(logService) {
     val searchScreens = SearchScreenType.values().map { it.title }
 
@@ -34,27 +35,17 @@ class SearchViewModel @Inject constructor(
         searchScreenType.value = SearchScreenType.values()[newValue]
     }
 
-    var categories = mutableStateListOf<Category>()
-        private set
-
-    private fun getCategories() {
-        categories.clear()
-        viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.getCategories(accountService.getUserId(), ::onError) {
-                categories.add(it.asCategory())
-            }
-        }
-    }
-
-    init {
-        getCategories()
-    }
+    val categories: StateFlow<Result<List<Category>>> =
+        categoriesRepository.addCategoriesListener(accountService.getUserId())
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = Result.Loading
+            )
 
     val queryFlow = MutableStateFlow("")
 
     fun onQueryChange(newValue: String) {
         queryFlow.value = newValue
     }
-
-
 }

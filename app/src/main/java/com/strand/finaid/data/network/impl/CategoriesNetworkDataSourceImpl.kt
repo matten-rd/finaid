@@ -7,7 +7,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.strand.finaid.data.Result
-import com.strand.finaid.data.network.StorageService
+import com.strand.finaid.data.network.CategoriesNetworkDataSource
 import com.strand.finaid.data.network.models.NetworkCategory
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 
 
-class StorageServiceImpl @Inject constructor() : StorageService {
+class CategoriesNetworkDataSourceImpl @Inject constructor() : CategoriesNetworkDataSource {
     private val String.userDocument: DocumentReference
         get() = Firebase.firestore.collection(UsersCollection).document(this)
 
@@ -53,7 +53,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             }
     }
 
-    override fun addTransactionCategory(
+    override fun addCategory(
         userId: String,
         category: NetworkCategory,
         onResult: (Throwable?) -> Unit
@@ -77,7 +77,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             .addOnFailureListener { e -> onResult(e) }
     }
 
-    override fun moveTransactionCategoryToTrash(
+    override fun moveCategoryToTrash(
         userId: String,
         categoryId: String,
         onResult: (Throwable?) -> Unit
@@ -89,7 +89,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             .addOnCompleteListener { task -> onResult(task.exception) }
     }
 
-    override fun deleteTransactionCategoryPermanently(
+    override fun deleteCategoryPermanently(
         userId: String,
         categoryId: String,
         onResult: (Throwable?) -> Unit

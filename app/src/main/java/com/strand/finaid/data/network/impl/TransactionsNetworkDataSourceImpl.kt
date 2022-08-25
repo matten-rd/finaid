@@ -44,7 +44,6 @@ class TransactionsNetworkDataSourceImpl @Inject constructor() : TransactionsNetw
             snapshot?.documentChanges?.forEach {
                 val wasDocumentDeleted = it.type == DocumentChange.Type.REMOVED
                 val transaction = it.document.toObject<NetworkTransaction>()
-                println(transaction.toString())
                 onDocumentEvent(wasDocumentDeleted, transaction.asTransactionEntity())
             }
         }

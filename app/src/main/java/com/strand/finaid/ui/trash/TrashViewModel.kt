@@ -1,19 +1,17 @@
 package com.strand.finaid.ui.trash
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.viewModelScope
 import com.strand.finaid.R
+import com.strand.finaid.data.Result
 import com.strand.finaid.data.local.entities.SavingsAccountEntity
 import com.strand.finaid.data.local.entities.TransactionEntity
-import com.strand.finaid.data.mappers.asCategory
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
-import com.strand.finaid.data.network.StorageService
+import com.strand.finaid.data.repository.CategoriesRepository
 import com.strand.finaid.data.repository.SavingsRepository
 import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.domain.SavingsScreenUiState
@@ -40,8 +38,7 @@ enum class TrashType(val title: String) {
 data class TrashCategoryUiState(
     val isRestoreDialogOpen: Boolean = false,
     val isDeleteDialogOpen: Boolean = false,
-    val selectedCategory: Category? = null,
-    val deletedCategories: SnapshotStateList<Category> = mutableStateListOf()
+    val selectedCategory: Category? = null
 )
 
 data class TrashTransactionsUiState(
@@ -60,7 +57,7 @@ data class TrashSavingsAccountsUiState(
 class TrashViewModel @Inject constructor(
     logService: LogService,
     private val accountService: AccountService,
-    private val storageService: StorageService,
+    private val categoriesRepository: CategoriesRepository,
     private val transactionsRepository: TransactionsRepository,
     private val savingsRepository: SavingsRepository,
     transactionScreenUiStateUseCase: TransactionScreenUiStateUseCase,
@@ -95,6 +92,14 @@ class TrashViewModel @Inject constructor(
     /**
      * Categories
      */
+    val categories: StateFlow<Result<List<Category>>> = categoriesRepository
+        .addCategoriesListener(accountService.getUserId(), true)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = Result.Loading
+        )
+
     var trashCategoryUiState by mutableStateOf(TrashCategoryUiState())
         private set
 
@@ -110,32 +115,15 @@ class TrashViewModel @Inject constructor(
         trashCategoryUiState = trashCategoryUiState.copy(selectedCategory = newValue)
     }
 
-    private fun getDeletedCategories() {
-        trashCategoryUiState.deletedCategories.clear()
-        viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.getDeletedCategories(accountService.getUserId(), ::onError) { category ->
-                trashCategoryUiState.deletedCategories.add(category.asCategory())
-            }
-        }
-    }
-
-    init { getDeletedCategories() }
-
     fun restoreCategoryFromTrash(category: Category) {
-        storageService.restoreCategoryFromTrash(accountService.getUserId(), category.id) { error ->
-            if (error == null) {
-                SnackbarManager.showMessage(R.string.category_restored)
-                getDeletedCategories()
-            } else { onError(error) }
+        categoriesRepository.restoreCategoryFromTrash(accountService.getUserId(), category.id) { error ->
+            if (error == null) SnackbarManager.showMessage(R.string.category_restored) else onError(error)
         }
     }
 
     fun permanentlyDeleteCategory(category: Category) {
-        storageService.deleteTransactionCategoryPermanently(accountService.getUserId(), category.id) { error ->
-            if (error == null) {
-                SnackbarManager.showMessage(R.string.category_permanently_deleted)
-                getDeletedCategories()
-            } else { onError(error) }
+        categoriesRepository.deleteCategoryPermanently(accountService.getUserId(), category.id) { error ->
+            if (error == null) SnackbarManager.showMessage(R.string.category_permanently_deleted) else onError(error)
         }
     }
 

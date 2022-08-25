@@ -3,24 +3,24 @@ package com.strand.finaid.ui.transactions
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.ktx.toObjects
 import com.strand.finaid.R
 import com.strand.finaid.data.Result
 import com.strand.finaid.data.local.entities.TransactionEntity
-import com.strand.finaid.data.mappers.asCategory
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.data.models.Transaction
 import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
-import com.strand.finaid.data.network.StorageService
-import com.strand.finaid.data.network.models.NetworkCategory
+import com.strand.finaid.data.repository.CategoriesRepository
 import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.domain.TransactionScreenUiState
 import com.strand.finaid.domain.TransactionScreenUiStateUseCase
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.absoluteValue
@@ -44,7 +44,7 @@ enum class SortOrder(val title: String, val field: String) {
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
     logService: LogService,
-    private val storageService: StorageService,
+    private val categoriesRepository: CategoriesRepository,
     private val accountService: AccountService,
     private val transactionsRepository: TransactionsRepository,
     transactionsScreenUiStateUseCase: TransactionScreenUiStateUseCase
@@ -74,26 +74,13 @@ class TransactionsViewModel @Inject constructor(
             initialValue = TransactionScreenUiState.Loading
         )
 
-    private val categoriesResult: Flow<Result<List<Category>>> =
-        storageService.addCategoriesListener(accountService.getUserId())
-            .map { result ->
-                when (result) {
-                    is Result.Success -> Result.Success(
-                        result.data?.toObjects<NetworkCategory>()?.map { it.asCategory() })
-                    Result.Loading -> Result.Loading
-                    is Result.Error -> {
-                        onError(result.exception)
-                        result
-                    }
-                }
-            }
-
-    val categories: StateFlow<Result<List<Category>>> = categoriesResult
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = Result.Loading
-        )
+    val categories: StateFlow<Result<List<Category>>> =
+        categoriesRepository.addCategoriesListener(accountService.getUserId())
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = Result.Loading
+            )
 
     fun onDeleteTransactionClick(transaction: TransactionUiState) {
         viewModelScope.launch(showErrorExceptionHandler) {

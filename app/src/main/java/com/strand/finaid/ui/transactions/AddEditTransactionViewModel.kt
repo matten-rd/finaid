@@ -1,21 +1,18 @@
 package com.strand.finaid.ui.transactions
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewModelScope
 import com.strand.finaid.R
+import com.strand.finaid.data.Result
 import com.strand.finaid.data.mappers.asAddEditTransactionUiState
-import com.strand.finaid.data.mappers.asCategory
-import com.strand.finaid.data.mappers.asNetworkCategory
 import com.strand.finaid.data.mappers.asTransaction
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
-import com.strand.finaid.data.network.StorageService
-import com.strand.finaid.data.network.models.NetworkCategory
+import com.strand.finaid.data.repository.CategoriesRepository
 import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.ext.idFromParameter
 import com.strand.finaid.ui.FinaidViewModel
@@ -23,6 +20,7 @@ import com.strand.finaid.ui.screenspec.TransactionDefaultId
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.*
@@ -62,7 +60,7 @@ enum class TransactionType(val title: String) {
 @HiltViewModel
 class AddEditTransactionViewModel @Inject constructor(
     logService: LogService,
-    private val storageService: StorageService,
+    private val categoriesRepository: CategoriesRepository,
     private val accountService: AccountService,
     private val transactionsRepository: TransactionsRepository
 ) : FinaidViewModel(logService) {
@@ -81,20 +79,32 @@ class AddEditTransactionViewModel @Inject constructor(
         transactionType.value = newType
     }
 
-    var incomeCategories = mutableStateListOf<Category>()
-        private set
-    var expenseCategories = mutableStateListOf<Category>()
-        private set
+    private val allCategories: Flow<Result<List<Category>>> = categoriesRepository
+        .addCategoriesListener(accountService.getUserId())
 
-    private fun getCategories() {
-        incomeCategories.clear()
-        expenseCategories.clear()
-        viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.getCategories(accountService.getUserId(), ::onError, ::updateCategoriesInList)
+    val incomeCategories: StateFlow<List<Category>> = allCategories.mapNotNull { result ->
+        when (result) {
+            is Result.Error -> listOf<Category>()
+            Result.Loading -> listOf<Category>()
+            is Result.Success -> result.data?.filter { it.transactionType == TransactionType.Income }
         }
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = listOf<Category>()
+    )
 
-    init { getCategories() }
+    val expenseCategories: StateFlow<List<Category>> = allCategories.mapNotNull { result ->
+        when (result) {
+            is Result.Error -> listOf<Category>()
+            Result.Loading -> listOf<Category>()
+            is Result.Success -> result.data?.filter { it.transactionType == TransactionType.Expense }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = listOf<Category>()
+    )
 
     var isEditMode by mutableStateOf(false)
         private set
@@ -108,14 +118,6 @@ class AddEditTransactionViewModel @Inject constructor(
                 uiState = transaction.asAddEditTransactionUiState()
             }
         }
-    }
-
-    private fun updateCategoriesInList(category: NetworkCategory?) {
-        if (category != null)
-            when (category.transactionType) {
-                TransactionType.Expense -> expenseCategories.add(category.asCategory())
-                TransactionType.Income -> incomeCategories.add(category.asCategory())
-            }
     }
 
     var uiState by mutableStateOf(AddEditTransactionUiState())
@@ -164,7 +166,7 @@ class AddEditTransactionViewModel @Inject constructor(
     var addEditCategoryDialogUiState by mutableStateOf(
             AddEditCategoryDialogUiState(
                 availableColors = expenseColors,
-                disabledColors = (incomeCategories + expenseCategories).map { it.color }
+                disabledColors = (incomeCategories.value + expenseCategories.value).map { it.color }
             ))
         private set
 
@@ -179,7 +181,7 @@ class AddEditTransactionViewModel @Inject constructor(
     }
 
     fun onColorSelected(newValue: Color) {
-        val isColorError = newValue in (incomeCategories + expenseCategories).map { it.color }
+        val isColorError = newValue in (incomeCategories.value + expenseCategories.value).map { it.color }
         addEditCategoryDialogUiState = addEditCategoryDialogUiState.copy(color = newValue, isColorError = isColorError)
     }
 
@@ -194,17 +196,16 @@ class AddEditTransactionViewModel @Inject constructor(
 
     fun addTransactionCategory() {
         // No need to check if name is blank and color not null since button is disabled if they are
-        val firebaseCategory = Category(
+        val category = Category(
             id = addEditCategoryDialogUiState.id,
             name = addEditCategoryDialogUiState.name,
             color = addEditCategoryDialogUiState.color!!,
             transactionType = transactionType.value
-        ).asNetworkCategory()
+        )
 
-        storageService.addTransactionCategory(accountService.getUserId(), firebaseCategory) { error ->
+        categoriesRepository.addCategory(accountService.getUserId(), category) { error ->
             if (error == null) {
                 SnackbarManager.showMessage(R.string.category_saved)
-                getCategories()
                 uiState = when (transactionType.value) {
                     TransactionType.Income -> uiState.copy(incomeCategory = null)
                     TransactionType.Expense -> uiState.copy(expenseCategory = null)
@@ -216,10 +217,9 @@ class AddEditTransactionViewModel @Inject constructor(
 
     fun moveTransactionCategoryToTrash(category: Category) {
         setConfirmDeleteCategoryAlertDialogUiState(false)
-        storageService.moveTransactionCategoryToTrash(accountService.getUserId(), category.id) { error ->
+        categoriesRepository.moveCategoryToTrash(accountService.getUserId(), category.id) { error ->
             if (error == null) {
                 SnackbarManager.showMessage(R.string.category_removed)
-                getCategories()
                 uiState = when (transactionType.value) {
                     TransactionType.Income -> uiState.copy(incomeCategory = null)
                     TransactionType.Expense -> uiState.copy(expenseCategory = null)

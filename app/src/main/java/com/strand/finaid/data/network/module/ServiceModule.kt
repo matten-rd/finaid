@@ -11,10 +11,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.strand.finaid.R
 import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
-import com.strand.finaid.data.network.StorageService
 import com.strand.finaid.data.network.impl.AccountServiceImpl
 import com.strand.finaid.data.network.impl.LogServiceImpl
-import com.strand.finaid.data.network.impl.StorageServiceImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,9 +29,6 @@ class ServiceModule {
 
     @Provides
     fun provideLogService(impl: LogServiceImpl): LogService = impl
-
-    @Provides
-    fun provideStorageService(impl: StorageServiceImpl): StorageService = impl
 
     @Provides
     fun provideAccountService(
