@@ -27,11 +27,15 @@ class SavingsNetworkDataSourceImpl @Inject constructor() : SavingsNetworkDataSou
         deleted: Boolean,
         onDocumentEvent: (Boolean, SavingsAccountEntity) -> Unit
     ) {
+        // FIXME(
+        //  This implementation of Room caching works for everything except for permanent deletes.
+        //  Therefore I have commented out the core caching logic so that all features work but the caching is broken.
+        //  )
         val query =
             if (lastModifiedDate != null)
                 userId.userDocument
                     .collection(SavingsCollection)
-                    .whereGreaterThan(LastModifiedField, lastModifiedDate)
+                    //.whereGreaterThan(LastModifiedField, lastModifiedDate)
             else
                 userId.userDocument
                     .collection(SavingsCollection)

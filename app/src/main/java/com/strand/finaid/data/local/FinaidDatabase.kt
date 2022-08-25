@@ -9,7 +9,7 @@ import com.strand.finaid.data.local.entities.SavingsAccountEntity
 import com.strand.finaid.data.local.entities.TransactionEntity
 import com.strand.finaid.data.local.typeconverters.DateTimeTypeConverter
 
-@Database(entities = [TransactionEntity::class, SavingsAccountEntity::class], version = 2)
+@Database(entities = [TransactionEntity::class, SavingsAccountEntity::class], version = 3)
 @TypeConverters(DateTimeTypeConverter::class)
 abstract class FinaidDatabase : RoomDatabase() {
     abstract fun transactionsDao(): TransactionsDao
