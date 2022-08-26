@@ -5,13 +5,13 @@ import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.ktx.toObjects
 import com.strand.finaid.R
-import com.strand.finaid.model.Result
-import com.strand.finaid.model.data.SavingsAccount
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
-import com.strand.finaid.model.service.StorageService
+import com.strand.finaid.data.Result
+import com.strand.finaid.data.mapper.asSavingsAccountUiState
+import com.strand.finaid.data.model.SavingsAccount
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
+import com.strand.finaid.data.repository.SavingsRepository
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,38 +28,43 @@ data class SavingsAccountUiState(
     val bank: String,
 )
 
+sealed interface SavingsScreenUiState {
+    data class Success(val savingsAccounts: List<SavingsAccountUiState>?) : SavingsScreenUiState
+    object Error : SavingsScreenUiState
+    object Loading : SavingsScreenUiState
+}
+
 @HiltViewModel
 class SavingsViewModel @Inject constructor(
     logService: LogService,
-    private val storageService: StorageService,
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    private val savingsRepository: SavingsRepository
 ) : FinaidViewModel(logService) {
-    private val savingsAccountResponse: Flow<Result<List<SavingsAccountUiState>>> = storageService
-        .addSavingsListener(accountService.getUserId())
-        .map { res ->
-            when (res) {
+    private val _savingsAccountsUiState: Flow<SavingsScreenUiState> = savingsRepository
+        .getSavingsAccountsStream(accountService.getUserId())
+        .map { result: Result<List<SavingsAccount>> ->
+            when (result) {
                 is Result.Success -> {
-                    Result.Success(
-                        res.data?.toObjects<SavingsAccount>()?.map { it.toSavingsAccountUiState() })
+                    SavingsScreenUiState.Success(result.data?.map { it.asSavingsAccountUiState() })
                 }
-                is Result.Loading -> { Result.Loading }
+                Result.Loading -> SavingsScreenUiState.Loading
                 is Result.Error -> {
-                    onError(res.exception)
-                    res
+                    onError(result.exception)
+                    SavingsScreenUiState.Error
                 }
             }
         }
 
-    val savingsAccounts: StateFlow<Result<List<SavingsAccountUiState>>> = savingsAccountResponse
+    val savingsAccountsUiState: StateFlow<SavingsScreenUiState> = _savingsAccountsUiState
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = Result.Loading
+            initialValue = SavingsScreenUiState.Loading
         )
 
     fun onDeleteSavingsAccountClick(savingsAccount: SavingsAccountUiState) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.moveSavingsAccountToTrash(accountService.getUserId(), savingsAccount.id) { error ->
+            savingsRepository.moveSavingsAccountToTrash(accountService.getUserId(), savingsAccount.id) { error ->
                 if (error == null)
                     SnackbarManager.showMessage(R.string.savingsaccount_removed)
                 else

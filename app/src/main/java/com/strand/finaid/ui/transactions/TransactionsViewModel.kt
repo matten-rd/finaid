@@ -3,14 +3,15 @@ package com.strand.finaid.ui.transactions
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.ktx.toObjects
 import com.strand.finaid.R
-import com.strand.finaid.model.Result
-import com.strand.finaid.model.data.FirebaseCategory
-import com.strand.finaid.model.data.Transaction
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
-import com.strand.finaid.model.service.StorageService
+import com.strand.finaid.data.Result
+import com.strand.finaid.data.mapper.asTransactionUiState
+import com.strand.finaid.data.model.Category
+import com.strand.finaid.data.model.Transaction
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
+import com.strand.finaid.data.repository.CategoriesRepository
+import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +30,12 @@ data class TransactionUiState(
     val date: String
 )
 
+sealed interface TransactionScreenUiState {
+    data class Success(val transactions: List<TransactionUiState>?) : TransactionScreenUiState
+    object Error : TransactionScreenUiState
+    object Loading : TransactionScreenUiState
+}
+
 enum class SortOrder(val title: String, val field: String) {
     Date("Datum", "date"),
     Sum("Summa", "amount"),
@@ -38,8 +45,9 @@ enum class SortOrder(val title: String, val field: String) {
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
     logService: LogService,
-    private val storageService: StorageService,
-    private val accountService: AccountService
+    private val accountService: AccountService,
+    private val categoriesRepository: CategoriesRepository,
+    private val transactionsRepository: TransactionsRepository
 ) : FinaidViewModel(logService) {
 
     val possibleSortOrders = SortOrder.values().map { it.title }
@@ -59,57 +67,41 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-    private val transactionResult: Flow<Result<List<TransactionUiState>>> = sortFlow.flatMapLatest { order ->
-        storageService
-            .addTransactionsListener(accountService.getUserId())
-            .map { result ->
+    private val _transactionsUiState: Flow<TransactionScreenUiState> = sortFlow.flatMapLatest { order ->
+        transactionsRepository
+            .getTransactionsStream(accountService.getUserId())
+            .map { result: Result<List<Transaction>> ->
                 when (result) {
-                    is Result.Success -> Result.Success(
-                        result.data?.toObjects<Transaction>()
-                            ?.customSortedBy(order)
-                            ?.map { it.toTransactionUiState() }
+                    is Result.Success -> TransactionScreenUiState.Success(
+                        result.data?.customSortedBy(order)?.map { it.asTransactionUiState() }
                     )
-                    Result.Loading -> Result.Loading
+                    Result.Loading -> TransactionScreenUiState.Loading
                     is Result.Error -> {
                         onError(result.exception)
-                        result
+                        TransactionScreenUiState.Error
                     }
                 }
             }
         }
 
-    val transactions: StateFlow<Result<List<TransactionUiState>>> = transactionResult
+    val transactionsUiState: StateFlow<TransactionScreenUiState> = _transactionsUiState
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = Result.Loading
+            initialValue = TransactionScreenUiState.Loading
         )
 
-
-    private val categoriesResult: Flow<Result<List<CategoryUi>>> =
-        storageService.addCategoriesListener(accountService.getUserId())
-            .map { result ->
-                when (result) {
-                    is Result.Success -> Result.Success(
-                        result.data?.toObjects<FirebaseCategory>()?.map { it.toCategoryUi() })
-                    Result.Loading -> Result.Loading
-                    is Result.Error -> {
-                        onError(result.exception)
-                        result
-                    }
-                }
-            }
-
-    val categories: StateFlow<Result<List<CategoryUi>>> = categoriesResult
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = Result.Loading
-        )
+    val categories: StateFlow<Result<List<Category>>> =
+        categoriesRepository.getCategoriesStream(accountService.getUserId())
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = Result.Loading
+            )
 
     fun onDeleteTransactionClick(transaction: TransactionUiState) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            storageService.moveTransactionToTrash(accountService.getUserId(), transaction.id) { error ->
+            transactionsRepository.moveTransactionToTrash(accountService.getUserId(), transaction.id) { error ->
                 if (error == null)
                     SnackbarManager.showMessage(R.string.transaction_removed)
                 else

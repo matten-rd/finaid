@@ -1,4 +1,4 @@
-package com.strand.finaid.model.service.module
+package com.strand.finaid.data.network.module
 
 import android.app.Application
 import android.content.Context
@@ -9,12 +9,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.strand.finaid.R
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
-import com.strand.finaid.model.service.StorageService
-import com.strand.finaid.model.service.impl.AccountServiceImpl
-import com.strand.finaid.model.service.impl.LogServiceImpl
-import com.strand.finaid.model.service.impl.StorageServiceImpl
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
+import com.strand.finaid.data.network.impl.AccountServiceImpl
+import com.strand.finaid.data.network.impl.LogServiceImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,9 +29,6 @@ class ServiceModule {
 
     @Provides
     fun provideLogService(impl: LogServiceImpl): LogService = impl
-
-    @Provides
-    fun provideStorageService(impl: StorageServiceImpl): StorageService = impl
 
     @Provides
     fun provideAccountService(
@@ -95,6 +90,5 @@ class ServiceModule {
         app: Application,
         options: GoogleSignInOptions
     ) = GoogleSignIn.getClient(app, options)
-
 
 }

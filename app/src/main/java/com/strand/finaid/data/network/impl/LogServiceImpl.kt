@@ -1,8 +1,8 @@
-package com.strand.finaid.model.service.impl
+package com.strand.finaid.data.network.impl
 
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.strand.finaid.model.service.LogService
+import com.strand.finaid.data.network.LogService
 import javax.inject.Inject
 
 class LogServiceImpl @Inject constructor() : LogService {

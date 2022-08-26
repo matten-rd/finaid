@@ -1,4 +1,4 @@
-package com.strand.finaid.preferences
+package com.strand.finaid.data.local.preferences
 
 import android.content.Context
 import androidx.compose.runtime.*

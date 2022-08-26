@@ -1,4 +1,4 @@
-package com.strand.finaid.model
+package com.strand.finaid.data
 
 sealed class Result<out T> {
     object Loading : Result<Nothing>()

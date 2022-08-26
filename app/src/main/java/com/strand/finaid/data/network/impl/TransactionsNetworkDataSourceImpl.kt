@@ -1,19 +1,14 @@
-package com.strand.finaid.model.service.impl
+package com.strand.finaid.data.network.impl
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
 import com.google.firebase.firestore.*
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.ktx.Firebase
-import com.strand.finaid.model.Result
-import com.strand.finaid.model.data.FirebaseCategory
-import com.strand.finaid.model.data.SavingsAccount
-import com.strand.finaid.model.data.Transaction
-import com.strand.finaid.model.service.StorageService
-import com.strand.finaid.model.service.repository.TransactionsPagingSource
+import com.strand.finaid.data.Result
+import com.strand.finaid.data.model.Transaction
+import com.strand.finaid.data.network.TransactionsNetworkDataSource
+import com.strand.finaid.data.network.model.NetworkTransaction
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -22,8 +17,7 @@ import java.time.Instant
 import java.util.*
 import javax.inject.Inject
 
-
-class StorageServiceImpl @Inject constructor() : StorageService {
+class TransactionsNetworkDataSourceImpl @Inject constructor() : TransactionsNetworkDataSource {
 
     private val Date.yearMonthFormat: String
         get() = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(this)
@@ -43,9 +37,6 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         awaitClose { listenerRegistration.remove() }
     }
 
-    /**
-     * Transactions
-     */
     override fun addTransactionsListener(userId: String, deleted: Boolean): Flow<Result<QuerySnapshot>> {
         val query = userId.userDocument
             .collection(TransactionsCollection)
@@ -56,7 +47,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
 
     override fun saveTransaction(
         userId: String,
-        transaction: Transaction,
+        transaction: NetworkTransaction,
         onResult: (Throwable?) -> Unit
     ) {
         val transactionDocRef = userId.userDocument.collection(TransactionsCollection).document(transaction.id)
@@ -156,7 +147,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         userId: String,
         transactionId: String,
         onError: (Throwable) -> Unit,
-        onSuccess: (Transaction?) -> Unit
+        onSuccess: (NetworkTransaction?) -> Unit
     ) {
         userId.userDocument
             .collection(TransactionsCollection)
@@ -262,7 +253,7 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         numberOfTransactions: Int,
         userId: String,
         onError: (Throwable) -> Unit,
-        onSuccess: (List<Transaction?>) -> Unit
+        onSuccess: (List<NetworkTransaction?>) -> Unit
     ) {
         userId.userDocument
             .collection(TransactionsCollection)
@@ -274,218 +265,10 @@ class StorageServiceImpl @Inject constructor() : StorageService {
             .addOnSuccessListener { result -> onSuccess(result.toObjects()) }
     }
 
-    override fun paginateTransactions(userId: String, pageSize: Int): Flow<PagingData<Transaction>> {
-        val query = userId.userDocument
-            .collection(TransactionsCollection)
-            .limit(pageSize.toLong())
-
-        return Pager(
-            PagingConfig(pageSize = pageSize)
-        ) {
-            TransactionsPagingSource(query)
-        }.flow
-    }
-
-    /**
-     * Categories
-     */
-    override fun addCategoriesListener(userId: String, deleted: Boolean): Flow<Result<QuerySnapshot>> {
-        val query = userId.userDocument
-            .collection(CategoriesCollection)
-            .whereEqualTo(DeletedField, deleted)
-
-        return query.snapshotFlow()
-    }
-
-    override fun getCategories(userId: String, onError: (Throwable) -> Unit, onSuccess: (FirebaseCategory) -> Unit) {
-        userId.userDocument
-            .collection(CategoriesCollection)
-            .whereEqualTo(DeletedField, false)
-            .get()
-            .addOnFailureListener { error -> onError(error) }
-            .addOnSuccessListener { result ->
-                result.forEach { document -> onSuccess(document.toObject()) }
-            }
-    }
-
-    override fun addTransactionCategory(
-        userId: String,
-        category: FirebaseCategory,
-        onResult: (Throwable?) -> Unit
-    ) {
-        userId.userDocument
-            .collection(CategoriesCollection)
-            .document(category.id)
-            .set(category)
-            .addOnCompleteListener { task -> onResult(task.exception) }
-
-        userId.userDocument
-            .collection(TransactionsCollection)
-            .whereEqualTo("category.id", category.id)
-            .get()
-            .addOnSuccessListener { result ->
-                result.forEach { document ->
-                    document.reference
-                        .update(mapOf("category.hexCode" to category.hexCode, "category.name" to category.name))
-                }
-            }
-            .addOnFailureListener { e -> onResult(e) }
-    }
-
-    override fun moveTransactionCategoryToTrash(
-        userId: String,
-        categoryId: String,
-        onResult: (Throwable?) -> Unit
-    ) {
-        userId.userDocument
-            .collection(CategoriesCollection)
-            .document(categoryId)
-            .update(DeletedField, true)
-            .addOnCompleteListener { task -> onResult(task.exception) }
-    }
-
-    override fun deleteTransactionCategoryPermanently(
-        userId: String,
-        categoryId: String,
-        onResult: (Throwable?) -> Unit
-    ) {
-        userId.userDocument
-            .collection(CategoriesCollection)
-            .document(categoryId)
-            .delete()
-            .addOnCompleteListener { task -> onResult(task.exception) }
-    }
-
-    override fun getDeletedCategories(
-        userId: String,
-        onError: (Throwable) -> Unit,
-        onSuccess: (FirebaseCategory) -> Unit
-    ) {
-        userId.userDocument
-            .collection(CategoriesCollection)
-            .whereEqualTo(DeletedField, true)
-            .get()
-            .addOnFailureListener { error -> onError(error) }
-            .addOnSuccessListener { result ->
-                result.forEach { document -> onSuccess(document.toObject()) }
-            }
-    }
-
-    override fun restoreCategoryFromTrash(
-        userId: String,
-        categoryId: String,
-        onResult: (Throwable?) -> Unit
-    ) {
-        userId.userDocument
-            .collection(CategoriesCollection)
-            .document(categoryId)
-            .update(DeletedField, false)
-            .addOnCompleteListener { task -> onResult(task.exception) }
-    }
-
-    /**
-     * Savings
-     */
-    override fun addSavingsListener(userId: String, deleted: Boolean): Flow<Result<QuerySnapshot>> {
-        val query = userId.userDocument
-            .collection(SavingsCollection)
-            .whereEqualTo(DeletedField, deleted)
-
-        return query.snapshotFlow()
-    }
-
-    override fun saveSavingsAccount(
-        userId: String,
-        savingsAccount: SavingsAccount,
-        onResult: (Throwable?) -> Unit
-    ) {
-        userId.userDocument
-            .collection(SavingsCollection)
-            .document(savingsAccount.id)
-            .set(savingsAccount)
-            .addOnCompleteListener { task -> onResult(task.exception) }
-    }
-
-    override fun getSavingsAccount(
-        userId: String,
-        savingsAccountId: String,
-        onError: (Throwable) -> Unit,
-        onSuccess: (SavingsAccount?) -> Unit
-    ) {
-        userId.userDocument
-            .collection(SavingsCollection)
-            .document(savingsAccountId)
-            .get()
-            .addOnFailureListener { error -> onError(error) }
-            .addOnSuccessListener { result -> onSuccess(result.toObject()) }
-    }
-
-    override fun moveSavingsAccountToTrash(
-        userId: String,
-        savingsAccountId: String,
-        onResult: (Throwable?) -> Unit
-    ) {
-        val savingsAccountUpdates = mapOf(
-            DeletedField to true,
-            LastModifiedField to Date.from(Instant.now())
-        )
-        userId.userDocument
-            .collection(SavingsCollection)
-            .document(savingsAccountId)
-            .update(savingsAccountUpdates)
-            .addOnCompleteListener { task -> onResult(task.exception) }
-    }
-
-    override fun restoreSavingsAccountFromTrash(
-        userId: String,
-        savingsAccountId: String,
-        onResult: (Throwable?) -> Unit
-    ) {
-        val savingsAccountUpdates = mapOf(
-            DeletedField to false,
-            LastModifiedField to Date.from(Instant.now())
-        )
-        userId.userDocument
-            .collection(SavingsCollection)
-            .document(savingsAccountId)
-            .update(savingsAccountUpdates)
-            .addOnCompleteListener { task -> onResult(task.exception) }
-    }
-
-    override fun deleteSavingsAccountPermanently(
-        userId: String,
-        savingsAccountId: String,
-        onResult: (Throwable?) -> Unit
-    ) {
-        userId.userDocument
-            .collection(SavingsCollection)
-            .document(savingsAccountId)
-            .delete()
-            .addOnCompleteListener { task -> onResult(task.exception) }
-    }
-
-    override fun getLimitedNumberOfSavingsAccounts(
-        numberOfAccounts: Int,
-        userId: String,
-        onError: (Throwable) -> Unit,
-        onSuccess: (List<SavingsAccount?>) -> Unit
-    ) {
-        userId.userDocument
-            .collection(SavingsCollection)
-            .orderBy(AmountField)
-            .limit(numberOfAccounts.toLong())
-            .get()
-            .addOnFailureListener { error -> onError(error) }
-            .addOnSuccessListener { result -> onSuccess(result.toObjects()) }
-    }
-
-
     companion object {
         private const val UsersCollection = "users"
         private const val TransactionsCollection = "transactions"
         private const val TransactionsKeyDataCollection = "transactionsKeyData"
-        private const val SavingsCollection = "savings"
-        private const val CategoriesCollection = "categories"
 
         private const val DeletedField = "deleted"
         private const val LastModifiedField = "lastModified"
@@ -493,6 +276,6 @@ class StorageServiceImpl @Inject constructor() : StorageService {
         private const val NetField = "net"
         private const val IncomeField = "income"
         private const val ExpenseField = "expense"
-        private const val AmountField = "amount"
     }
+
 }

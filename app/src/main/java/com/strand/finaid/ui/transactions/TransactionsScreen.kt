@@ -15,8 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.strand.finaid.R
-import com.strand.finaid.model.Result
+import com.strand.finaid.data.Result
+import com.strand.finaid.data.model.Category
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.SegmentedButton
@@ -28,20 +30,22 @@ fun TransactionsScreen(
     navigateToEditScreen: (String) -> Unit,
     openSortSheet: () -> Unit
 ) {
-    val transactions by viewModel.transactions.collectAsState()
-    val categories by viewModel.categories.collectAsState()
+    val transactions: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
+    val categories: Result<List<Category>> by viewModel.categories.collectAsStateWithLifecycle()
     val openDialog = remember { mutableStateOf(false) }
     val selectedTransaction = remember { mutableStateOf<TransactionUiState?>(null) }
 
     // Use intermediate variable to enable smart cast and ensure that it has the same value in the condition and the when branches
     when (val t = transactions) {
-        is Result.Success -> {
-            if (t.data.isNullOrEmpty())
+        TransactionScreenUiState.Error -> { FullScreenError() }
+        TransactionScreenUiState.Loading -> { FullScreenLoading() }
+        is TransactionScreenUiState.Success -> {
+            if (t.transactions.isNullOrEmpty())
                 Text(text = "Empty Content")
             else {
                 val c = categories
                 TransactionsScreenContent(
-                    transactions = t.data,
+                    transactions = t.transactions,
                     categories = if (c is Result.Success && !c.data.isNullOrEmpty()) c.data else emptyList(),
                     openSortSheet = openSortSheet,
                     onEditClick = navigateToEditScreen,
@@ -52,8 +56,6 @@ fun TransactionsScreen(
                 )
             }
         }
-        is Result.Error -> { FullScreenError() }
-        Result.Loading -> { FullScreenLoading() }
     }
 
     if (openDialog.value) {
@@ -83,7 +85,7 @@ fun TransactionsScreen(
 @Composable
 private fun TransactionsScreenContent(
     transactions: List<TransactionUiState>,
-    categories: List<CategoryUi>,
+    categories: List<Category>,
     openSortSheet: () -> Unit,
     onEditClick: (String) -> Unit,
     onDeleteClick: (TransactionUiState) -> Unit
@@ -115,7 +117,7 @@ private fun TransactionsScreenContent(
 @Composable
 private fun FilterRow(
     openSortSheet: () -> Unit,
-    categories: List<CategoryUi>
+    categories: List<Category>
 ) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)

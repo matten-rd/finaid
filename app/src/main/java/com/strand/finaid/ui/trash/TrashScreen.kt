@@ -21,15 +21,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.strand.finaid.R
-import com.strand.finaid.model.Result
+import com.strand.finaid.data.Result
+import com.strand.finaid.data.model.Category
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.list_items.BaseItem
 import com.strand.finaid.ui.savings.SavingsAccountUiState
-import com.strand.finaid.ui.transactions.CategoryUi
+import com.strand.finaid.ui.savings.SavingsScreenUiState
+import com.strand.finaid.ui.transactions.TransactionScreenUiState
 import com.strand.finaid.ui.transactions.TransactionUiState
 import kotlinx.coroutines.launch
 
@@ -41,8 +44,9 @@ fun TrashScreen(
     val initialPage = viewModel.selectedTrashType.ordinal
     val pagerState = rememberPagerState(initialPage = initialPage)
     val scope = rememberCoroutineScope()
-    val transactions by viewModel.transactions.collectAsState()
-    val savingsAccounts by viewModel.savingsAccounts.collectAsState()
+    val transactions: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
+    val savingsAccounts: SavingsScreenUiState by viewModel.savingsAccountsUiState.collectAsStateWithLifecycle()
+    val categories: Result<List<Category>> by viewModel.categories.collectAsStateWithLifecycle()
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
@@ -96,6 +100,7 @@ fun TrashScreen(
                         onPermanentlyDeleteClick = viewModel::permanentlyDeleteTransaction
                     )
                     TrashType.Categories.ordinal -> CategoryTrashScreen(
+                        categories = categories,
                         uiState = viewModel.trashCategoryUiState,
                         setIsCategoryRestoreDialogOpen = viewModel::setIsCategoryRestoreDialogOpen,
                         setIsCategoryDeleteDialogOpen = viewModel::setIsCategoryDeleteDialogOpen,
@@ -112,7 +117,7 @@ fun TrashScreen(
 
 @Composable
 fun SavingsTrashScreen(
-    savingsAccounts: Result<List<SavingsAccountUiState>>,
+    savingsAccounts: SavingsScreenUiState,
     uiState: TrashSavingsAccountsUiState,
     openSheet: () -> Unit,
     setIsSavingsAccountRestoreDialogOpen: (Boolean) -> Unit,
@@ -123,15 +128,17 @@ fun SavingsTrashScreen(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (savingsAccounts) {
-            is Result.Success -> {
-                if (savingsAccounts.data.isNullOrEmpty())
+            SavingsScreenUiState.Error -> { FullScreenError() }
+            SavingsScreenUiState.Loading -> { FullScreenLoading() }
+            is SavingsScreenUiState.Success -> {
+                if (savingsAccounts.savingsAccounts.isNullOrEmpty())
                     Text(text = "Empty Content")
                 else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        items(savingsAccounts.data, key = { it.id }) { savingsAccount ->
+                        items(savingsAccounts.savingsAccounts, key = { it.id }) { savingsAccount ->
                             BaseItem(
                                 modifier = Modifier.animateItemPlacement(),
                                 icon = savingsAccount.icon,
@@ -147,8 +154,6 @@ fun SavingsTrashScreen(
                     }
                 }
             }
-            is Result.Error -> { FullScreenError() }
-            Result.Loading -> { FullScreenLoading() }
         }
     }
 
@@ -201,7 +206,7 @@ fun SavingsTrashScreen(
 
 @Composable
 fun TransactionsTrashScreen(
-    transactions: Result<List<TransactionUiState>>,
+    transactions: TransactionScreenUiState,
     uiState: TrashTransactionsUiState,
     openSheet: () -> Unit,
     setIsTransactionRestoreDialogOpen: (Boolean) -> Unit,
@@ -212,15 +217,17 @@ fun TransactionsTrashScreen(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         when (transactions) {
-            is Result.Success -> {
-                if (transactions.data.isNullOrEmpty())
+            TransactionScreenUiState.Error -> { FullScreenError() }
+            TransactionScreenUiState.Loading -> { FullScreenLoading() }
+            is TransactionScreenUiState.Success -> {
+                if (transactions.transactions.isNullOrEmpty())
                     Text(text = "Empty Content")
                 else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        items(transactions.data, key = { it.id }) { transactionItem ->
+                        items(transactions.transactions, key = { it.id }) { transactionItem ->
                             BaseItem(
                                 modifier = Modifier.animateItemPlacement(),
                                 icon = transactionItem.icon,
@@ -236,8 +243,6 @@ fun TransactionsTrashScreen(
                     }
                 }
             }
-            is Result.Error -> { FullScreenError() }
-            Result.Loading -> { FullScreenLoading() }
         }
     }
 
@@ -290,29 +295,41 @@ fun TransactionsTrashScreen(
 
 @Composable
 fun CategoryTrashScreen(
+    categories: Result<List<Category>>,
     uiState: TrashCategoryUiState,
     setIsCategoryRestoreDialogOpen: (Boolean) -> Unit,
     setIsCategoryDeleteDialogOpen: (Boolean) -> Unit,
-    setSelectedCategory: (CategoryUi) -> Unit,
-    onRestoreClick: (CategoryUi) -> Unit,
-    onPermanentlyDeleteClick: (CategoryUi) -> Unit
+    setSelectedCategory: (Category) -> Unit,
+    onRestoreClick: (Category) -> Unit,
+    onPermanentlyDeleteClick: (Category) -> Unit
 ) {
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(uiState.deletedCategories) { deletedCategory ->
-                TrashCategoryItem(
-                    category = deletedCategory,
-                    openRestoreDialog = {
-                        setSelectedCategory(deletedCategory)
-                        setIsCategoryRestoreDialogOpen(true)
-                    },
-                    openDeleteDialog =  {
-                        setSelectedCategory(deletedCategory)
-                        setIsCategoryDeleteDialogOpen(true)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        when (categories) {
+            is Result.Error -> { FullScreenError() }
+            Result.Loading -> { FullScreenLoading() }
+            is Result.Success -> {
+                if (categories.data.isNullOrEmpty())
+                    Text(text = "Empty content")
+                else
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(categories.data) { deletedCategory ->
+                            TrashCategoryItem(
+                                category = deletedCategory,
+                                openRestoreDialog = {
+                                    setSelectedCategory(deletedCategory)
+                                    setIsCategoryRestoreDialogOpen(true)
+                                },
+                                openDeleteDialog =  {
+                                    setSelectedCategory(deletedCategory)
+                                    setIsCategoryDeleteDialogOpen(true)
+                                }
+                            )
+                        }
                     }
-                )
             }
         }
     }
@@ -366,7 +383,7 @@ fun CategoryTrashScreen(
 
 @Composable
 private fun TrashCategoryItem(
-    category: CategoryUi,
+    category: Category,
     openRestoreDialog: () -> Unit,
     openDeleteDialog: () -> Unit
 ) {

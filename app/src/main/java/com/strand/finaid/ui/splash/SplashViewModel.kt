@@ -1,7 +1,7 @@
 package com.strand.finaid.ui.splash
 
 import androidx.lifecycle.ViewModel
-import com.strand.finaid.model.service.AccountService
+import com.strand.finaid.data.network.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

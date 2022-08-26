@@ -4,8 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.AuthCredential
-import com.strand.finaid.model.service.AccountService
-import com.strand.finaid.model.service.LogService
+import com.strand.finaid.data.network.AccountService
+import com.strand.finaid.data.network.LogService
 import com.strand.finaid.ui.FinaidViewModel
 import kotlinx.coroutines.launch
 

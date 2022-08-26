@@ -7,7 +7,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -28,7 +27,7 @@ fun AddEditSavingsScreen(
         viewModel.initialize(savingsAccountId)
     }
 
-    val uiState by viewModel.uiState
+    val uiState = viewModel.uiState
 
     if (viewModel.isDeleteSavingsAccountDialogOpen) {
         AlertDialog(

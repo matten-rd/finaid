@@ -6,7 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import com.strand.finaid.preferences.rememberThemePreference
+import com.strand.finaid.data.local.preferences.rememberThemePreference
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,

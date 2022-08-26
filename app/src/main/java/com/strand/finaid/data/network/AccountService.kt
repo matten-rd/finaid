@@ -1,4 +1,4 @@
-package com.strand.finaid.model.service
+package com.strand.finaid.data.network
 
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.tasks.Task

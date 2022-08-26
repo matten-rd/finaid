@@ -14,7 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.strand.finaid.R
-import com.strand.finaid.preferences.rememberThemePreference
+import com.strand.finaid.data.local.preferences.rememberThemePreference
 import com.strand.finaid.ui.theme.AppTheme
 
 @Composable

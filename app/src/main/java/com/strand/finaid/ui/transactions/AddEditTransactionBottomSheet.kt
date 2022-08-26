@@ -14,7 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.strand.finaid.R
+import com.strand.finaid.data.model.Category
 import com.strand.finaid.ui.components.BaseBottomSheet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -26,10 +28,12 @@ fun CategoryBottomSheet(
     scope: CoroutineScope
 ) {
     val transactionType by viewModel.transactionType
+    val incomeCategories by viewModel.incomeCategories.collectAsStateWithLifecycle()
+    val expenseCategories by viewModel.expenseCategories.collectAsStateWithLifecycle()
 
     val (options, selectedCategory, onCategorySelected) = when (transactionType) {
-        TransactionType.Income -> Triple(viewModel.incomeCategories, viewModel.uiState.incomeCategory, viewModel::onIncomeCategoryChange)
-        TransactionType.Expense -> Triple(viewModel.expenseCategories, viewModel.uiState.expenseCategory, viewModel::onExpenseCategoryChange)
+        TransactionType.Income -> Triple(incomeCategories, viewModel.uiState.incomeCategory, viewModel::onIncomeCategoryChange)
+        TransactionType.Expense -> Triple(expenseCategories, viewModel.uiState.expenseCategory, viewModel::onExpenseCategoryChange)
     }
 
     CategoryBottomSheetContent(
@@ -54,12 +58,12 @@ fun CategoryBottomSheet(
 
 @Composable
 private fun CategoryBottomSheetContent(
-    options: List<CategoryUi>,
-    selectedCategory: CategoryUi?,
-    onCategorySelected: (CategoryUi) -> Unit,
+    options: List<Category>,
+    selectedCategory: Category?,
+    onCategorySelected: (Category) -> Unit,
     onCreateCategoryClick: () -> Unit,
-    onDeleteCategoryClick: (CategoryUi) -> Unit,
-    onEditCategoryClick: (CategoryUi) -> Unit,
+    onDeleteCategoryClick: (Category) -> Unit,
+    onEditCategoryClick: (Category) -> Unit,
 ) {
     BaseBottomSheet(title = stringResource(id = R.string.select_category)) {
         Column(
@@ -104,11 +108,11 @@ private fun CategoryBottomSheetContent(
 
 @Composable
 private fun CategoryItem(
-    category: CategoryUi,
-    onCategorySelected: (CategoryUi) -> Unit,
+    category: Category,
+    onCategorySelected: (Category) -> Unit,
     isSelected: Boolean,
-    onDeleteCategoryClick: (CategoryUi) -> Unit,
-    onEditCategoryClick: (CategoryUi) -> Unit
+    onDeleteCategoryClick: (Category) -> Unit,
+    onEditCategoryClick: (Category) -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val modifier = Modifier
