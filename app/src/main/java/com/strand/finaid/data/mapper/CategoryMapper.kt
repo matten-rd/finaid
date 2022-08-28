@@ -8,7 +8,7 @@ import com.strand.finaid.data.network.model.NetworkCategory
 fun Category.asNetworkCategory(): NetworkCategory {
     return NetworkCategory(
         id = id,
-        name = name,
+        name = name.trim(),
         hexCode = String.format("%06X", color.toArgb() and 0xFFFFFF),
         deleted = deleted,
         transactionType = transactionType

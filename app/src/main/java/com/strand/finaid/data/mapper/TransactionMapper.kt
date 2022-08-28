@@ -74,7 +74,7 @@ fun NetworkTransaction.asTransaction(): Transaction {
 fun Transaction.asNetworkTransaction(): NetworkTransaction {
     return NetworkTransaction(
         id = id,
-        memo = memo,
+        memo = memo.trim(),
         amount = amount,
         category = category.asNetworkCategory(),
         date = date,

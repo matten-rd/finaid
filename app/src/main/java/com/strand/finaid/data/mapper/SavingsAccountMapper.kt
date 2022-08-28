@@ -66,8 +66,8 @@ fun NetworkSavingsAccount.asSavingsAccount(): SavingsAccount {
 fun SavingsAccount.asNetworkSavingsAccount(): NetworkSavingsAccount {
     return NetworkSavingsAccount(
         id = id,
-        name = name,
-        bank = bank,
+        name = name.trim(),
+        bank = bank.trim(),
         hexCode = hexCode,
         amount = amount,
         lastModified = Date.from(Instant.now()),
