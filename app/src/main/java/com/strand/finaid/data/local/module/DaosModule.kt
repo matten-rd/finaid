@@ -14,4 +14,7 @@ object DaosModule {
 
     @Provides
     fun provideSavingsDao(database: FinaidDatabase) = database.savingsDao()
+
+    @Provides
+    fun provideCategoriesDao(database: FinaidDatabase) = database.categoriesDao()
 }

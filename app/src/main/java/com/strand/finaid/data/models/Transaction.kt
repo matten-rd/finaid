@@ -2,7 +2,6 @@ package com.strand.finaid.data.models
 
 import com.google.firebase.firestore.Exclude
 import com.strand.finaid.NoArg
-import com.strand.finaid.data.network.models.NetworkCategory
 import com.strand.finaid.ui.transactions.TransactionType
 import java.util.*
 
@@ -11,7 +10,7 @@ data class Transaction(
     val id: String = UUID.randomUUID().toString(),
     val memo: String,
     val amount: Int,
-    val category: NetworkCategory,
+    val category: Category,
     val date: Date,
     val lastModified: Date,
     val deleted: Boolean

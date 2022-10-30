@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.strand.finaid.R
 import com.strand.finaid.data.mappers.asAddEditSavingsAccountUiState
 import com.strand.finaid.data.mappers.asSavingsAccount
-import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
 import com.strand.finaid.data.repository.SavingsRepository
 import com.strand.finaid.ext.idFromParameter
@@ -33,7 +32,6 @@ data class AddEditSavingsAccountUiState(
 @HiltViewModel
 class AddEditSavingsViewModel @Inject constructor(
     logService: LogService,
-    private val accountService: AccountService,
     private val savingsRepository: SavingsRepository
 ) : FinaidViewModel(logService) {
 
@@ -78,9 +76,8 @@ class AddEditSavingsViewModel @Inject constructor(
         val savingsAccount = uiState.asSavingsAccount()
 
         if (savingsAccount != null) {
-            savingsRepository.saveSavingsAccount(accountService.getUserId(), savingsAccount) { error ->
-                if (error == null) onSuccess() else onError(error)
-            }
+            viewModelScope.launch { savingsRepository.saveSavingsAccount(savingsAccount = savingsAccount) }
+            onSuccess()
         } else {
             SnackbarManager.showMessage(R.string.form_error)
         }
@@ -95,12 +92,7 @@ class AddEditSavingsViewModel @Inject constructor(
 
     fun onDeleteSavingsAccountClick(savingsAccountId: String) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            savingsRepository.moveSavingsAccountToTrash(accountService.getUserId(), savingsAccountId) { error ->
-                if (error == null)
-                    SnackbarManager.showMessage(R.string.savingsaccount_removed)
-                else
-                    onError(error)
-            }
+            savingsRepository.moveSavingsAccountToTrash(savingsAccountId = savingsAccountId)
         }
     }
 

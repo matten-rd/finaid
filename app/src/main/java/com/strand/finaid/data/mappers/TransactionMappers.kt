@@ -3,10 +3,8 @@ package com.strand.finaid.data.mappers
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.MoneyOff
-import androidx.compose.ui.graphics.Color
 import com.strand.finaid.data.local.entities.TransactionEntity
 import com.strand.finaid.data.models.Transaction
-import com.strand.finaid.data.network.models.NetworkTransaction
 import com.strand.finaid.ui.transactions.AddEditTransactionUiState
 import com.strand.finaid.ui.transactions.TransactionType
 import com.strand.finaid.ui.transactions.TransactionUiState
@@ -20,7 +18,7 @@ fun Transaction.asTransactionUiState(): TransactionUiState {
     return TransactionUiState(
         id = id,
         icon = if (amount > 0) Icons.Default.AttachMoney else Icons.Default.MoneyOff,
-        color = Color(android.graphics.Color.parseColor("#${category.hexCode}")),
+        color = category.color,
         amount = amount,
         memo = memo,
         category = category.name,
@@ -33,8 +31,8 @@ fun Transaction.asAddEditTransactionUiState(): AddEditTransactionUiState {
         id = id,
         memo = memo,
         amount = amount.absoluteValue.toString(),
-        incomeCategory = if (getTransactionType() == TransactionType.Income) category.asCategory() else null,
-        expenseCategory = if (getTransactionType() == TransactionType.Expense) category.asCategory() else null,
+        incomeCategory = if (getTransactionType() == TransactionType.Income) category else null,
+        expenseCategory = if (getTransactionType() == TransactionType.Expense) category else null,
         date = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
     )
 }
@@ -47,14 +45,14 @@ fun AddEditTransactionUiState.asTransaction(transactionType: TransactionType) : 
     return if (!isCategoryOfSelectedTransactionTypeNull && amount.toIntOrNull() != null && memo.isNotBlank())
         Transaction(
             id = id,
-            memo = memo,
+            memo = memo.trim(),
             amount = when (transactionType) {
                 TransactionType.Income -> amount.toInt()
                 TransactionType.Expense -> amount.toInt() * -1
             },
             category = when (transactionType) {
-                TransactionType.Income -> incomeCategory!!.asNetworkCategory()
-                TransactionType.Expense -> expenseCategory!!.asNetworkCategory()
+                TransactionType.Income -> incomeCategory!!
+                TransactionType.Expense -> expenseCategory!!
             },
             date = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()),
             lastModified = Date.from(Instant.now()),
@@ -68,31 +66,19 @@ fun TransactionEntity.asTransaction(): Transaction {
         id = id,
         memo = memo,
         amount = amount,
-        category = category,
+        category = category.asCategory(),
         date = date,
         lastModified = lastModified,
         deleted = deleted
     )
 }
 
-fun NetworkTransaction.asTransactionEntity(): TransactionEntity {
+fun Transaction.asTransactionEntity(): TransactionEntity {
     return TransactionEntity(
         id = id,
         memo = memo,
         amount = amount,
-        category = category,
-        date = date,
-        lastModified = lastModified,
-        deleted = deleted
-    )
-}
-
-fun Transaction.asNetworkTransaction(): NetworkTransaction {
-    return NetworkTransaction(
-        id = id,
-        memo = memo,
-        amount = amount,
-        category = category,
+        category = category.asCategoryEntity(),
         date = date,
         lastModified = lastModified,
         deleted = deleted

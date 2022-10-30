@@ -4,26 +4,25 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.outlined.CurrencyExchange
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeFloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.strand.finaid.R
-import com.strand.finaid.topBarPadding
 import com.strand.finaid.ui.components.FinaidMainTopAppBar
 import com.strand.finaid.ui.navigation.*
 import com.strand.finaid.ui.transactions.TransactionsScreen
@@ -39,37 +38,34 @@ object TransactionsScreenSpec : BottomNavScreenSpec {
     override val route: String = "main/transactions"
 
     @Composable
+    override fun TopBar(
+        navController: NavController,
+        navBackStackEntry: NavBackStackEntry,
+        bottomSheetState: ModalBottomSheetState,
+        coroutineScope: CoroutineScope,
+        scrollBehavior: TopAppBarScrollBehavior
+    ) {
+        FinaidMainTopAppBar(
+            onProfileClick = { navController.navigate(ProfileScreenSpec.route) },
+            onSearchClick = { navController.navigate(SearchScreenSpec.route) },
+            scrollBehavior = scrollBehavior
+        )
+    }
+
+    @Composable
     override fun Content(
         navController: NavController,
         navBackStackEntry: NavBackStackEntry,
         bottomSheetState: ModalBottomSheetState,
         coroutineScope: CoroutineScope
     ) {
-        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarScrollState())
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                val scrollFraction = scrollBehavior.scrollFraction
-                val appBarContainerColor by TopAppBarDefaults.centerAlignedTopAppBarColors()
-                    .containerColor(scrollFraction = scrollFraction)
-                Surface(color = appBarContainerColor) {
-                    FinaidMainTopAppBar(
-                        modifier = Modifier.topBarPadding(),
-                        onProfileClick = { navController.navigate(ProfileScreenSpec.route) },
-                        onSearchClick = { navController.navigate(SearchScreenSpec.route) },
-                        scrollBehavior = scrollBehavior
-                    )
-                }
-            }
-        ) {
-            Column(modifier = Modifier.padding(it)) {
-                TransactionsScreen(
-                    navigateToEditScreen = { id ->
-                        navController.navigate("${AddEditTransactionScreenSpec.cleanRoute}?$TransactionId={$id}")
-                    },
-                    openSortSheet = { coroutineScope.launch { bottomSheetState.show() } }
-                )
-            }
+        Column {
+            TransactionsScreen(
+                navigateToEditScreen = { id ->
+                    navController.navigate("${AddEditTransactionScreenSpec.cleanRoute}?$TransactionId={$id}")
+                },
+                openSortSheet = { coroutineScope.launch { bottomSheetState.show() } }
+            )
         }
     }
 
@@ -105,8 +101,8 @@ object TransactionsScreenSpec : BottomNavScreenSpec {
             when (initialState.destination.route) {
                 HomeScreenSpec.route,
                 SavingsScreenSpec.route -> materialFadeThroughIn()
-                AddEditTransactionScreenSpec.route -> materialSharedAxisZIn(forward = false)
-                ProfileScreenSpec.route,
+                AddEditTransactionScreenSpec.route,
+                ProfileScreenSpec.route -> materialSharedAxisZIn(forward = false)
                 SearchScreenSpec.route -> materialElevationScaleIn()
                 else -> super.enterTransition(this)
             }
@@ -120,8 +116,8 @@ object TransactionsScreenSpec : BottomNavScreenSpec {
             when (targetState.destination.route) {
                 HomeScreenSpec.route,
                 SavingsScreenSpec.route -> materialFadeThroughOut()
-                AddEditTransactionScreenSpec.route -> materialSharedAxisZOut(forward = true)
-                ProfileScreenSpec.route,
+                AddEditTransactionScreenSpec.route,
+                ProfileScreenSpec.route -> materialSharedAxisZOut(forward = true)
                 SearchScreenSpec.route -> materialElevationScaleOut()
                 else -> super.exitTransition(this)
             }

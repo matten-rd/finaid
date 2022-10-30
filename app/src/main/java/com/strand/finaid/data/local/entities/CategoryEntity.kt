@@ -1,12 +1,13 @@
-package com.strand.finaid.data.network.models
+package com.strand.finaid.data.local.entities
 
-
-import com.strand.finaid.NoArg
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.strand.finaid.ui.transactions.TransactionType
 import java.util.*
 
-@NoArg
-data class NetworkCategory(
+@Entity(tableName = "categories")
+data class CategoryEntity(
+    @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     val name: String,
     val hexCode: String,

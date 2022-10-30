@@ -4,9 +4,12 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -20,19 +23,23 @@ sealed interface ScreenSpec {
 
     companion object {
         val allScreens: Map<String, ScreenSpec> = listOf<ScreenSpec>(
-            SplashScreenSpec,
             HomeScreenSpec,
             SavingsScreenSpec,
             TransactionsScreenSpec,
             ProfileScreenSpec,
             SearchScreenSpec,
-            LandingScreenSpec,
-            LoginScreenSpec,
-            SignupScreenSpec,
             AddEditTransactionScreenSpec,
             AddEditSavingsScreenSpec,
             TrashScreenSpec
         ).associateBy { it.route }
+
+        val subScreens: List<ScreenSpec> = listOf(
+            ProfileScreenSpec,
+            SearchScreenSpec,
+            AddEditTransactionScreenSpec,
+            AddEditSavingsScreenSpec,
+            TrashScreenSpec
+        )
     }
 
     val route: String
@@ -41,16 +48,57 @@ sealed interface ScreenSpec {
         get() = emptyList()
 
     val enterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
-        get() = { slideIntoContainer(AnimatedContentScope.SlideDirection.Left) }
+        get() = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Left,
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = LinearEasing
+                )
+            )
+        }
 
     val popEnterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
-        get() = { slideIntoContainer(AnimatedContentScope.SlideDirection.Right) }
+        get() = {
+            slideIntoContainer(
+                AnimatedContentScope.SlideDirection.Right,
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = LinearEasing
+                )
+            )
+        }
 
     val exitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
-        get() = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Left) }
+        get() = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Left,
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = LinearEasing
+                )
+            )
+        }
 
     val popExitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
-        get() = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Right) }
+        get() = {
+            slideOutOfContainer(
+                AnimatedContentScope.SlideDirection.Right,
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = LinearEasing
+                )
+            )
+        }
+
+    @Composable
+    fun TopBar(
+        navController: NavController,
+        navBackStackEntry: NavBackStackEntry,
+        bottomSheetState: ModalBottomSheetState,
+        coroutineScope: CoroutineScope,
+        scrollBehavior: TopAppBarScrollBehavior
+    )
 
     @Composable
     fun Content(

@@ -3,7 +3,6 @@ package com.strand.finaid.data.local.dao
 import androidx.room.*
 import com.strand.finaid.data.local.entities.TransactionEntity
 import kotlinx.coroutines.flow.Flow
-import java.util.*
 
 @Dao
 interface TransactionsDao {
@@ -21,36 +20,15 @@ interface TransactionsDao {
     @Query("SELECT * FROM transactions WHERE transaction_deleted = 0 ORDER BY date DESC LIMIT :limit")
     suspend fun getLimitedNumberOfTransactionEntities(limit: Int): List<TransactionEntity>
 
-    @Query("SELECT MAX(lastModified) FROM transactions")
-    suspend fun getLastModifiedDate(): Date
-
     // INSERT/UPDATE SINGLE
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertOrIgnoreTransactionEntity(entity: TransactionEntity): Long
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTransactionEntity(entity: TransactionEntity)
 
     @Update
     suspend fun updateTransactionEntity(entity: TransactionEntity)
 
-    @Transaction
-    suspend fun upsertTransactionEntity(entity: TransactionEntity) = upsert(
-        item = entity,
-        insert = ::insertOrIgnoreTransactionEntity,
-        update = ::updateTransactionEntity
-    )
-
-    // INSERT/UPDATE MANY
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertOrIgnoreTransactionEntities(transactionEntities: List<TransactionEntity>): List<Long>
-
-    @Update
-    suspend fun updateTransactionEntities(entities: List<TransactionEntity>)
-
-    @Transaction
-    suspend fun upsertTransactionEntities(entities: List<TransactionEntity>) = upsertMany(
-        items = entities,
-        insertMany = ::insertOrIgnoreTransactionEntities,
-        updateMany = ::updateTransactionEntities
-    )
+    @Query("UPDATE transactions SET transaction_deleted = :deleted WHERE transaction_id = :id")
+    suspend fun updateDeletedField(id: String, deleted: Boolean)
 
     // DELETE
     @Delete

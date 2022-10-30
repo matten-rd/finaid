@@ -2,19 +2,16 @@ package com.strand.finaid.data.repository.impl
 
 import com.strand.finaid.data.local.dao.TransactionsDao
 import com.strand.finaid.data.local.entities.TransactionEntity
-import com.strand.finaid.data.mappers.asNetworkTransaction
 import com.strand.finaid.data.mappers.asTransaction
+import com.strand.finaid.data.mappers.asTransactionEntity
 import com.strand.finaid.data.models.Transaction
-import com.strand.finaid.data.network.TransactionsNetworkDataSource
 import com.strand.finaid.data.repository.TransactionsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.util.*
 import javax.inject.Inject
 
 class TransactionsRepositoryImpl @Inject constructor(
-    private val transactionsDao: TransactionsDao,
-    private val network: TransactionsNetworkDataSource
+    private val transactionsDao: TransactionsDao
 ) : TransactionsRepository {
 
     override fun getTransactionsStream(): Flow<List<Transaction>> =
@@ -32,58 +29,16 @@ class TransactionsRepositoryImpl @Inject constructor(
         transactionsDao.getLimitedNumberOfTransactionEntities(numberOfTransactions)
             .map { it.asTransaction() }
 
-    override suspend fun getLastModifiedDate(): Date = transactionsDao.getLastModifiedDate()
+    override suspend fun saveTransaction(transaction: Transaction) =
+        transactionsDao.insertTransactionEntity(transaction.asTransactionEntity())
 
-    override fun addTransactionsListener(
-        userId: String,
-        lastModifiedDate: Date?,
-        deleted: Boolean,
-        onDocumentEvent: (Boolean, TransactionEntity) -> Unit
-    ) {
-        network.addTransactionsListener(userId, lastModifiedDate, deleted, onDocumentEvent)
-    }
+    override suspend fun moveTransactionToTrash(transactionId: String) =
+        transactionsDao.updateDeletedField(id = transactionId, deleted = true)
 
-    override fun removeListener() {
-        network.removeTransactionsListener()
-    }
+    override suspend fun restoreTransactionFromTrash(transactionId: String) =
+        transactionsDao.updateDeletedField(id = transactionId, deleted = false)
 
-    override suspend fun updateLocalDatabase(wasDocumentDeleted: Boolean, transaction: TransactionEntity) {
-        if (wasDocumentDeleted)
-            transactionsDao.deleteTransactionEntity(transaction)
-        else
-            transactionsDao.upsertTransactionEntity(transaction)
-    }
-
-    override fun saveTransaction(
-        userId: String,
-        transaction: Transaction,
-        onResult: (Throwable?) -> Unit
-    ) {
-        network.saveTransaction(userId, transaction.asNetworkTransaction(), onResult)
-    }
-
-    override fun moveTransactionToTrash(
-        userId: String,
-        transactionId: String,
-        onResult: (Throwable?) -> Unit
-    ) {
-        network.moveTransactionToTrash(userId, transactionId, onResult)
-    }
-
-    override fun restoreTransactionFromTrash(
-        userId: String,
-        transactionId: String,
-        onResult: (Throwable?) -> Unit
-    ) {
-        network.restoreTransactionFromTrash(userId, transactionId, onResult)
-    }
-
-    override fun deleteTransactionPermanently(
-        userId: String,
-        transactionId: String,
-        onResult: (Throwable?) -> Unit
-    ) {
-        network.deleteTransactionPermanently(userId, transactionId, onResult)
-    }
+    override suspend fun deleteTransactionPermanently(transactionId: String) =
+        transactionsDao.deleteTransactionEntityById(transactionId)
 
 }

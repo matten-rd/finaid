@@ -2,9 +2,7 @@ package com.strand.finaid.ui.search
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
-import com.strand.finaid.data.Result
 import com.strand.finaid.data.models.Category
-import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
 import com.strand.finaid.data.repository.CategoriesRepository
 import com.strand.finaid.ui.FinaidViewModel
@@ -23,7 +21,6 @@ enum class SearchScreenType(val title: String) {
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     logService: LogService,
-    private val accountService: AccountService,
     private val categoriesRepository: CategoriesRepository
 ) : FinaidViewModel(logService) {
     val searchScreens = SearchScreenType.values().map { it.title }
@@ -35,13 +32,12 @@ class SearchViewModel @Inject constructor(
         searchScreenType.value = SearchScreenType.values()[newValue]
     }
 
-    val categories: StateFlow<Result<List<Category>>> =
-        categoriesRepository.addCategoriesListener(accountService.getUserId())
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = Result.Loading
-            )
+    val categories: StateFlow<List<Category>> = categoriesRepository.getCategoriesStream()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     val queryFlow = MutableStateFlow("")
 

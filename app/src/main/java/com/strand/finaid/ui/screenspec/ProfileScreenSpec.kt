@@ -4,23 +4,40 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.strand.finaid.R
-import com.strand.finaid.topBarPadding
+import com.strand.finaid.ui.navigation.materialSharedAxisZIn
+import com.strand.finaid.ui.navigation.materialSharedAxisZOut
 import com.strand.finaid.ui.profile.ProfileScreen
 import kotlinx.coroutines.CoroutineScope
 
 object ProfileScreenSpec : ScreenSpec {
     override val route: String = "main/profile"
+
+    @Composable
+    override fun TopBar(
+        navController: NavController,
+        navBackStackEntry: NavBackStackEntry,
+        bottomSheetState: ModalBottomSheetState,
+        coroutineScope: CoroutineScope,
+        scrollBehavior: TopAppBarScrollBehavior
+    ) {
+        TopAppBar(
+            title = { Text(text = stringResource(id = R.string.screen_profile)) },
+            navigationIcon = {
+                IconButton(onClick = { navController.navigateUp() }) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                }
+            }
+        )
+    }
 
     @Composable
     override fun Content(
@@ -29,25 +46,10 @@ object ProfileScreenSpec : ScreenSpec {
         bottomSheetState: ModalBottomSheetState,
         coroutineScope: CoroutineScope
     ) {
-        Scaffold(
-            topBar = {
-                LargeTopAppBar(
-                    modifier = Modifier.topBarPadding(),
-                    title = { Text(text = stringResource(id = R.string.screen_profile)) },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.navigateUp() }) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = null)
-                        }
-                    }
-                )
-            }
-        ) {
-            Column(modifier = Modifier.padding(it)) {
-                ProfileScreen(
-                    navigateToLanding = { navController.navigate(LandingScreenSpec.route) { popUpTo(0) } },
-                    navigateToTrash = { navController.navigate(TrashScreenSpec.route) }
-                )
-            }
+        Column {
+            ProfileScreen(
+                navigateToTrash = { navController.navigate(TrashScreenSpec.route) }
+            )
         }
     }
 
@@ -55,7 +57,7 @@ object ProfileScreenSpec : ScreenSpec {
         get() = {
             when (initialState.destination.route) {
                 TrashScreenSpec.route -> super.enterTransition(this)
-                else -> slideIntoContainer(AnimatedContentScope.SlideDirection.Up)
+                else -> materialSharedAxisZIn(forward = true)//slideIntoContainer(AnimatedContentScope.SlideDirection.Up)
             }
         }
 
@@ -63,7 +65,7 @@ object ProfileScreenSpec : ScreenSpec {
         get() = {
             when (initialState.destination.route) {
                 TrashScreenSpec.route -> super.popEnterTransition(this)
-                else -> slideIntoContainer(AnimatedContentScope.SlideDirection.Down)
+                else -> materialSharedAxisZIn(forward = true)//slideIntoContainer(AnimatedContentScope.SlideDirection.Down)
             }
         }
 
@@ -71,7 +73,7 @@ object ProfileScreenSpec : ScreenSpec {
         get() = {
             when (targetState.destination.route) {
                 TrashScreenSpec.route -> super.exitTransition(this)
-                else -> slideOutOfContainer(AnimatedContentScope.SlideDirection.Up)
+                else -> materialSharedAxisZOut(forward = false)//slideOutOfContainer(AnimatedContentScope.SlideDirection.Up)
             }
         }
 
@@ -79,7 +81,7 @@ object ProfileScreenSpec : ScreenSpec {
         get() = {
             when (targetState.destination.route) {
                 TrashScreenSpec.route -> super.popExitTransition(this)
-                else -> slideOutOfContainer(AnimatedContentScope.SlideDirection.Down)
+                else -> materialSharedAxisZOut(forward = false)//slideOutOfContainer(AnimatedContentScope.SlideDirection.Down)
             }
         }
 }

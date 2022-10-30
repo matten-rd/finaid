@@ -6,20 +6,22 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.strand.finaid.R
-import com.strand.finaid.data.Result
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.domain.TransactionScreenUiState
+import com.strand.finaid.ext.formatAmount
+import com.strand.finaid.ext.rememberChartState
+import com.strand.finaid.ui.components.AnimatedBarchart
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.SegmentedButton
@@ -31,13 +33,8 @@ fun TransactionsScreen(
     navigateToEditScreen: (String) -> Unit,
     openSortSheet: () -> Unit
 ) {
-    DisposableEffect(viewModel) {
-        viewModel.addListener()
-        onDispose { viewModel.removeListener() }
-    }
-
     val transactions: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
-    val categories by viewModel.categories.collectAsState()
+    val categories by viewModel.categories.collectAsStateWithLifecycle()
     val openDialog = remember { mutableStateOf(false) }
     val selectedTransaction = remember { mutableStateOf<TransactionUiState?>(null) }
 
@@ -49,10 +46,9 @@ fun TransactionsScreen(
             if (t.transactions.isNullOrEmpty())
                 Text(text = "Empty Content")
             else {
-                val c = categories
                 TransactionsScreenContent(
                     transactions = t.transactions,
-                    categories = if (c is Result.Success && !c.data.isNullOrEmpty()) c.data else emptyList(),
+                    categories = categories,
                     openSortSheet = openSortSheet,
                     onEditClick = navigateToEditScreen,
                     onDeleteClick = {
@@ -100,7 +96,18 @@ private fun TransactionsScreenContent(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        item { TransactionGraph() }
+        item {
+            val chartState = rememberChartState(
+                items = transactions,
+                colors = { transaction -> transaction.color },
+                amounts = { transaction -> transaction.amount }
+            )
+            TransactionGraph(
+                displayValue = transactions.sumOf { it.amount },
+                proportions = chartState.percentageProportions,
+                colors = chartState.colors
+            )
+        }
         item {
             FilterRow(
                 openSortSheet = openSortSheet,
@@ -141,19 +148,19 @@ private fun FilterRow(
                 onClick = { selected = !selected },
                 label = { Text(text = category.name) },
                 leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Circle,
-                        contentDescription = null,
-                        modifier = Modifier.size(FilterChipDefaults.IconSize),
-                        tint = category.color
-                    )
-                },
-                selectedIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Done,
-                        contentDescription = null,
-                        modifier = Modifier.size(FilterChipDefaults.IconSize)
-                    )
+                    if (selected)
+                        Icon(
+                            imageVector = Icons.Default.Done,
+                            contentDescription = null,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        )
+                    else
+                        Icon(
+                            imageVector = Icons.Default.Circle,
+                            contentDescription = null,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize),
+                            tint = category.color
+                        )
                 }
             )
         }
@@ -162,7 +169,11 @@ private fun FilterRow(
 }
 
 @Composable
-private fun TransactionGraph() {
+private fun TransactionGraph(
+    displayValue: Int,
+    proportions: List<Float>,
+    colors: List<Color>
+) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Card(
             shape = RoundedCornerShape(28.dp)
@@ -180,7 +191,31 @@ private fun TransactionGraph() {
                 .height(250.dp),
             shape = RoundedCornerShape(28.dp)
         ) {
-
+            Row(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "${displayValue.formatAmount()} kr", style = MaterialTheme.typography.headlineLarge)
+                Row {
+                    FilledIconButton(onClick = { /*TODO*/ }) {
+                        Icon(imageVector = Icons.Default.ChevronLeft, contentDescription = null)
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    FilledIconButton(onClick = { /*TODO*/ }) {
+                        Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
+                    }
+                }
+            }
+            AnimatedBarchart(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxSize(),
+                proportions = proportions,
+                colors = colors
+            )
         }
     }
 }

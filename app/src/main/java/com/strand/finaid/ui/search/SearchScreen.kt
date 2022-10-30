@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.strand.finaid.data.Result
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.ui.components.SegmentedButton
 
@@ -47,45 +46,37 @@ fun SearchScreen(
 
 @Composable
 private fun SearchTransactionsContent(
-    categories: Result<List<Category>>
+    categories: List<Category>
 ) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item { Spacer(modifier = Modifier.width(8.dp)) }
-        when (categories) {
-            is Result.Error -> {
 
-            }
-            Result.Loading -> {
-
-            }
-            is Result.Success -> {
-                items(categories.data ?: listOf(), key = { it.id }) { category ->
-                    var selected by remember { mutableStateOf(false) }
-                    FilterChip(
-                        selected = selected,
-                        onClick = { selected = !selected },
-                        label = { Text(text = category.name) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Circle,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize),
-                                tint = category.color
-                            )
-                        },
-                        selectedIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Done,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
-                    )
+        items(categories, key = { it.id }) { category ->
+            var selected by remember { mutableStateOf(false) }
+            FilterChip(
+                selected = selected,
+                onClick = { selected = !selected },
+                label = { Text(text = category.name) },
+                leadingIcon = {
+                    if (selected)
+                        Icon(
+                            imageVector = Icons.Default.Done,
+                            contentDescription = null,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        )
+                    else
+                        Icon(
+                            imageVector = Icons.Default.Circle,
+                            contentDescription = null,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize),
+                            tint = category.color
+                        )
                 }
-            }
+            )
         }
+
         item { Spacer(modifier = Modifier.width(8.dp)) }
     }
 

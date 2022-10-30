@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.strand.finaid.data.network.models.NetworkCategory
 import java.util.*
 
 @Entity(tableName = "transactions")
@@ -14,8 +13,8 @@ data class TransactionEntity(
     val id: String = UUID.randomUUID().toString(),
     val memo: String,
     val amount: Int,
-    @Embedded
-    val category: NetworkCategory,
+    @Embedded(prefix = "category_")
+    val category: CategoryEntity,
     val date: Date,
     val lastModified: Date,
     @ColumnInfo(name = "transaction_deleted")

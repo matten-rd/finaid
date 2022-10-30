@@ -3,13 +3,12 @@ package com.strand.finaid.data.local.dao
 import androidx.room.*
 import com.strand.finaid.data.local.entities.SavingsAccountEntity
 import kotlinx.coroutines.flow.Flow
-import java.util.*
 
 @Dao
 interface SavingsDao {
 
     // GET
-    @Query("SELECT * FROM savings_accounts WHERE deleted = 0 ORDER BY name DESC")
+    @Query("SELECT * FROM savings_accounts WHERE deleted = 0 ORDER BY hexCode DESC")
     fun getSavingsAccountEntitiesStream(): Flow<List<SavingsAccountEntity>>
 
     @Query("SELECT * FROM savings_accounts WHERE deleted = 1 ORDER BY name DESC")
@@ -21,22 +20,15 @@ interface SavingsDao {
     @Query("SELECT * FROM savings_accounts WHERE deleted = 0 ORDER BY name DESC LIMIT :limit")
     suspend fun getLimitedNumberOfSavingsAccountEntities(limit: Int): List<SavingsAccountEntity>
 
-    @Query("SELECT MAX(lastModified) FROM savings_accounts")
-    suspend fun getLastModifiedDate(): Date
-
     // INSERT/UPDATE SINGLE
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertOrIgnoreSavingsAccountEntity(entity: SavingsAccountEntity): Long
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSavingsAccountEntity(entity: SavingsAccountEntity)
 
     @Update
     suspend fun updateSavingsAccountEntity(entity: SavingsAccountEntity)
 
-    @Transaction
-    suspend fun upsertSavingsAccountEntity(entity: SavingsAccountEntity) = upsert(
-        item = entity,
-        insert = ::insertOrIgnoreSavingsAccountEntity,
-        update = ::updateSavingsAccountEntity
-    )
+    @Query("UPDATE savings_accounts SET deleted = :deleted WHERE id = :id")
+    suspend fun updateDeletedField(id: String, deleted: Boolean)
 
     // DELETE
     @Delete

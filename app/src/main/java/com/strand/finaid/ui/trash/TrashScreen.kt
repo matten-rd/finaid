@@ -25,7 +25,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.strand.finaid.R
-import com.strand.finaid.data.Result
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.domain.SavingsScreenUiState
 import com.strand.finaid.domain.TransactionScreenUiState
@@ -41,11 +40,6 @@ fun TrashScreen(
     viewModel: TrashViewModel = hiltViewModel(),
     openSheet: () -> Unit
 ) {
-    DisposableEffect(viewModel) {
-        viewModel.addListener()
-        onDispose { viewModel.removeListener() }
-    }
-
     val initialPage = viewModel.selectedTrashType.ordinal
     val pagerState = rememberPagerState(initialPage = initialPage)
     val scope = rememberCoroutineScope()
@@ -300,7 +294,7 @@ fun TransactionsTrashScreen(
 
 @Composable
 fun CategoryTrashScreen(
-    categories: Result<List<Category>>,
+    categories: List<Category>,
     uiState: TrashCategoryUiState,
     setIsCategoryRestoreDialogOpen: (Boolean) -> Unit,
     setIsCategoryDeleteDialogOpen: (Boolean) -> Unit,
@@ -313,30 +307,24 @@ fun CategoryTrashScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        when (categories) {
-            is Result.Error -> { FullScreenError() }
-            Result.Loading -> { FullScreenLoading() }
-            is Result.Success -> {
-                if (categories.data.isNullOrEmpty())
-                    Text(text = "Empty content")
-                else
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(categories.data) { deletedCategory ->
-                            TrashCategoryItem(
-                                category = deletedCategory,
-                                openRestoreDialog = {
-                                    setSelectedCategory(deletedCategory)
-                                    setIsCategoryRestoreDialogOpen(true)
-                                },
-                                openDeleteDialog =  {
-                                    setSelectedCategory(deletedCategory)
-                                    setIsCategoryDeleteDialogOpen(true)
-                                }
-                            )
+        if (categories.isEmpty())
+            Text(text = "Empty content")
+        else
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(categories) { deletedCategory ->
+                    TrashCategoryItem(
+                        category = deletedCategory,
+                        openRestoreDialog = {
+                            setSelectedCategory(deletedCategory)
+                            setIsCategoryRestoreDialogOpen(true)
+                        },
+                        openDeleteDialog =  {
+                            setSelectedCategory(deletedCategory)
+                            setIsCategoryDeleteDialogOpen(true)
                         }
-                    }
+                    )
+                }
             }
-        }
     }
 
     if (uiState.isRestoreDialogOpen) {

@@ -4,14 +4,12 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NamedNavArgument
@@ -19,7 +17,6 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.navArgument
 import com.strand.finaid.R
-import com.strand.finaid.topBarPadding
 import com.strand.finaid.ui.navigation.materialSharedAxisZIn
 import com.strand.finaid.ui.navigation.materialSharedAxisZOut
 import com.strand.finaid.ui.savings.AddEditSavingsScreen
@@ -33,6 +30,31 @@ object AddEditSavingsScreenSpec : ScreenSpec {
         get() = listOf(navArgument(SavingsAccountId) { defaultValue = SavingsDefaultAccountId })
 
     @Composable
+    override fun TopBar(
+        navController: NavController,
+        navBackStackEntry: NavBackStackEntry,
+        bottomSheetState: ModalBottomSheetState,
+        coroutineScope: CoroutineScope,
+        scrollBehavior: TopAppBarScrollBehavior
+    ) {
+        val viewModel: AddEditSavingsViewModel = hiltViewModel(navBackStackEntry)
+        SmallTopAppBar(
+            title = { Text(text = stringResource(id = if (viewModel.isEditMode) R.string.edit_savingsaccount else R.string.add_savingsaccount)) },
+            navigationIcon = {
+                IconButton(onClick = { navController.navigateUp() }) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                }
+            },
+            actions = {
+                if (viewModel.isEditMode)
+                    IconButton(onClick = { viewModel.setIsDeleteSavingsAccountDialogOpen(true) }) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = null)
+                    }
+            }
+        )
+    }
+
+    @Composable
     override fun Content(
         navController: NavController,
         navBackStackEntry: NavBackStackEntry,
@@ -40,32 +62,12 @@ object AddEditSavingsScreenSpec : ScreenSpec {
         coroutineScope: CoroutineScope
     ) {
         val viewModel: AddEditSavingsViewModel = hiltViewModel()
-        Scaffold(
-            topBar = {
-                SmallTopAppBar(
-                    modifier = Modifier.topBarPadding(),
-                    title = { Text(text = stringResource(id = if (viewModel.isEditMode) R.string.edit_savingsaccount else R.string.add_savingsaccount)) },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.navigateUp() }) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = null)
-                        }
-                    },
-                    actions = {
-                        if (viewModel.isEditMode)
-                            IconButton(onClick = { viewModel.setIsDeleteSavingsAccountDialogOpen(true) }) {
-                                Icon(imageVector = Icons.Default.Delete, contentDescription = null)
-                            }
-                    }
-                )
-            }
-        ) {
-            Column(modifier = Modifier.padding(it)) {
-                AddEditSavingsScreen(
-                    viewModel = viewModel,
-                    savingsAccountId = navBackStackEntry.arguments?.getString(SavingsAccountId) ?: SavingsDefaultAccountId,
-                    navigateUp = { navController.navigateUp() }
-                )
-            }
+        Column {
+            AddEditSavingsScreen(
+                viewModel = viewModel,
+                savingsAccountId = navBackStackEntry.arguments?.getString(SavingsAccountId) ?: SavingsDefaultAccountId,
+                navigateUp = { navController.navigateUp() }
+            )
         }
     }
 

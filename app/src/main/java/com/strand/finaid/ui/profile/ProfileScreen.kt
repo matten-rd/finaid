@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,7 +18,6 @@ import com.strand.finaid.ui.theme.AppTheme
 
 @Composable
 fun ProfileScreen(
-    navigateToLanding: () -> Unit,
     navigateToTrash: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
@@ -54,23 +52,10 @@ fun ProfileScreen(
                 Text(text = stringResource(id = R.string.screen_trash), style = MaterialTheme.typography.titleLarge)
                 Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
             }
-            ProfileScreenCard(onClick = { /*TODO: Change password*/ }) {
-                Text(text = stringResource(id = R.string.change_password), style = MaterialTheme.typography.titleLarge)
+            ProfileScreenCard(onClick = { /*TODO: Navigate to export data screen*/ }) {
+                Text(text = stringResource(id = R.string.export_data), style = MaterialTheme.typography.titleLarge)
                 Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
             }
-        }
-
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { viewModel.onSignOutClick(onSuccess = navigateToLanding) }
-        ) {
-            Icon(
-                imageVector = Icons.Default.Logout,
-                contentDescription = null,
-                modifier = Modifier.size(ButtonDefaults.IconSize)
-            )
-            Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-            Text(text = stringResource(id = R.string.sign_out))
         }
     }
 }

@@ -30,4 +30,8 @@ data class ComposeColorRoles(
     val onAccentContainer: Color
 )
 
+fun Color.asHexCode() = String.format("%06X", this.toArgb() and 0xFFFFFF)
+
+fun String.asColor() = Color(android.graphics.Color.parseColor("#${this}"))
+
 

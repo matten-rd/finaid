@@ -4,24 +4,23 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material.icons.outlined.Wallet
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeFloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.strand.finaid.R
-import com.strand.finaid.topBarPadding
 import com.strand.finaid.ui.components.FinaidMainTopAppBar
 import com.strand.finaid.ui.navigation.*
 import com.strand.finaid.ui.savings.SavingsScreen
@@ -34,34 +33,31 @@ object SavingsScreenSpec : BottomNavScreenSpec {
     override val route: String = "main/savings"
 
     @Composable
+    override fun TopBar(
+        navController: NavController,
+        navBackStackEntry: NavBackStackEntry,
+        bottomSheetState: ModalBottomSheetState,
+        coroutineScope: CoroutineScope,
+        scrollBehavior: TopAppBarScrollBehavior
+    ) {
+        FinaidMainTopAppBar(
+            onProfileClick = { navController.navigate(ProfileScreenSpec.route) },
+            onSearchClick = { navController.navigate(SearchScreenSpec.route) },
+            scrollBehavior = scrollBehavior
+        )
+    }
+
+    @Composable
     override fun Content(
         navController: NavController,
         navBackStackEntry: NavBackStackEntry,
         bottomSheetState: ModalBottomSheetState,
         coroutineScope: CoroutineScope
     ) {
-        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarScrollState())
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                val scrollFraction = scrollBehavior.scrollFraction
-                val appBarContainerColor by TopAppBarDefaults.centerAlignedTopAppBarColors()
-                    .containerColor(scrollFraction = scrollFraction)
-                Surface(color = appBarContainerColor) {
-                    FinaidMainTopAppBar(
-                        modifier = Modifier.topBarPadding(),
-                        onProfileClick = { navController.navigate(ProfileScreenSpec.route) },
-                        onSearchClick = { navController.navigate(SearchScreenSpec.route) },
-                        scrollBehavior = scrollBehavior
-                    )
-                }
-            }
-        ) {
-            Column(modifier = Modifier.padding(it)) {
-                SavingsScreen(navigateToEditScreen = { id ->
-                    navController.navigate("${AddEditSavingsScreenSpec.cleanRoute}?$SavingsAccountId={$id}")
-                })
-            }
+        Column {
+            SavingsScreen(navigateToEditScreen = { id ->
+                navController.navigate("${AddEditSavingsScreenSpec.cleanRoute}?$SavingsAccountId={$id}")
+            })
         }
     }
 

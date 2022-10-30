@@ -4,18 +4,15 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ModalBottomSheetState
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallTopAppBar
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import com.strand.finaid.topBarPadding
 import com.strand.finaid.ui.search.SearchField
 import com.strand.finaid.ui.search.SearchScreen
 import com.strand.finaid.ui.search.SearchViewModel
@@ -25,31 +22,35 @@ object SearchScreenSpec : ScreenSpec {
     override val route: String = "main/search"
 
     @Composable
+    override fun TopBar(
+        navController: NavController,
+        navBackStackEntry: NavBackStackEntry,
+        bottomSheetState: ModalBottomSheetState,
+        coroutineScope: CoroutineScope,
+        scrollBehavior: TopAppBarScrollBehavior
+    ) {
+        val viewModel: SearchViewModel = hiltViewModel(navBackStackEntry)
+        val query by viewModel.queryFlow.collectAsState()
+        SmallTopAppBar(
+            title = {
+                SearchField(
+                    query = query,
+                    onQueryChange = viewModel::onQueryChange,
+                    onNavigateUp = { navController.navigateUp() }
+                )
+            }
+        )
+    }
+
+    @Composable
     override fun Content(
         navController: NavController,
         navBackStackEntry: NavBackStackEntry,
         bottomSheetState: ModalBottomSheetState,
         coroutineScope: CoroutineScope
     ) {
-        Scaffold(
-            topBar = {
-                val viewModel: SearchViewModel = hiltViewModel(navBackStackEntry)
-                val query by viewModel.queryFlow.collectAsState()
-                SmallTopAppBar(
-                    modifier = Modifier.topBarPadding(),
-                    title = {
-                        SearchField(
-                            query = query,
-                            onQueryChange = viewModel::onQueryChange,
-                            onNavigateUp = { navController.navigateUp() }
-                        )
-                    }
-                )
-            }
-        ) {
-            Column(modifier = Modifier.padding(it)) {
-                SearchScreen()
-            }
+        Column {
+            SearchScreen()
         }
     }
 

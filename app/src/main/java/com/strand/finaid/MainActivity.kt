@@ -12,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -21,8 +21,8 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.strand.finaid.ui.components.FinaidFAB
 import com.strand.finaid.ui.navigation.FinaidBottomNavigation
+import com.strand.finaid.ui.screenspec.HomeScreenSpec
 import com.strand.finaid.ui.screenspec.ScreenSpec
-import com.strand.finaid.ui.screenspec.SplashScreenSpec
 import com.strand.finaid.ui.theme.FinaidTheme
 import com.strand.finaid.ui.theme.isAppInDarkTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -80,7 +80,9 @@ fun FinaidApp() {
         sheetBackgroundColor = MaterialTheme.colorScheme.surface,
         scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f)
     ) {
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             snackbarHost = {
                 SnackbarHost(
                     hostState = appState.snackbarHostState,
@@ -91,6 +93,17 @@ fun FinaidApp() {
                         shape = RoundedCornerShape(12.dp)
                     )
                 }
+            },
+            topBar = {
+                if (navBackStackEntry != null)
+                    ScreenSpec.allScreens[currentDestination?.route]
+                        ?.TopBar(
+                            navController,
+                            navBackStackEntry!!,
+                            bottomSheetState,
+                            scope,
+                            scrollBehavior
+                        )
             },
             bottomBar = {
                 AnimatedVisibility(
@@ -115,7 +128,7 @@ fun FinaidApp() {
         ) { innerPadding ->
             AnimatedNavHost(
                 navController = navController,
-                startDestination = SplashScreenSpec.route,
+                startDestination = HomeScreenSpec.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
                 ScreenSpec.allScreens.values.forEach { screen ->
@@ -138,12 +151,4 @@ fun FinaidApp() {
             }
         }
     }
-}
-
-fun Modifier.topBarPadding() = composed {
-    this.padding(
-        WindowInsets.statusBars
-            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
-            .asPaddingValues()
-    )
 }

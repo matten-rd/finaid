@@ -5,14 +5,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.strand.finaid.R
 import com.strand.finaid.domain.SavingsScreenUiState
+import com.strand.finaid.ext.formatAmount
+import com.strand.finaid.ext.rememberChartState
+import com.strand.finaid.ui.components.AnimatedBarchart
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.SegmentedButton
@@ -23,11 +31,6 @@ fun SavingsScreen(
     viewModel: SavingsViewModel = hiltViewModel(),
     navigateToEditScreen: (String) -> Unit
 ) {
-    DisposableEffect(viewModel) {
-        viewModel.addListener()
-        onDispose { viewModel.removeListener() }
-    }
-
     val savingsAccounts: SavingsScreenUiState by viewModel.savingsAccountsUiState.collectAsStateWithLifecycle()
     val openDialog = remember { mutableStateOf(false) }
     val selectedSavingsAccount = remember { mutableStateOf<SavingsAccountUiState?>(null) }
@@ -44,7 +47,18 @@ fun SavingsScreen(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    item { SavingsGraph() }
+                    item {
+                        val chartState = rememberChartState(
+                            items = s.savingsAccounts,
+                            colors = { account -> account.color },
+                            amounts = { account -> account.amount }
+                        )
+                        SavingsGraph(
+                            displayValue = s.savingsAccounts.sumOf { it.amount },
+                            proportions = chartState.percentageProportions,
+                            colors = chartState.colors
+                        )
+                    }
                     items(s.savingsAccounts, key = { it.id }) { savingsAccountItem ->
                         SavingsAccountItem(
                             modifier = Modifier.animateItemPlacement(),
@@ -85,7 +99,11 @@ fun SavingsScreen(
 }
 
 @Composable
-private fun SavingsGraph() {
+private fun SavingsGraph(
+    displayValue: Int,
+    proportions: List<Float>,
+    colors: List<Color>
+) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Card(
             shape = RoundedCornerShape(28.dp)
@@ -103,7 +121,22 @@ private fun SavingsGraph() {
                 .height(250.dp),
             shape = RoundedCornerShape(28.dp)
         ) {
-
+            Row(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "${displayValue.formatAmount()} kr", style = MaterialTheme.typography.headlineLarge)
+            }
+            AnimatedBarchart(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxSize(),
+                proportions = proportions,
+                colors = colors
+            )
         }
     }
 }

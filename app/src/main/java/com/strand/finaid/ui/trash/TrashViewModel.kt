@@ -5,11 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.strand.finaid.R
-import com.strand.finaid.data.Result
-import com.strand.finaid.data.local.entities.SavingsAccountEntity
-import com.strand.finaid.data.local.entities.TransactionEntity
 import com.strand.finaid.data.models.Category
-import com.strand.finaid.data.network.AccountService
 import com.strand.finaid.data.network.LogService
 import com.strand.finaid.data.repository.CategoriesRepository
 import com.strand.finaid.data.repository.SavingsRepository
@@ -56,7 +52,6 @@ data class TrashSavingsAccountsUiState(
 @HiltViewModel
 class TrashViewModel @Inject constructor(
     logService: LogService,
-    private val accountService: AccountService,
     private val categoriesRepository: CategoriesRepository,
     private val transactionsRepository: TransactionsRepository,
     private val savingsRepository: SavingsRepository,
@@ -73,31 +68,14 @@ class TrashViewModel @Inject constructor(
         selectedTrashType = TrashType.values()[newValue]
     }
 
-    fun addListener() {
-        viewModelScope.launch {
-            val lastModifiedTransactionDate = transactionsRepository.getLastModifiedDate()
-            val lastModifiedSavingsAccountDate = savingsRepository.getLastModifiedDate()
-            transactionsRepository.addTransactionsListener(accountService.getUserId(), lastModifiedTransactionDate,true, ::onTransactionDocumentEvent)
-            savingsRepository.addSavingsAccountsListener(accountService.getUserId(), lastModifiedSavingsAccountDate,true, ::onSavingsAccountDocumentEvent)
-        }
-    }
-
-    fun removeListener() {
-        viewModelScope.launch {
-            transactionsRepository.removeListener()
-            savingsRepository.removeListener()
-        }
-    }
-
     /**
      * Categories
      */
-    val categories: StateFlow<Result<List<Category>>> = categoriesRepository
-        .addCategoriesListener(accountService.getUserId(), true)
+    val categories: StateFlow<List<Category>> = categoriesRepository.getDeletedCategoriesStream()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = Result.Loading
+            initialValue = emptyList()
         )
 
     var trashCategoryUiState by mutableStateOf(TrashCategoryUiState())
@@ -116,14 +94,16 @@ class TrashViewModel @Inject constructor(
     }
 
     fun restoreCategoryFromTrash(category: Category) {
-        categoriesRepository.restoreCategoryFromTrash(accountService.getUserId(), category.id) { error ->
-            if (error == null) SnackbarManager.showMessage(R.string.category_restored) else onError(error)
+        viewModelScope.launch(showErrorExceptionHandler) {
+            categoriesRepository.restoreCategoryFromTrash(category.id)
+            SnackbarManager.showMessage(R.string.category_restored)
         }
     }
 
     fun permanentlyDeleteCategory(category: Category) {
-        categoriesRepository.deleteCategoryPermanently(accountService.getUserId(), category.id) { error ->
-            if (error == null) SnackbarManager.showMessage(R.string.category_permanently_deleted) else onError(error)
+        viewModelScope.launch {
+            categoriesRepository.deleteCategoryPermanently(category.id)
+            SnackbarManager.showMessage(R.string.category_permanently_deleted)
         }
     }
 
@@ -153,20 +133,14 @@ class TrashViewModel @Inject constructor(
         )
 
     fun restoreTransactionFromTrash(transaction: TransactionUiState) {
-        transactionsRepository.restoreTransactionFromTrash(accountService.getUserId(), transaction.id) { error ->
-            if (error == null) SnackbarManager.showMessage(R.string.transaction_restored) else onError(error)
+        viewModelScope.launch {
+            transactionsRepository.restoreTransactionFromTrash(transactionId = transaction.id)
         }
     }
 
     fun permanentlyDeleteTransaction(transaction: TransactionUiState) {
-        transactionsRepository.deleteTransactionPermanently(accountService.getUserId(), transaction.id) { error ->
-            if (error == null) SnackbarManager.showMessage(R.string.transaction_permanently_deleted) else onError(error)
-        }
-    }
-
-    private fun onTransactionDocumentEvent(wasDocumentDeleted: Boolean, transaction: TransactionEntity) {
         viewModelScope.launch {
-            transactionsRepository.updateLocalDatabase(wasDocumentDeleted, transaction)
+            transactionsRepository.deleteTransactionPermanently(transactionId = transaction.id)
         }
     }
 
@@ -196,20 +170,15 @@ class TrashViewModel @Inject constructor(
         )
 
     fun restoreSavingsAccountFromTrash(savingsAccount: SavingsAccountUiState) {
-        savingsRepository.restoreSavingsAccountFromTrash(accountService.getUserId(), savingsAccount.id) { error ->
-            if (error == null) SnackbarManager.showMessage(R.string.savingsaccount_restored) else onError(error)
+        viewModelScope.launch {
+            savingsRepository.restoreSavingsAccountFromTrash(savingsAccountId = savingsAccount.id)
         }
     }
 
     fun permanentlyDeleteSavingsAccount(savingsAccount: SavingsAccountUiState) {
-        savingsRepository.deleteSavingsAccountPermanently(accountService.getUserId(), savingsAccount.id) { error ->
-            if (error == null) SnackbarManager.showMessage(R.string.savingsaccount_permanently_deleted) else onError(error)
+        viewModelScope.launch {
+            savingsRepository.deleteSavingsAccountPermanently(savingsAccountId = savingsAccount.id)
         }
     }
 
-    private fun onSavingsAccountDocumentEvent(wasDocumentDeleted: Boolean, savingsAccount: SavingsAccountEntity) {
-        viewModelScope.launch {
-            savingsRepository.updateLocalDatabase(wasDocumentDeleted, savingsAccount)
-        }
-    }
 }
