@@ -20,6 +20,9 @@ interface TransactionsDao {
     @Query("SELECT * FROM transactions WHERE transaction_deleted = 0 ORDER BY date DESC LIMIT :limit")
     suspend fun getLimitedNumberOfTransactionEntities(limit: Int): List<TransactionEntity>
 
+    @Query("SELECT SUM(amount) FROM transactions WHERE transaction_deleted = 0")
+    suspend fun getTransactionSum(): Int
+
     // INSERT/UPDATE SINGLE
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransactionEntity(entity: TransactionEntity)

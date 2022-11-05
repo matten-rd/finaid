@@ -20,6 +20,9 @@ interface SavingsDao {
     @Query("SELECT * FROM savings_accounts WHERE deleted = 0 ORDER BY name DESC LIMIT :limit")
     suspend fun getLimitedNumberOfSavingsAccountEntities(limit: Int): List<SavingsAccountEntity>
 
+    @Query("SELECT SUM(amount) FROM savings_accounts WHERE deleted = 0")
+    suspend fun getSavingsAccountSum(): Int
+
     // INSERT/UPDATE SINGLE
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSavingsAccountEntity(entity: SavingsAccountEntity)

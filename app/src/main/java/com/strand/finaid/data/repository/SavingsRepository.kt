@@ -8,6 +8,7 @@ interface SavingsRepository {
     fun getDeletedSavingsAccountsStream(): Flow<List<SavingsAccount>>
     suspend fun getSavingsAccountById(savingsAccountId: String): SavingsAccount
     suspend fun getLimitedNumberOfSavingsAccounts(numberOfTransactions: Int): List<SavingsAccount>
+    suspend fun getSavingsAccountSum(): Int
     suspend fun saveSavingsAccount(savingsAccount: SavingsAccount)
     suspend fun moveSavingsAccountToTrash(savingsAccountId: String)
     suspend fun restoreSavingsAccountFromTrash(savingsAccountId: String)

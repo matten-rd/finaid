@@ -29,6 +29,8 @@ class SavingsRepositoryImpl @Inject constructor(
         savingsDao.getLimitedNumberOfSavingsAccountEntities(numberOfTransactions)
             .map { it.asSavingsAccount() }
 
+    override suspend fun getSavingsAccountSum(): Int = savingsDao.getSavingsAccountSum()
+
     override suspend fun saveSavingsAccount(savingsAccount: SavingsAccount) =
         savingsDao.insertSavingsAccountEntity(savingsAccount.asSavingsAccountEntity())
 

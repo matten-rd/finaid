@@ -1,8 +1,10 @@
 package com.strand.finaid.ui.transactions
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
+import com.strand.finaid.R
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.data.network.LogService
 import com.strand.finaid.data.repository.CategoriesRepository
@@ -28,10 +30,10 @@ data class TransactionUiState(
     val date: String
 )
 
-enum class SortOrder(val title: String, val field: String) {
-    Date("Datum", "date"),
-    Sum("Summa", "amount"),
-    Name("Namn", "memo")
+enum class SortOrder(@StringRes val titleId: Int) {
+    Date(R.string.date),
+    Sum(R.string.sum),
+    Name(R.string.name)
 }
 
 @HiltViewModel
@@ -42,7 +44,7 @@ class TransactionsViewModel @Inject constructor(
     transactionsScreenUiStateUseCase: TransactionScreenUiStateUseCase
 ) : FinaidViewModel(logService) {
 
-    val possibleSortOrders = SortOrder.values().map { it.title }
+    val possibleSortOrders = SortOrder.values().map { it.titleId }
 
     val sortFlow = MutableStateFlow(SortOrder.Date)
 

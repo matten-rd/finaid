@@ -87,7 +87,7 @@ private fun rememberDatePicker(currentDate: LocalDate, onDateChange: (LocalDate)
 @Composable
 fun TransactionsSortBottomSheet(
     onClose: () -> Unit,
-    possibleSortOrders: List<String>,
+    possibleSortOrders: List<Int>,
     selectedSortOrder: SortOrder,
     onSelectedSortOrder: (Int) -> Unit
 ) {
@@ -99,7 +99,7 @@ fun TransactionsSortBottomSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             SegmentedButton(
-                items = possibleSortOrders,
+                items = possibleSortOrders.map { id -> stringResource(id = id) },
                 selectedIndex = selectedSortOrder.ordinal,
                 indexChanged = { onSelectedSortOrder(it) }
             )

@@ -29,6 +29,8 @@ class TransactionsRepositoryImpl @Inject constructor(
         transactionsDao.getLimitedNumberOfTransactionEntities(numberOfTransactions)
             .map { it.asTransaction() }
 
+    override suspend fun getTransactionSum(): Int = transactionsDao.getTransactionSum()
+
     override suspend fun saveTransaction(transaction: Transaction) =
         transactionsDao.insertTransactionEntity(transaction.asTransactionEntity())
 

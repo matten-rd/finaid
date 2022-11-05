@@ -12,7 +12,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.strand.finaid.R
+import com.strand.finaid.domain.HomeScreenUiState
 import com.strand.finaid.ext.formatAmount
+import com.strand.finaid.ui.components.FullScreenError
+import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.list_items.HomeScreenSavingsAccountItem
 import com.strand.finaid.ui.components.list_items.HomeScreenTransactionItem
 
@@ -23,37 +26,42 @@ fun HomeScreen(
     onNavigateToTransactions: () -> Unit,
     onNavigateToSavings: () -> Unit
 ) {
-    val transactions = viewModel.transactions
-    val savingsAccounts = viewModel.savingsAccounts
-    
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Spacer(modifier = Modifier.height(8.dp))
-        HomeScreenCard(
-            header = stringResource(id = R.string.your_savings),
-            amount = 123456,
-            onShowMoreClick = onNavigateToSavings
-        ) {
-            savingsAccounts.forEach { savingsAccount ->
-                HomeScreenSavingsAccountItem(savingsAccount = savingsAccount)
-            }
-        }
+    val uiState = viewModel.uiState
 
-        HomeScreenCard(
-            header = stringResource(id = R.string.total_net),
-            amount = 12345,
-            onShowMoreClick = onNavigateToTransactions
-        ) {
-            transactions.forEach { transaction ->
-                HomeScreenTransactionItem(transaction = transaction)
+    when (uiState) {
+        HomeScreenUiState.Error -> { FullScreenError() }
+        HomeScreenUiState.Loading -> { FullScreenLoading() }
+        is HomeScreenUiState.Success -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                HomeScreenCard(
+                    header = stringResource(id = R.string.your_savings),
+                    amount = uiState.savingsAccountSum,
+                    onShowMoreClick = onNavigateToSavings
+                ) {
+                    uiState.savingsAccounts.forEach { savingsAccount ->
+                        HomeScreenSavingsAccountItem(savingsAccount = savingsAccount)
+                    }
+                }
+
+                HomeScreenCard(
+                    header = stringResource(id = R.string.total_net),
+                    amount = uiState.transactionSum,
+                    onShowMoreClick = onNavigateToTransactions
+                ) {
+                    uiState.transactions.forEach { transaction ->
+                        HomeScreenTransactionItem(transaction = transaction)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
     }
 
 }

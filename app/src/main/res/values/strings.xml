@@ -84,6 +84,9 @@
     <string name="savingsaccount_restored">Sparkontot återställdes.</string>
 
     <string name="sort_by">Sortera efter</string>
+    <string name="name">Namn</string>
+    <string name="sum">Summa</string>
+    <string name="date">Datum</string>
     <string name="select_date">Välj datum</string>
     <string name="select_category">Välj kategori</string>
     <string name="select_theme">Välj tema</string>

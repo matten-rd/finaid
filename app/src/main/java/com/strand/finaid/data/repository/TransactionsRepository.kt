@@ -8,6 +8,7 @@ interface TransactionsRepository {
     fun getDeletedTransactionsStream(): Flow<List<Transaction>>
     suspend fun getTransactionById(transactionId: String): Transaction
     suspend fun getLimitedNumberOfTransactions(numberOfTransactions: Int): List<Transaction>
+    suspend fun getTransactionSum(): Int
     suspend fun saveTransaction(transaction: Transaction)
     suspend fun moveTransactionToTrash(transactionId: String)
     suspend fun restoreTransactionFromTrash(transactionId: String)
