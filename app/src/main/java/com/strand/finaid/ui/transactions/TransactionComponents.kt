@@ -6,8 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
@@ -91,6 +90,8 @@ fun TransactionsSortBottomSheet(
     selectedSortOrder: SortOrder,
     onSelectedSortOrder: (Int) -> Unit
 ) {
+    var selectedSortOrderIndex by remember(selectedSortOrder) { mutableStateOf(selectedSortOrder.ordinal) }
+
     BaseBottomSheet(title = stringResource(id = R.string.sort_by)) {
         Column(
             modifier = Modifier
@@ -100,15 +101,20 @@ fun TransactionsSortBottomSheet(
         ) {
             SegmentedButton(
                 items = possibleSortOrders.map { id -> stringResource(id = id) },
-                selectedIndex = selectedSortOrder.ordinal,
-                indexChanged = { onSelectedSortOrder(it) }
+                selectedIndex = selectedSortOrderIndex,
+                indexChanged = { newIndex -> selectedSortOrderIndex = newIndex }
             )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                FilledTonalButton(onClick = { onClose() }) {
+                FilledTonalButton(
+                    onClick = {
+                        onClose()
+                        onSelectedSortOrder(selectedSortOrderIndex)
+                    }
+                ) {
                     Text(text = stringResource(id = R.string.save))
                 }
             }

@@ -8,7 +8,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +38,7 @@ fun TransactionsScreen(
 ) {
     val transactions: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
     val openDialog = remember { mutableStateOf(false) }
     val selectedTransaction = remember { mutableStateOf<TransactionUiState?>(null) }
 
@@ -49,6 +53,8 @@ fun TransactionsScreen(
                 TransactionsScreenContent(
                     transactions = t.transactions,
                     categories = categories,
+                    selectedCategories = selectedCategories,
+                    onToggleCategory = viewModel::toggleCategory,
                     openSortSheet = openSortSheet,
                     onEditClick = navigateToEditScreen,
                     onDeleteClick = {
@@ -88,6 +94,8 @@ fun TransactionsScreen(
 private fun TransactionsScreenContent(
     transactions: List<TransactionUiState>,
     categories: List<Category>,
+    selectedCategories: List<Category>,
+    onToggleCategory: (Category) -> Unit,
     openSortSheet: () -> Unit,
     onEditClick: (String) -> Unit,
     onDeleteClick: (TransactionUiState) -> Unit
@@ -112,6 +120,8 @@ private fun TransactionsScreenContent(
             FilterRow(
                 openSortSheet = openSortSheet,
                 categories = categories,
+                selectedCategories = selectedCategories,
+                onToggleCategory = onToggleCategory
             )
         }
         items(transactions, key = { it.id }) { transactionItem ->
@@ -130,7 +140,9 @@ private fun TransactionsScreenContent(
 @Composable
 private fun FilterRow(
     openSortSheet: () -> Unit,
-    categories: List<Category>
+    categories: List<Category>,
+    selectedCategories: List<Category>,
+    onToggleCategory: (Category) -> Unit
 ) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -142,10 +154,10 @@ private fun FilterRow(
             }
         }
         items(categories, key = { it.id }) { category ->
-            var selected by remember { mutableStateOf(false) }
+            val selected by remember(selectedCategories) { mutableStateOf(category in selectedCategories) }
             FilterChip(
-                selected = selected,
-                onClick = { selected = !selected },
+                selected = category in selectedCategories,
+                onClick = { onToggleCategory(category) },
                 label = { Text(text = category.name) },
                 leadingIcon = {
                     if (selected)

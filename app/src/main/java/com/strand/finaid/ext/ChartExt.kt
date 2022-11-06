@@ -22,11 +22,11 @@ fun <T> rememberChartState(
     colors: (T) -> Color,
     amounts: (T) -> Int
 ): ChartState {
-    return remember(items) {
-        val proportions = items.extractProportions { amounts(it).absoluteValue }
-        val allColors = items.map { colors(it) }
-        val uniqueColors = allColors.distinct()
+    val proportions = remember(items) { items.extractProportions { amounts(it).absoluteValue } }
+    val allColors = remember(items) { items.map { colors(it) } }
+    val uniqueColors = remember(allColors) { allColors.distinct() }
 
+    val floatProportions = remember(proportions, allColors) {
         // FIXME: This can be done in some better way
         val pair = allColors zip proportions
         val group = pair.groupBy { it.first }
@@ -35,14 +35,19 @@ fun <T> rememberChartState(
                 it.second.toDouble()
             }
         }
-        val floatProportions = hell.keys.toList().map { it.toFloat() } // Used for circle chart
+        hell.keys.toList().map { it.toFloat() } // Used for circle chart
+    }
+    val percentageProportions = remember(floatProportions) {
         val maxValue = floatProportions.maxOrNull()!!
-        val percentageProportions = floatProportions.map { it/maxValue } // Used for bar chart
+        floatProportions.map { it / maxValue } // Used for bar chart
+    }
 
+    return remember(floatProportions, percentageProportions, uniqueColors) {
         ChartState(
             floatProportions = floatProportions,
             percentageProportions = percentageProportions,
             colors = uniqueColors
         )
     }
+
 }

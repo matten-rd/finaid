@@ -13,10 +13,7 @@ import com.strand.finaid.domain.TransactionScreenUiState
 import com.strand.finaid.domain.TransactionScreenUiStateUseCase
 import com.strand.finaid.ui.FinaidViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,19 +43,34 @@ class TransactionsViewModel @Inject constructor(
 
     val possibleSortOrders = SortOrder.values().map { it.titleId }
 
-    val sortFlow = MutableStateFlow(SortOrder.Date)
+    private val _sortFlow = MutableStateFlow(SortOrder.Date)
+    val sortFlow = _sortFlow.asStateFlow()
 
     fun onSetSortOrder(newValue: Int) {
         val newSortOrder = SortOrder.values()[newValue]
-        sortFlow.value = newSortOrder
+        _sortFlow.value = newSortOrder
     }
 
-    val transactionsUiState: StateFlow<TransactionScreenUiState> = transactionsScreenUiStateUseCase()
-        .stateIn(
+    private val _selectedCategories = MutableStateFlow(emptyList<Category>())
+    val selectedCategories = _selectedCategories.asStateFlow()
+
+    fun toggleCategory(category: Category) {
+        _selectedCategories.update {
+            if (category in it) { it - category } else { it + category }
+        }
+    }
+
+    val transactionsUiState: StateFlow<TransactionScreenUiState> =
+        combine(sortFlow, selectedCategories) { sortOrder, selected ->
+            Pair(sortOrder, selected)
+        }.flatMapLatest { (sortOrder, selected) ->
+            transactionsScreenUiStateUseCase(sortOrder = sortOrder, selectedCategories = selected)
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = TransactionScreenUiState.Loading
         )
+
 
     val categories: StateFlow<List<Category>> = categoriesRepository.getCategoriesStream()
         .stateIn(
