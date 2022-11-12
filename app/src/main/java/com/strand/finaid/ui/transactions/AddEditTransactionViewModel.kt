@@ -19,7 +19,9 @@ import com.strand.finaid.ui.screenspec.TransactionDefaultId
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.*
@@ -77,20 +79,14 @@ class AddEditTransactionViewModel @Inject constructor(
         transactionType.value = newType
     }
 
-    private val allCategories: Flow<List<Category>> = categoriesRepository.getCategoriesStream()
-
-    val incomeCategories: StateFlow<List<Category>> = allCategories.map { list ->
-            list.filter { category -> category.transactionType == TransactionType.Income }
-        }
+    val incomeCategories: StateFlow<List<Category>> = categoriesRepository.getIncomeCategoriesStream()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
-    val expenseCategories: StateFlow<List<Category>> = allCategories.map { list ->
-            list.filter { category -> category.transactionType == TransactionType.Expense }
-        }
+    val expenseCategories: StateFlow<List<Category>> = categoriesRepository.getExpenseCategoriesStream()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

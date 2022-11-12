@@ -11,6 +11,12 @@ interface CategoriesDao {
     @Query("SELECT * FROM categories WHERE deleted = 0 ORDER BY name DESC")
     fun getCategoryEntitiesStream(): Flow<List<CategoryEntity>>
 
+    @Query("SELECT * FROM categories WHERE deleted = 0 AND transactionType = 'Income' ORDER BY name DESC")
+    fun getIncomeCategoryEntitiesStream(): Flow<List<CategoryEntity>>
+
+    @Query("SELECT * FROM categories WHERE deleted = 0 AND transactionType = 'Expense' ORDER BY name DESC")
+    fun getExpenseCategoryEntitiesStream(): Flow<List<CategoryEntity>>
+
     @Query("SELECT * FROM categories WHERE deleted = 1 ORDER BY name DESC")
     fun getDeletedCategoryEntitiesStream(): Flow<List<CategoryEntity>>
 

@@ -18,6 +18,14 @@ class CategoriesRepositoryImpl @Inject constructor(
         categoriesDao.getCategoryEntitiesStream()
             .map { it.map(CategoryEntity::asCategory) }
 
+    override fun getIncomeCategoriesStream(): Flow<List<Category>> =
+        categoriesDao.getIncomeCategoryEntitiesStream()
+            .map { it.map(CategoryEntity::asCategory) }
+
+    override fun getExpenseCategoriesStream(): Flow<List<Category>> =
+        categoriesDao.getExpenseCategoryEntitiesStream()
+            .map { it.map(CategoryEntity::asCategory) }
+
     override fun getDeletedCategoriesStream(): Flow<List<Category>> =
         categoriesDao.getDeletedCategoryEntitiesStream()
             .map { it.map(CategoryEntity::asCategory) }

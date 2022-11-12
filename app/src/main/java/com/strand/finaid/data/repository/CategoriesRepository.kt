@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface CategoriesRepository {
     fun getCategoriesStream(): Flow<List<Category>>
+    fun getIncomeCategoriesStream(): Flow<List<Category>>
+    fun getExpenseCategoriesStream(): Flow<List<Category>>
     fun getDeletedCategoriesStream(): Flow<List<Category>>
     suspend fun addCategory(category: Category)
     suspend fun moveCategoryToTrash(categoryId: String)
