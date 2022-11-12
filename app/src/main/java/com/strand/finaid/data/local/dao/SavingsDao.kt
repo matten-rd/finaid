@@ -34,9 +34,6 @@ interface SavingsDao {
     suspend fun updateDeletedField(id: String, deleted: Boolean)
 
     // DELETE
-    @Delete
-    suspend fun deleteSavingsAccountEntity(entity: SavingsAccountEntity)
-
     @Query("DELETE FROM savings_accounts WHERE id = :id")
     suspend fun deleteSavingsAccountEntityById(id: String)
 

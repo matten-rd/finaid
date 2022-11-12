@@ -64,7 +64,7 @@ fun AddEditTransactionScreen(
                     }
                 },
                 confirmButton = {
-                    FilledTonalButton(onClick = { viewModel.moveTransactionCategoryToTrash(category) }) {
+                    FilledTonalButton(onClick = { viewModel.moveTransactionCategoryToTrash(category.id) }) {
                         Text(text = stringResource(id = R.string.delete))
                     }
                 }

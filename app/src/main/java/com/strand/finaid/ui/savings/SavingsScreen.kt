@@ -58,7 +58,7 @@ fun SavingsScreen(
                 confirmButton = {
                     FilledTonalButton(
                         onClick = {
-                            viewModel.onDeleteSavingsAccountClick(savingsAccount)
+                            viewModel.onDeleteSavingsAccountClick(savingsAccount.id)
                             openDialog.value = false
                         }
                     ) { Text(text = stringResource(id = R.string.delete)) }

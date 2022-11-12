@@ -28,9 +28,6 @@ interface CategoriesDao {
     suspend fun updateTransactionsWithNewCategory(id: String, name: String, hexCode: String)
 
     // DELETE
-    @Delete
-    suspend fun deleteCategoryEntity(entity: CategoryEntity)
-
     @Query("DELETE FROM categories WHERE id = :id")
     suspend fun deleteSCategoryEntityById(id: String)
 

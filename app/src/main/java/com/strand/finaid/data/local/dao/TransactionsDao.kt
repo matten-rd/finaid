@@ -39,9 +39,6 @@ interface TransactionsDao {
     suspend fun updateDeletedField(id: String, deleted: Boolean)
 
     // DELETE
-    @Delete
-    suspend fun deleteTransactionEntity(entity: TransactionEntity)
-
     @Query("DELETE FROM transactions WHERE transaction_id = :id")
     suspend fun deleteTransactionEntityById(id: String)
 

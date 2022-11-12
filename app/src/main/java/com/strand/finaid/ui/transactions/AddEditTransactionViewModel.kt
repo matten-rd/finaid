@@ -214,10 +214,10 @@ class AddEditTransactionViewModel @Inject constructor(
         SnackbarManager.showMessage(R.string.category_saved)
     }
 
-    fun moveTransactionCategoryToTrash(category: Category) {
+    fun moveTransactionCategoryToTrash(categoryId: String) {
         setConfirmDeleteCategoryAlertDialogUiState(false)
         viewModelScope.launch(showErrorExceptionHandler) {
-            categoriesRepository.moveCategoryToTrash(category.id)
+            categoriesRepository.moveCategoryToTrash(categoryId)
         }
 
         uiState = when (transactionType.value) {

@@ -79,9 +79,9 @@ class TransactionsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    fun onDeleteTransactionClick(transaction: TransactionUiState) {
+    fun onDeleteTransactionClick(transactionId: String) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            transactionsRepository.moveTransactionToTrash(transactionId = transaction.id)
+            transactionsRepository.moveTransactionToTrash(transactionId = transactionId)
         }
     }
 }

@@ -39,9 +39,9 @@ class SavingsViewModel @Inject constructor(
             initialValue = SavingsScreenUiState.Loading
         )
 
-    fun onDeleteSavingsAccountClick(savingsAccount: SavingsAccountUiState) {
+    fun onDeleteSavingsAccountClick(savingsAccountId: String) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            savingsRepository.moveSavingsAccountToTrash(savingsAccountId = savingsAccount.id)
+            savingsRepository.moveSavingsAccountToTrash(savingsAccountId = savingsAccountId)
         }
     }
 }

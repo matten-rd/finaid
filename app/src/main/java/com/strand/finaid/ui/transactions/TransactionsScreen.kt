@@ -70,7 +70,7 @@ fun TransactionsScreen(
                 confirmButton = {
                     FilledTonalButton(
                         onClick = {
-                            viewModel.onDeleteTransactionClick(transaction)
+                            viewModel.onDeleteTransactionClick(transaction.id)
                             openDialog.value = false
                         }
                     ) { Text(text = stringResource(id = R.string.delete)) }
