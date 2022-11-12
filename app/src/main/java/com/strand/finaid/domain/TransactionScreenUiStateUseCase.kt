@@ -11,7 +11,6 @@ import com.strand.finaid.ui.transactions.TransactionUiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import kotlin.math.absoluteValue
 
 sealed interface TransactionScreenUiState {
     data class Success(val transactions: List<TransactionUiState>?) : TransactionScreenUiState
@@ -28,29 +27,24 @@ class TransactionScreenUiStateUseCase @Inject constructor(
         selectedCategories: List<Category> = emptyList()
     ): Flow<TransactionScreenUiState> {
         val transactionsStream: Flow<List<Transaction>> =
-            if (deleted)
+            if (deleted) {
                 transactionsRepository.getDeletedTransactionsStream()
-            else
-                transactionsRepository.getTransactionsStream()
+            } else {
+                transactionsRepository.getTransactionEntitiesStream(sortOrder = sortOrder)
+            }
 
         return transactionsStream
             .asResult()
             .map { result: Result<List<Transaction>> ->
                 when (result) {
                     is Result.Success -> {
-                        val transactions = result.data
-                        val sortedTransactions = when (sortOrder) {
-                            SortOrder.Date -> transactions?.sortedByDescending { it.date }
-                            SortOrder.Sum -> transactions?.sortedByDescending { it.amount.absoluteValue }
-                            SortOrder.Name -> transactions?.sortedBy { it.memo }
-                        }?.filter { transaction ->
+                        val transactions = result.data?.filter { transaction ->
                             if (selectedCategories.isNotEmpty())
                                 transaction.category in selectedCategories
                             else
                                 true
                         }
-
-                        TransactionScreenUiState.Success(sortedTransactions?.map { it.asTransactionUiState() })
+                        TransactionScreenUiState.Success(transactions?.map { it.asTransactionUiState() })
                     }
                     Result.Loading -> TransactionScreenUiState.Loading
                     is Result.Error -> TransactionScreenUiState.Error

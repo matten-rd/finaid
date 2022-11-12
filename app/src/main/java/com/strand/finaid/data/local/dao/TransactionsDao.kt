@@ -2,14 +2,19 @@ package com.strand.finaid.data.local.dao
 
 import androidx.room.*
 import com.strand.finaid.data.local.entities.TransactionEntity
+import com.strand.finaid.ui.transactions.SortOrder
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionsDao {
 
     // GET
-    @Query("SELECT * FROM transactions WHERE transaction_deleted = 0 ORDER BY date DESC")
-    fun getTransactionEntitiesStream(): Flow<List<TransactionEntity>>
+    @Query("SELECT * FROM transactions WHERE transaction_deleted = 0 ORDER BY " +
+            "CASE WHEN :sortOrder = 'Date' THEN date END DESC," +
+            "CASE WHEN :sortOrder = 'Sum' THEN ABS(amount) END DESC," +
+            "CASE WHEN :sortOrder = 'Name' THEN memo END ASC"
+    )
+    fun getTransactionEntitiesStream(sortOrder: SortOrder): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM transactions WHERE transaction_deleted = 1 ORDER BY date DESC")
     fun getDeletedTransactionEntitiesStream(): Flow<List<TransactionEntity>>

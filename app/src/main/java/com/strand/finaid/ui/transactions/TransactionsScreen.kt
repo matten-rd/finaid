@@ -1,5 +1,6 @@
 package com.strand.finaid.ui.transactions
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -36,35 +37,24 @@ fun TransactionsScreen(
     navigateToEditScreen: (String) -> Unit,
     openSortSheet: () -> Unit
 ) {
-    val transactions: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
+    val uiState: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
     val openDialog = remember { mutableStateOf(false) }
     val selectedTransaction = remember { mutableStateOf<TransactionUiState?>(null) }
 
-    // Use intermediate variable to enable smart cast and ensure that it has the same value in the condition and the when branches
-    when (val t = transactions) {
-        TransactionScreenUiState.Error -> { FullScreenError() }
-        TransactionScreenUiState.Loading -> { FullScreenLoading() }
-        is TransactionScreenUiState.Success -> {
-            if (t.transactions.isNullOrEmpty())
-                Text(text = "Empty Content")
-            else {
-                TransactionsScreenContent(
-                    transactions = t.transactions,
-                    categories = categories,
-                    selectedCategories = selectedCategories,
-                    onToggleCategory = viewModel::toggleCategory,
-                    openSortSheet = openSortSheet,
-                    onEditClick = navigateToEditScreen,
-                    onDeleteClick = {
-                        selectedTransaction.value = it
-                        openDialog.value = true
-                    }
-                )
-            }
+    TransactionsScreenDisplay(
+        uiState = uiState,
+        categories = categories,
+        selectedCategories = selectedCategories,
+        onToggleCategory = viewModel::toggleCategory,
+        openSortSheet = openSortSheet,
+        navigateToEditScreen = navigateToEditScreen,
+        onDeleteClick = {
+            selectedTransaction.value = it
+            openDialog.value = true
         }
-    }
+    )
 
     if (openDialog.value) {
         selectedTransaction.value?.let { transaction ->
@@ -86,6 +76,39 @@ fun TransactionsScreen(
                     ) { Text(text = stringResource(id = R.string.delete)) }
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun TransactionsScreenDisplay(
+    uiState: TransactionScreenUiState,
+    categories: List<Category>,
+    selectedCategories: List<Category>,
+    onToggleCategory: (Category) -> Unit,
+    openSortSheet: () -> Unit,
+    navigateToEditScreen: (String) -> Unit,
+    onDeleteClick: (TransactionUiState) -> Unit
+) {
+    Crossfade(targetState = uiState) { screen ->
+        when (screen) {
+            TransactionScreenUiState.Error -> { FullScreenError() }
+            TransactionScreenUiState.Loading -> { FullScreenLoading() }
+            is TransactionScreenUiState.Success -> {
+                if (screen.transactions.isNullOrEmpty())
+                    Text(text = "Empty Content")
+                else {
+                    TransactionsScreenContent(
+                        transactions = screen.transactions,
+                        categories = categories,
+                        selectedCategories = selectedCategories,
+                        onToggleCategory = onToggleCategory,
+                        openSortSheet = openSortSheet,
+                        onEditClick = navigateToEditScreen,
+                        onDeleteClick = onDeleteClick
+                    )
+                }
+            }
         }
     }
 }
