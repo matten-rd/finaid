@@ -4,8 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -27,7 +31,35 @@ fun HomeScreen(
     onNavigateToSavings: () -> Unit
 ) {
     val uiState = viewModel.uiState
+    val refreshing by viewModel.isRefreshing
 
+    val pullRefreshState = rememberPullRefreshState(refreshing, { viewModel.refresh() })
+
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .pullRefresh(pullRefreshState)
+    ) {
+        HomeScreenDisplay(
+            uiState = uiState,
+            onNavigateToTransactions = onNavigateToTransactions,
+            onNavigateToSavings = onNavigateToSavings
+        )
+
+        PullRefreshIndicator(
+            refreshing = refreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+    }
+
+}
+
+@Composable
+private fun HomeScreenDisplay(
+    uiState: HomeScreenUiState,
+    onNavigateToTransactions: () -> Unit,
+    onNavigateToSavings: () -> Unit,
+) {
     when (uiState) {
         HomeScreenUiState.Error -> { FullScreenError() }
         HomeScreenUiState.Loading -> { FullScreenLoading() }
@@ -63,9 +95,7 @@ fun HomeScreen(
             }
         }
     }
-
 }
-
 
 @Composable
 private fun HomeScreenCard(

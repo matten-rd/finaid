@@ -1,6 +1,5 @@
 package com.strand.finaid.ui.components.list_items
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
@@ -15,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -73,7 +73,7 @@ internal fun RevealSwipe(
                 .fillMaxWidth(0.5f)
                 .fillMaxHeight()
                 .align(Alignment.CenterStart)
-                .background(startBackgroundColor)
+                .drawBehind { drawRect(startBackgroundColor) }
                 .clickable {
                     onStartClick()
                     scope.launch { revealState.reset() }
@@ -95,7 +95,7 @@ internal fun RevealSwipe(
                 .fillMaxWidth(0.5f)
                 .fillMaxHeight()
                 .align(Alignment.CenterEnd)
-                .background(endBackgroundColor)
+                .drawBehind { drawRect(endBackgroundColor) }
                 .clickable {
                     onEndClick()
                     scope.launch { revealState.reset() }

@@ -10,6 +10,7 @@ import com.strand.finaid.domain.HomeScreenUiStateUseCase
 import com.strand.finaid.ui.FinaidViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,6 +23,8 @@ class HomeViewModel @Inject constructor(
     var uiState: HomeScreenUiState by mutableStateOf(HomeScreenUiState.Loading)
         private set
 
+    val isRefreshing = mutableStateOf(false)
+
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         uiState = HomeScreenUiState.Error
         onError(throwable)
@@ -30,6 +33,15 @@ class HomeViewModel @Inject constructor(
     private fun initHomeScreenUiState() {
         viewModelScope.launch(exceptionHandler) {
             uiState = homeScreenUiStateUseCase()
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            isRefreshing.value = true
+            delay(1000)
+            initHomeScreenUiState()
+            isRefreshing.value = false
         }
     }
 
