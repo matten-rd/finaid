@@ -60,6 +60,10 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
+    fun clearSelectedCategories() {
+        _selectedCategories.update { emptyList() }
+    }
+
     val transactionsUiState: StateFlow<TransactionScreenUiState> =
         combine(sortFlow, selectedCategories) { sortOrder, selected ->
             Pair(sortOrder, selected)

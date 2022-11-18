@@ -1,6 +1,7 @@
 package com.strand.finaid.ui.transactions
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -15,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -48,6 +50,7 @@ fun TransactionsScreen(
         categories = categories,
         selectedCategories = selectedCategories,
         onToggleCategory = viewModel::toggleCategory,
+        onClearSelectedCategories = viewModel::clearSelectedCategories,
         openSortSheet = openSortSheet,
         navigateToEditScreen = navigateToEditScreen,
         onDeleteClick = {
@@ -86,6 +89,7 @@ private fun TransactionsScreenDisplay(
     categories: List<Category>,
     selectedCategories: List<Category>,
     onToggleCategory: (Category) -> Unit,
+    onClearSelectedCategories: () -> Unit,
     openSortSheet: () -> Unit,
     navigateToEditScreen: (String) -> Unit,
     onDeleteClick: (TransactionUiState) -> Unit
@@ -103,6 +107,7 @@ private fun TransactionsScreenDisplay(
                         categories = categories,
                         selectedCategories = selectedCategories,
                         onToggleCategory = onToggleCategory,
+                        onClearSelectedCategories = onClearSelectedCategories,
                         openSortSheet = openSortSheet,
                         onEditClick = navigateToEditScreen,
                         onDeleteClick = onDeleteClick
@@ -119,6 +124,7 @@ private fun TransactionsScreenContent(
     categories: List<Category>,
     selectedCategories: List<Category>,
     onToggleCategory: (Category) -> Unit,
+    onClearSelectedCategories: () -> Unit,
     openSortSheet: () -> Unit,
     onEditClick: (String) -> Unit,
     onDeleteClick: (TransactionUiState) -> Unit
@@ -144,7 +150,8 @@ private fun TransactionsScreenContent(
                 openSortSheet = openSortSheet,
                 categories = categories,
                 selectedCategories = selectedCategories,
-                onToggleCategory = onToggleCategory
+                onToggleCategory = onToggleCategory,
+                onClearSelectedCategories = onClearSelectedCategories
             )
         }
         items(transactions, key = { it.id }) { transactionItem ->
@@ -165,17 +172,34 @@ private fun FilterRow(
     openSortSheet: () -> Unit,
     categories: List<Category>,
     selectedCategories: List<Category>,
-    onToggleCategory: (Category) -> Unit
+    onToggleCategory: (Category) -> Unit,
+    onClearSelectedCategories: () -> Unit
 ) {
     LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        item { Spacer(modifier = Modifier.width(0.dp)) }
-        item {
-            IconButton(onClick = openSortSheet) {
-                Icon(imageVector = Icons.Default.Sort, contentDescription = null)
+        stickyHeader {
+            Row(
+                modifier = Modifier.background(
+                    brush = Brush.horizontalGradient(
+                        0.95f to MaterialTheme.colorScheme.background,
+                        1f to Color.Transparent,
+                    )
+                )
+            ) {
+                Spacer(modifier = Modifier.size(8.dp))
+                if (selectedCategories.isNotEmpty()) {
+                    IconButton(onClick = onClearSelectedCategories, modifier = Modifier.size(32.dp)) {
+                        Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+                    }
+                }
+                IconButton(onClick = openSortSheet, modifier = Modifier.size(32.dp)) {
+                    Icon(imageVector = Icons.Default.Sort, contentDescription = null)
+                }
             }
         }
+
         items(categories, key = { it.id }) { category ->
             val selected by remember(selectedCategories) { mutableStateOf(category in selectedCategories) }
             FilterChip(
