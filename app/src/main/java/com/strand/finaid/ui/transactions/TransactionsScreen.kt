@@ -3,9 +3,7 @@ package com.strand.finaid.ui.transactions
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -37,7 +35,8 @@ import com.strand.finaid.ui.components.list_items.TransactionItem
 fun TransactionsScreen(
     viewModel: TransactionsViewModel = hiltViewModel(),
     navigateToEditScreen: (String) -> Unit,
-    openSortSheet: () -> Unit
+    openSortSheet: () -> Unit,
+    filterRowListState: LazyListState = rememberLazyListState()
 ) {
     val uiState: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
@@ -56,7 +55,8 @@ fun TransactionsScreen(
         onDeleteClick = {
             selectedTransaction.value = it
             openDialog.value = true
-        }
+        },
+        filterRowListState = filterRowListState
     )
 
     if (openDialog.value) {
@@ -92,7 +92,8 @@ private fun TransactionsScreenDisplay(
     onClearSelectedCategories: () -> Unit,
     openSortSheet: () -> Unit,
     navigateToEditScreen: (String) -> Unit,
-    onDeleteClick: (TransactionUiState) -> Unit
+    onDeleteClick: (TransactionUiState) -> Unit,
+    filterRowListState: LazyListState
 ) {
     Crossfade(targetState = uiState) { screen ->
         when (screen) {
@@ -110,7 +111,8 @@ private fun TransactionsScreenDisplay(
                         onClearSelectedCategories = onClearSelectedCategories,
                         openSortSheet = openSortSheet,
                         onEditClick = navigateToEditScreen,
-                        onDeleteClick = onDeleteClick
+                        onDeleteClick = onDeleteClick,
+                        filterRowListState = filterRowListState
                     )
                 }
             }
@@ -127,7 +129,8 @@ private fun TransactionsScreenContent(
     onClearSelectedCategories: () -> Unit,
     openSortSheet: () -> Unit,
     onEditClick: (String) -> Unit,
-    onDeleteClick: (TransactionUiState) -> Unit
+    onDeleteClick: (TransactionUiState) -> Unit,
+    filterRowListState: LazyListState
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -151,7 +154,8 @@ private fun TransactionsScreenContent(
                 categories = categories,
                 selectedCategories = selectedCategories,
                 onToggleCategory = onToggleCategory,
-                onClearSelectedCategories = onClearSelectedCategories
+                onClearSelectedCategories = onClearSelectedCategories,
+                listState = filterRowListState
             )
         }
         items(transactions, key = { it.id }) { transactionItem ->
@@ -173,9 +177,11 @@ private fun FilterRow(
     categories: List<Category>,
     selectedCategories: List<Category>,
     onToggleCategory: (Category) -> Unit,
-    onClearSelectedCategories: () -> Unit
+    onClearSelectedCategories: () -> Unit,
+    listState: LazyListState
 ) {
     LazyRow(
+        state = listState,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
