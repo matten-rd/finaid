@@ -8,8 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,39 +30,30 @@ fun SavingsScreen(
     navigateToEditScreen: (String) -> Unit
 ) {
     val uiState: SavingsScreenUiState by viewModel.savingsAccountsUiState.collectAsStateWithLifecycle()
-    val openDialog = remember { mutableStateOf(false) }
-    val selectedSavingsAccount = remember { mutableStateOf<SavingsAccountUiState?>(null) }
+    val isDialogOpen by viewModel.isDialogOpen
 
     SavingsScreenDisplay(
         uiState = uiState,
         navigateToEditScreen = navigateToEditScreen,
-        onDeleteClick = {
-            selectedSavingsAccount.value = it
-            openDialog.value = true
-        }
+        onDeleteClick = viewModel::onDeleteSavingsAccountClick
     )
 
-    if (openDialog.value) {
-        selectedSavingsAccount.value?.let { savingsAccount ->
-            AlertDialog(
-                onDismissRequest = { openDialog.value = false },
-                title = { Text(text = stringResource(id = R.string.delete_savingsaccount)) },
-                text = { Text(text = stringResource(id = R.string.savingsaccount_will_be_moved_to_trash)) },
-                dismissButton = {
-                    TextButton(onClick = { openDialog.value = false }) {
-                        Text(text = stringResource(id = R.string.cancel))
-                    }
-                },
-                confirmButton = {
-                    FilledTonalButton(
-                        onClick = {
-                            viewModel.onDeleteSavingsAccountClick(savingsAccount.id)
-                            openDialog.value = false
-                        }
-                    ) { Text(text = stringResource(id = R.string.delete)) }
+    if (isDialogOpen) {
+        AlertDialog(
+            onDismissRequest = viewModel::closeDialog,
+            title = { Text(text = stringResource(id = R.string.delete_savingsaccount)) },
+            text = { Text(text = stringResource(id = R.string.savingsaccount_will_be_moved_to_trash)) },
+            dismissButton = {
+                TextButton(onClick = viewModel::closeDialog) {
+                    Text(text = stringResource(id = R.string.cancel))
                 }
-            )
-        }
+            },
+            confirmButton = {
+                FilledTonalButton(onClick = viewModel::onConfirmDeleteSavingsAccountClick) {
+                    Text(text = stringResource(id = R.string.delete))
+                }
+            }
+        )
     }
 }
 

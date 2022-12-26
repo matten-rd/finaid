@@ -2,6 +2,7 @@ package com.strand.finaid.ui.savings
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wallet
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
@@ -39,9 +40,23 @@ class SavingsViewModel @Inject constructor(
             initialValue = SavingsScreenUiState.Loading
         )
 
-    fun onDeleteSavingsAccountClick(savingsAccountId: String) {
+    val isDialogOpen = mutableStateOf(false)
+
+    fun closeDialog() {
+        isDialogOpen.value = false
+    }
+
+    private val selectedSavingsAccount = mutableStateOf<SavingsAccountUiState?>(null)
+
+    fun onDeleteSavingsAccountClick(savingsAccount: SavingsAccountUiState) {
+        selectedSavingsAccount.value = savingsAccount
+        isDialogOpen.value = true
+    }
+
+    fun onConfirmDeleteSavingsAccountClick() {
         viewModelScope.launch(showErrorExceptionHandler) {
-            savingsRepository.moveSavingsAccountToTrash(savingsAccountId = savingsAccountId)
+            savingsRepository.moveSavingsAccountToTrash(savingsAccountId = selectedSavingsAccount.value!!.id)
         }
+        closeDialog()
     }
 }

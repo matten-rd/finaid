@@ -41,8 +41,7 @@ fun TransactionsScreen(
     val uiState: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
-    val openDialog = remember { mutableStateOf(false) }
-    val selectedTransaction = remember { mutableStateOf<TransactionUiState?>(null) }
+    val isDialogOpen by viewModel.isDialogOpen
 
     TransactionsScreenDisplay(
         uiState = uiState,
@@ -52,34 +51,26 @@ fun TransactionsScreen(
         onClearSelectedCategories = viewModel::clearSelectedCategories,
         openSortSheet = openSortSheet,
         navigateToEditScreen = navigateToEditScreen,
-        onDeleteClick = {
-            selectedTransaction.value = it
-            openDialog.value = true
-        },
+        onDeleteClick = viewModel::onDeleteTransactionClick,
         filterRowListState = filterRowListState
     )
 
-    if (openDialog.value) {
-        selectedTransaction.value?.let { transaction ->
-            AlertDialog(
-                onDismissRequest = { openDialog.value = false },
-                title = { Text(text = stringResource(id = R.string.delete_transaction)) },
-                text = { Text(text = stringResource(id = R.string.transaction_will_be_moved_to_trash)) },
-                dismissButton = {
-                    TextButton(onClick = { openDialog.value = false }) {
-                        Text(text = stringResource(id = R.string.cancel))
-                    }
-                },
-                confirmButton = {
-                    FilledTonalButton(
-                        onClick = {
-                            viewModel.onDeleteTransactionClick(transaction.id)
-                            openDialog.value = false
-                        }
-                    ) { Text(text = stringResource(id = R.string.delete)) }
+    if (isDialogOpen) {
+        AlertDialog(
+            onDismissRequest = viewModel::closeDialog,
+            title = { Text(text = stringResource(id = R.string.delete_transaction)) },
+            text = { Text(text = stringResource(id = R.string.transaction_will_be_moved_to_trash)) },
+            dismissButton = {
+                TextButton(onClick = viewModel::closeDialog) {
+                    Text(text = stringResource(id = R.string.cancel))
                 }
-            )
-        }
+            },
+            confirmButton = {
+                FilledTonalButton(onClick = viewModel::onConfirmDeleteTransactionClick) {
+                    Text(text = stringResource(id = R.string.delete))
+                }
+            }
+        )
     }
 }
 

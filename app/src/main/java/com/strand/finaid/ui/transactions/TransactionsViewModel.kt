@@ -1,6 +1,7 @@
 package com.strand.finaid.ui.transactions
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
@@ -83,9 +84,23 @@ class TransactionsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    fun onDeleteTransactionClick(transactionId: String) {
+    val isDialogOpen = mutableStateOf(false)
+
+    fun closeDialog() {
+        isDialogOpen.value = false
+    }
+
+    private val selectedTransaction = mutableStateOf<TransactionUiState?>(null)
+
+    fun onDeleteTransactionClick(transaction: TransactionUiState) {
+        selectedTransaction.value = transaction
+        isDialogOpen.value = true
+    }
+
+    fun onConfirmDeleteTransactionClick() {
         viewModelScope.launch(showErrorExceptionHandler) {
-            transactionsRepository.moveTransactionToTrash(transactionId = transactionId)
+            transactionsRepository.moveTransactionToTrash(transactionId = selectedTransaction.value!!.id)
         }
+        closeDialog()
     }
 }
