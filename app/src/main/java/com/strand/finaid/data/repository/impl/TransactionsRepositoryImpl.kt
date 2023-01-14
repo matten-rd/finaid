@@ -6,7 +6,6 @@ import com.strand.finaid.data.mappers.asTransaction
 import com.strand.finaid.data.mappers.asTransactionEntity
 import com.strand.finaid.data.models.Transaction
 import com.strand.finaid.data.repository.TransactionsRepository
-import com.strand.finaid.ui.transactions.SortOrder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -14,8 +13,8 @@ import javax.inject.Inject
 class TransactionsRepositoryImpl @Inject constructor(
     private val transactionsDao: TransactionsDao
 ) : TransactionsRepository {
-    override fun getTransactionEntitiesStream(sortOrder: SortOrder): Flow<List<Transaction>> =
-        transactionsDao.getTransactionEntitiesStream(sortOrder = sortOrder)
+    override fun getTransactionEntitiesStream(): Flow<List<Transaction>> =
+        transactionsDao.getTransactionEntitiesStream()
             .map { it.map(TransactionEntity::asTransaction) }
 
     override fun getDeletedTransactionsStream(): Flow<List<Transaction>> =

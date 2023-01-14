@@ -41,7 +41,9 @@ fun TransactionsScreen(
     val uiState: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
-    val isDialogOpen by viewModel.isDialogOpen
+    val isDialogOpen = remember { mutableStateOf(false) }
+    val periods = viewModel.periods
+    val selectedPeriod by viewModel.periodFlow.collectAsStateWithLifecycle()
 
     TransactionsScreenDisplay(
         uiState = uiState,
@@ -51,22 +53,31 @@ fun TransactionsScreen(
         onClearSelectedCategories = viewModel::clearSelectedCategories,
         openSortSheet = openSortSheet,
         navigateToEditScreen = navigateToEditScreen,
-        onDeleteClick = viewModel::onDeleteTransactionClick,
-        filterRowListState = filterRowListState
+        onDeleteClick = {
+            viewModel.setSelectedTransaction(it)
+            isDialogOpen.value = true
+        },
+        filterRowListState = filterRowListState,
+        periods = periods,
+        selectedPeriod = selectedPeriod,
+        onSetPeriod = viewModel::onSetPeriod
     )
 
-    if (isDialogOpen) {
+    if (isDialogOpen.value) {
         AlertDialog(
-            onDismissRequest = viewModel::closeDialog,
+            onDismissRequest = { isDialogOpen.value = false },
             title = { Text(text = stringResource(id = R.string.delete_transaction)) },
             text = { Text(text = stringResource(id = R.string.transaction_will_be_moved_to_trash)) },
             dismissButton = {
-                TextButton(onClick = viewModel::closeDialog) {
+                TextButton(onClick = { isDialogOpen.value = false }) {
                     Text(text = stringResource(id = R.string.cancel))
                 }
             },
             confirmButton = {
-                FilledTonalButton(onClick = viewModel::onConfirmDeleteTransactionClick) {
+                FilledTonalButton(onClick = {
+                    viewModel.onConfirmDeleteTransactionClick()
+                    isDialogOpen.value = false
+                }) {
                     Text(text = stringResource(id = R.string.delete))
                 }
             }
@@ -84,7 +95,10 @@ private fun TransactionsScreenDisplay(
     openSortSheet: () -> Unit,
     navigateToEditScreen: (String) -> Unit,
     onDeleteClick: (TransactionUiState) -> Unit,
-    filterRowListState: LazyListState
+    filterRowListState: LazyListState,
+    periods: List<Int>,
+    selectedPeriod: Period,
+    onSetPeriod: (Int) -> Unit
 ) {
     Crossfade(targetState = uiState) { screen ->
         when (screen) {
@@ -103,7 +117,10 @@ private fun TransactionsScreenDisplay(
                         openSortSheet = openSortSheet,
                         onEditClick = navigateToEditScreen,
                         onDeleteClick = onDeleteClick,
-                        filterRowListState = filterRowListState
+                        filterRowListState = filterRowListState,
+                        periods = periods,
+                        selectedPeriod = selectedPeriod,
+                        onSetPeriod = onSetPeriod
                     )
                 }
             }
@@ -121,7 +138,10 @@ private fun TransactionsScreenContent(
     openSortSheet: () -> Unit,
     onEditClick: (String) -> Unit,
     onDeleteClick: (TransactionUiState) -> Unit,
-    filterRowListState: LazyListState
+    filterRowListState: LazyListState,
+    periods: List<Int>,
+    selectedPeriod: Period,
+    onSetPeriod: (Int) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -136,7 +156,10 @@ private fun TransactionsScreenContent(
             TransactionGraph(
                 displayValue = transactions.sumOf { it.amount },
                 proportions = chartState.percentageProportions,
-                colors = chartState.colors
+                colors = chartState.colors,
+                periods = periods,
+                selectedPeriod = selectedPeriod,
+                onSetPeriod = onSetPeriod
             )
         }
         item {
@@ -228,7 +251,10 @@ private fun FilterRow(
 private fun TransactionGraph(
     displayValue: Int,
     proportions: List<Float>,
-    colors: List<Color>
+    colors: List<Color>,
+    periods: List<Int>,
+    selectedPeriod: Period,
+    onSetPeriod: (Int) -> Unit
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Card(
@@ -236,9 +262,9 @@ private fun TransactionGraph(
         ) {
             SegmentedButton(
                 modifier = Modifier.padding(12.dp),
-                items = listOf("Månad", "År", "Totalt"),
-                selectedIndex = 0,
-                indexChanged = {  }
+                items = periods.map { id -> stringResource(id = id) },
+                selectedIndex = selectedPeriod.ordinal,
+                indexChanged = onSetPeriod
             )
         }
         Card(

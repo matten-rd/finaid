@@ -34,6 +34,12 @@ enum class SortOrder(@StringRes val titleId: Int) {
     Name(R.string.name)
 }
 
+enum class Period(@StringRes val periodId: Int) {
+    Month(R.string.month),
+    Year(R.string.year),
+    Total(R.string.total)
+}
+
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
     logService: LogService,
@@ -42,8 +48,16 @@ class TransactionsViewModel @Inject constructor(
     transactionsScreenUiStateUseCase: TransactionScreenUiStateUseCase
 ) : FinaidViewModel(logService) {
 
-    val possibleSortOrders = SortOrder.values().map { it.titleId }
+    val periods = Period.values().map { it.periodId }
+    private val _periodFlow = MutableStateFlow(Period.Total)
+    val periodFlow = _periodFlow.asStateFlow()
 
+    fun onSetPeriod(newValue: Int) {
+        val newPeriod = Period.values()[newValue]
+        _periodFlow.value = newPeriod
+    }
+
+    val possibleSortOrders = SortOrder.values().map { it.titleId }
     private val _sortFlow = MutableStateFlow(SortOrder.Date)
     val sortFlow = _sortFlow.asStateFlow()
 
@@ -66,10 +80,10 @@ class TransactionsViewModel @Inject constructor(
     }
 
     val transactionsUiState: StateFlow<TransactionScreenUiState> =
-        combine(sortFlow, selectedCategories) { sortOrder, selected ->
-            Pair(sortOrder, selected)
-        }.flatMapLatest { (sortOrder, selected) ->
-            transactionsScreenUiStateUseCase(sortOrder = sortOrder, selectedCategories = selected)
+        combine(sortFlow, periodFlow, selectedCategories) { sortOrder, period, selected ->
+            Triple(sortOrder, period, selected)
+        }.flatMapLatest { (sortOrder, period, selected) ->
+            transactionsScreenUiStateUseCase(sortOrder = sortOrder, period = period, selectedCategories = selected)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -84,23 +98,15 @@ class TransactionsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val isDialogOpen = mutableStateOf(false)
-
-    fun closeDialog() {
-        isDialogOpen.value = false
-    }
-
     private val selectedTransaction = mutableStateOf<TransactionUiState?>(null)
 
-    fun onDeleteTransactionClick(transaction: TransactionUiState) {
+    fun setSelectedTransaction(transaction: TransactionUiState) {
         selectedTransaction.value = transaction
-        isDialogOpen.value = true
     }
 
     fun onConfirmDeleteTransactionClick() {
         viewModelScope.launch(showErrorExceptionHandler) {
             transactionsRepository.moveTransactionToTrash(transactionId = selectedTransaction.value!!.id)
         }
-        closeDialog()
     }
 }

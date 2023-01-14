@@ -40,23 +40,15 @@ class SavingsViewModel @Inject constructor(
             initialValue = SavingsScreenUiState.Loading
         )
 
-    val isDialogOpen = mutableStateOf(false)
-
-    fun closeDialog() {
-        isDialogOpen.value = false
-    }
-
     private val selectedSavingsAccount = mutableStateOf<SavingsAccountUiState?>(null)
 
-    fun onDeleteSavingsAccountClick(savingsAccount: SavingsAccountUiState) {
+    fun setSelectedSavingsAccount(savingsAccount: SavingsAccountUiState) {
         selectedSavingsAccount.value = savingsAccount
-        isDialogOpen.value = true
     }
 
     fun onConfirmDeleteSavingsAccountClick() {
         viewModelScope.launch(showErrorExceptionHandler) {
             savingsRepository.moveSavingsAccountToTrash(savingsAccountId = selectedSavingsAccount.value!!.id)
         }
-        closeDialog()
     }
 }

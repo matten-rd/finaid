@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,26 +32,32 @@ fun SavingsScreen(
     navigateToEditScreen: (String) -> Unit
 ) {
     val uiState: SavingsScreenUiState by viewModel.savingsAccountsUiState.collectAsStateWithLifecycle()
-    val isDialogOpen by viewModel.isDialogOpen
+    val isDialogOpen = remember { mutableStateOf(false) }
 
     SavingsScreenDisplay(
         uiState = uiState,
         navigateToEditScreen = navigateToEditScreen,
-        onDeleteClick = viewModel::onDeleteSavingsAccountClick
+        onDeleteClick = {
+            viewModel.setSelectedSavingsAccount(it)
+            isDialogOpen.value = true
+        }
     )
 
-    if (isDialogOpen) {
+    if (isDialogOpen.value) {
         AlertDialog(
-            onDismissRequest = viewModel::closeDialog,
+            onDismissRequest = { isDialogOpen.value = false },
             title = { Text(text = stringResource(id = R.string.delete_savingsaccount)) },
             text = { Text(text = stringResource(id = R.string.savingsaccount_will_be_moved_to_trash)) },
             dismissButton = {
-                TextButton(onClick = viewModel::closeDialog) {
+                TextButton(onClick = { isDialogOpen.value = false }) {
                     Text(text = stringResource(id = R.string.cancel))
                 }
             },
             confirmButton = {
-                FilledTonalButton(onClick = viewModel::onConfirmDeleteSavingsAccountClick) {
+                FilledTonalButton(onClick = {
+                    viewModel.onConfirmDeleteSavingsAccountClick()
+                    isDialogOpen.value = false
+                }) {
                     Text(text = stringResource(id = R.string.delete))
                 }
             }
