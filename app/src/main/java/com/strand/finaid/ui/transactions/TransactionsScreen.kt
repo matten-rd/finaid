@@ -57,6 +57,9 @@ fun TransactionsScreen(
             viewModel.setSelectedTransaction(it)
             isDialogOpen.value = true
         },
+        onDuplicateClick = {
+            viewModel.duplicateTransaction(transactionId = it, onSuccess = navigateToEditScreen)
+        },
         filterRowListState = filterRowListState,
         periods = periods,
         selectedPeriod = selectedPeriod,
@@ -95,6 +98,7 @@ private fun TransactionsScreenDisplay(
     openSortSheet: () -> Unit,
     navigateToEditScreen: (String) -> Unit,
     onDeleteClick: (TransactionUiState) -> Unit,
+    onDuplicateClick: (String) -> Unit,
     filterRowListState: LazyListState,
     periods: List<Int>,
     selectedPeriod: Period,
@@ -117,6 +121,7 @@ private fun TransactionsScreenDisplay(
                         openSortSheet = openSortSheet,
                         onEditClick = navigateToEditScreen,
                         onDeleteClick = onDeleteClick,
+                        onDuplicateClick = onDuplicateClick,
                         filterRowListState = filterRowListState,
                         periods = periods,
                         selectedPeriod = selectedPeriod,
@@ -138,6 +143,7 @@ private fun TransactionsScreenContent(
     openSortSheet: () -> Unit,
     onEditClick: (String) -> Unit,
     onDeleteClick: (TransactionUiState) -> Unit,
+    onDuplicateClick: (String) -> Unit,
     filterRowListState: LazyListState,
     periods: List<Int>,
     selectedPeriod: Period,
@@ -177,7 +183,8 @@ private fun TransactionsScreenContent(
                 modifier = Modifier.animateItemPlacement(),
                 transaction = transactionItem,
                 onEditClick = onEditClick,
-                onDeleteClick = onDeleteClick
+                onDeleteClick = onDeleteClick,
+                onDuplicateClick = onDuplicateClick
             )
         }
         item { Spacer(modifier = Modifier.height(128.dp)) }

@@ -1,5 +1,6 @@
 package com.strand.finaid.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
@@ -12,13 +13,14 @@ import com.strand.finaid.R
 @Composable
 fun FinaidMainTopAppBar(
     modifier: Modifier = Modifier,
+    @StringRes titleId: Int? = null,
     onProfileClick: () -> Unit,
     onSearchClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior
 ) {
     CenterAlignedTopAppBar(
         modifier = modifier,
-        title = { Text(text = stringResource(id = R.string.app_name)) },
+        title = { Text(text = stringResource(id = titleId ?: R.string.app_name)) },
         navigationIcon = {
             IconButton(onClick = onSearchClick) {
                 Icon(imageVector = Icons.Default.Search, contentDescription = null)

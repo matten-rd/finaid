@@ -41,6 +41,7 @@ object SavingsScreenSpec : BottomNavScreenSpec {
         scrollBehavior: TopAppBarScrollBehavior
     ) {
         FinaidMainTopAppBar(
+            titleId = R.string.screen_savings,
             onProfileClick = { navController.navigate(ProfileScreenSpec.route) },
             onSearchClick = { navController.navigate(SearchScreenSpec.route) },
             scrollBehavior = scrollBehavior

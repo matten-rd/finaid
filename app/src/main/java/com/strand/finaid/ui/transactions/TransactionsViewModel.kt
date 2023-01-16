@@ -16,6 +16,8 @@ import com.strand.finaid.ui.FinaidViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.util.*
 import javax.inject.Inject
 
 data class TransactionUiState(
@@ -107,6 +109,19 @@ class TransactionsViewModel @Inject constructor(
     fun onConfirmDeleteTransactionClick() {
         viewModelScope.launch(showErrorExceptionHandler) {
             transactionsRepository.moveTransactionToTrash(transactionId = selectedTransaction.value!!.id)
+        }
+    }
+
+    fun duplicateTransaction(transactionId: String, onSuccess: (String) -> Unit) {
+        viewModelScope.launch(showErrorExceptionHandler) {
+            var transaction = transactionsRepository.getTransactionById(transactionId = transactionId)
+            transaction = transaction.copy(
+                id = UUID.randomUUID().toString(),
+                date = Date.from(Instant.now()),
+                lastModified = Date.from(Instant.now())
+            )
+            transactionsRepository.saveTransaction(transaction)
+            onSuccess(transaction.id)
         }
     }
 }

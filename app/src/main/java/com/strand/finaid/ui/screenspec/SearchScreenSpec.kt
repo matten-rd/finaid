@@ -13,6 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import com.strand.finaid.ui.navigation.materialSharedAxisZIn
+import com.strand.finaid.ui.navigation.materialSharedAxisZOut
 import com.strand.finaid.ui.search.SearchField
 import com.strand.finaid.ui.search.SearchScreen
 import com.strand.finaid.ui.search.SearchViewModel
@@ -55,14 +57,14 @@ object SearchScreenSpec : ScreenSpec {
     }
 
     override val enterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
-        get() = { slideIntoContainer(AnimatedContentScope.SlideDirection.Up) }
-
-    override val exitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
-        get() = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Up) }
+        get() = { materialSharedAxisZIn(forward = true) }
 
     override val popEnterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
-        get() = { slideIntoContainer(AnimatedContentScope.SlideDirection.Down) }
+        get() = { materialSharedAxisZIn(forward = true) }
+
+    override val exitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
+        get() = { materialSharedAxisZOut(forward = false) }
 
     override val popExitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
-        get() = { slideOutOfContainer(AnimatedContentScope.SlideDirection.Down) }
+        get() = { materialSharedAxisZOut(forward = false) }
 }

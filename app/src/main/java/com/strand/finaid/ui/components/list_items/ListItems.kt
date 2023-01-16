@@ -34,7 +34,8 @@ fun TransactionItem(
     modifier: Modifier = Modifier,
     transaction: TransactionUiState,
     onEditClick: (String) -> Unit,
-    onDeleteClick: (TransactionUiState) -> Unit
+    onDeleteClick: (TransactionUiState) -> Unit,
+    onDuplicateClick: (String) -> Unit
 ) {
     val revealState = rememberRevealState()
     val isDragged by remember {
@@ -47,7 +48,7 @@ fun TransactionItem(
     RevealSwipe(
         modifier = modifier,
         revealState = revealState,
-        onStartClick = { /*TODO*/ },
+        onStartClick = { onDuplicateClick(transaction.id) },
         onEndClick = { onDeleteClick(transaction) },
         hiddenIconEnd = Icons.Default.Delete,
         hiddenIconStart = Icons.Default.ContentCopy,
