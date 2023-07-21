@@ -2,15 +2,16 @@ package com.strand.finaid.ui.savings
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wallet
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
+import com.strand.finaid.R
 import com.strand.finaid.data.network.LogService
 import com.strand.finaid.data.repository.SavingsRepository
 import com.strand.finaid.domain.SavingsScreenUiState
 import com.strand.finaid.domain.SavingsScreenUiStateUseCase
 import com.strand.finaid.ui.FinaidViewModel
+import com.strand.finaid.ui.snackbar.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -37,18 +38,19 @@ class SavingsViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SavingsScreenUiState.Loading
+            initialValue = SavingsScreenUiState(isLoading = true)
         )
 
-    private val selectedSavingsAccount = mutableStateOf<SavingsAccountUiState?>(null)
-
-    fun setSelectedSavingsAccount(savingsAccount: SavingsAccountUiState) {
-        selectedSavingsAccount.value = savingsAccount
-    }
-
-    fun onConfirmDeleteSavingsAccountClick() {
+    fun onDeleteSavingsAccountSwipe(savingsAccountId: String) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            savingsRepository.moveSavingsAccountToTrash(savingsAccountId = selectedSavingsAccount.value!!.id)
+            savingsRepository.moveSavingsAccountToTrash(savingsAccountId = savingsAccountId)
+        }
+        viewModelScope.launch(showErrorExceptionHandler) {
+            SnackbarManager.showMessage(R.string.savingsaccount_removed, false, R.string.undo) {
+                viewModelScope.launch {
+                    savingsRepository.restoreSavingsAccountFromTrash(savingsAccountId = savingsAccountId)
+                }
+            }
         }
     }
 }

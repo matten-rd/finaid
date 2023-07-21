@@ -3,14 +3,16 @@
     <string name="web_client_id">910718291793-odagcuoquke9i4eb6ba1mu8vbn3kddkm.apps.googleusercontent.com</string>
 
     <string name="screen_home">Hem</string>
-    <string name="screen_savings">Sparande</string>
-    <string name="screen_transactions">Transaktioner</string>
+    <string name="savings">Sparande</string>
+    <string name="transactions">Transaktioner</string>
     <string name="screen_profile">Profil</string>
     <string name="screen_search">Sök</string>
     <string name="landing">Håll koll på din ekonomi</string>
     <string name="screen_trash">Papperskorgen</string>
+    <string name="settings">Inställningar</string>
 
     <string name="generic_error">Något gick fel. Försök igen.</string>
+    <string name="empty_period_error">Det finns ingen data för den valda perioden.</string>
     <string name="form_error">Fyll i alla fält först.</string>
     <string name="email_error">Fyll i en giltig mailaddress.</string>
     <string name="password_match_error">Lösenorden måste matcha.</string>
@@ -28,6 +30,7 @@
     <string name="continue_with_google">Fortsätt med Google</string>
     <string name="continue_as_guest">Fortsätt som gäst</string>
     <string name="export_data">Exportera data</string>
+    <string name="export_success">Datan har exporterats</string>
 
     <string name="expense">Utgift</string>
     <string name="income">Inkomst</string>
@@ -42,6 +45,7 @@
 
     <string name="save">Spara</string>
     <string name="restore">Återställ</string>
+    <string name="undo">Ångra</string>
     <string name="delete_permanently">Ta bort permanent</string>
     <string name="delete">Ta bort</string>
     <string name="cancel">Avbryt</string>

@@ -1,23 +1,21 @@
 package com.strand.finaid.ui.components.list_items
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.luminance
@@ -27,43 +25,51 @@ import androidx.compose.ui.unit.dp
 import com.strand.finaid.ext.formatAmount
 import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.transactions.TransactionUiState
-import kotlin.math.absoluteValue
 
 @Composable
 fun TransactionItem(
     modifier: Modifier = Modifier,
     transaction: TransactionUiState,
     onEditClick: (String) -> Unit,
-    onDeleteClick: (TransactionUiState) -> Unit,
+    onDeleteClick: (String) -> Unit,
     onDuplicateClick: (String) -> Unit
 ) {
-    val revealState = rememberRevealState()
-    val isDragged by remember {
-        derivedStateOf { revealState.offset.value.absoluteValue > 1f }
-    }
-    val backgroundColor: Color by animateColorAsState(
-        if (isDragged) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.background
+    val currentItem by rememberUpdatedState(transaction)
+    val dismissState = rememberDismissState(
+        positionalThreshold = { totalDistance -> 0.5f * totalDistance },
+        confirmValueChange = {
+            // return true for it to go off screen, false to make it bounce back
+            when (it) {
+                DismissValue.DismissedToStart -> {
+                    onDeleteClick(currentItem.id)
+                    true
+                }
+                DismissValue.DismissedToEnd -> {
+                    onDuplicateClick(currentItem.id)
+                    false
+                }
+                else -> false
+            }
+        }
     )
 
-    RevealSwipe(
+    SwipeToDismiss(
+        state = dismissState,
         modifier = modifier,
-        revealState = revealState,
-        onStartClick = { onDuplicateClick(transaction.id) },
-        onEndClick = { onDeleteClick(transaction) },
-        hiddenIconEnd = Icons.Default.Delete,
-        hiddenIconStart = Icons.Default.ContentCopy,
-        endBackgroundColor = MaterialTheme.colorScheme.error
-    ) {
-        BaseItem(
-            cardColors = CardDefaults.cardColors(containerColor = backgroundColor),
-            icon = transaction.icon,
-            color = transaction.color,
-            header = transaction.memo,
-            subhead = "${transaction.date} \u2022 ${transaction.category}",
-            amount = transaction.amount,
-            onClick = { onEditClick(transaction.id) }
-        )
-    }
+        background = {
+            SwipeBackground(dismissState = dismissState)
+        },
+        dismissContent = {
+            BaseItem(
+                icon = transaction.icon,
+                color = transaction.color,
+                header = transaction.memo,
+                subhead = "${transaction.date} \u2022 ${transaction.category}",
+                amount = transaction.amount,
+                onClick = { onEditClick(transaction.id) }
+            )
+        }
+    )
 }
 
 @Composable
@@ -71,35 +77,41 @@ fun SavingsAccountItem(
     modifier: Modifier = Modifier,
     savingsAccount: SavingsAccountUiState,
     onEditClick: (String) -> Unit,
-    onDeleteClick: (SavingsAccountUiState) -> Unit
+    onDeleteClick: (String) -> Unit
 ) {
-    val revealState = rememberRevealState()
-    val isDragged by remember {
-        derivedStateOf { revealState.offset.value.absoluteValue > 1f }
-    }
-    val backgroundColor: Color by animateColorAsState(
-        if (isDragged) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.background
+    val currentItem by rememberUpdatedState(savingsAccount)
+    val dismissState = rememberDismissState(
+        positionalThreshold = { totalDistance -> 0.5f * totalDistance },
+        confirmValueChange = {
+            // return true for it to go off screen, false to make it bounce back
+            when (it) {
+                DismissValue.DismissedToStart -> {
+                    onDeleteClick(currentItem.id)
+                    true
+                }
+                else -> false
+            }
+        }
     )
 
-    RevealSwipe(
+    SwipeToDismiss(
+        state = dismissState,
         modifier = modifier,
-        revealState = revealState,
-        onStartClick = { /*TODO*/ },
-        onEndClick = { onDeleteClick(savingsAccount) },
-        hiddenIconEnd = Icons.Default.Delete,
-        hiddenIconStart = Icons.Default.ContentCopy,
-        endBackgroundColor = MaterialTheme.colorScheme.error
-    ) {
-        BaseItem(
-            cardColors = CardDefaults.cardColors(containerColor = backgroundColor),
-            icon = savingsAccount.icon,
-            color = savingsAccount.color,
-            header = savingsAccount.name,
-            subhead = savingsAccount.bank,
-            amount = savingsAccount.amount,
-            onClick = { onEditClick(savingsAccount.id) }
-        )
-    }
+        background = {
+            SwipeBackground(dismissState = dismissState)
+        },
+        dismissContent = {
+            BaseItem(
+                icon = savingsAccount.icon,
+                color = savingsAccount.color,
+                header = savingsAccount.name,
+                subhead = savingsAccount.bank,
+                amount = savingsAccount.amount,
+                onClick = { onEditClick(savingsAccount.id) }
+            )
+        },
+        directions = setOf(DismissDirection.EndToStart)
+    )
 }
 
 @Composable
@@ -113,73 +125,59 @@ internal fun BaseItem(
     amount: Int,
     onClick: () -> Unit
 ) {
-    var multiSelected by remember { mutableStateOf(false) }
-    val cardContainerColor by animateColorAsState(
-        if (multiSelected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
-    )
-
     Card(
         modifier = modifier,
         shape = RectangleShape,
-        colors = cardColors
+        colors = cardColors,
+        onClick = onClick
     ) {
-        Card(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            onClick = onClick,
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = cardContainerColor)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .drawBehind { drawRoundRect(color) },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(color)
-                            .size(48.dp)
-                            .selectable(multiSelected, onClick = { multiSelected = !multiSelected }),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (multiSelected) Icons.Default.Check else icon,
-                            contentDescription = null,
-                            tint = if (color.luminance() < 0.5) Color.White else Color.Black,
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.height(IntrinsicSize.Max),
-                        verticalArrangement = Arrangement.SpaceEvenly
-                    ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = if (color.luminance() < 0.5) Color.White else Color.Black,
+                    )
+                }
+                Column(
+                    modifier = Modifier.height(IntrinsicSize.Max),
+                    verticalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Text(
+                        text = header,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                         Text(
-                            text = header,
-                            style = MaterialTheme.typography.titleMedium,
+                            text = subhead,
+                            style = MaterialTheme.typography.bodyMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                            Text(
-                                text = subhead,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
                     }
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "${amount.formatAmount()} kr", style = MaterialTheme.typography.titleLarge)
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = "${amount.formatAmount()} kr", style = MaterialTheme.typography.titleLarge)
         }
     }
 }
@@ -188,26 +186,34 @@ internal fun BaseItem(
 @Composable
 fun HomeScreenSavingsAccountItem(
     savingsAccount: SavingsAccountUiState,
+    isFirst: Boolean = false,
+    isLast: Boolean = false,
 ) {
     HomeScreenBaseListItem(
         icon = savingsAccount.icon,
         color = savingsAccount.color,
         header = savingsAccount.name,
         subhead = savingsAccount.bank,
-        amount = savingsAccount.amount
+        amount = savingsAccount.amount,
+        isFirst = isFirst,
+        isLast = isLast
     )
 }
 
 @Composable
 fun HomeScreenTransactionItem(
     transaction: TransactionUiState,
+    isFirst: Boolean = false,
+    isLast: Boolean = false,
 ) {
     HomeScreenBaseListItem(
         icon = transaction.icon,
         color = transaction.color,
         header = transaction.memo,
         subhead = "${transaction.date} \u2022 ${transaction.category}",
-        amount = transaction.amount
+        amount = transaction.amount,
+        isFirst = isFirst,
+        isLast = isLast
     )
 }
 
@@ -218,11 +224,20 @@ private fun HomeScreenBaseListItem(
     color: Color,
     header: String,
     subhead: String,
-    amount: Int
+    amount: Int,
+    isFirst: Boolean = false,
+    isLast: Boolean = false
 ) {
+    val shape = when {
+        isFirst && isLast -> RoundedCornerShape(16.dp)
+        isFirst -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
+        isLast -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
+        else -> RoundedCornerShape(4.dp)
+    }
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = CircleShape,
+        shape = shape,
         color = MaterialTheme.colorScheme.inverseOnSurface
     ) {
         Row(
@@ -241,7 +256,7 @@ private fun HomeScreenBaseListItem(
                     modifier = Modifier
                         .clip(CircleShape)
                         .background(color)
-                        .size(42.dp),
+                        .size(48.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(

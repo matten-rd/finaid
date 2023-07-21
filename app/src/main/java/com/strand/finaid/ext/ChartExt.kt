@@ -34,7 +34,7 @@ fun <T> rememberChartState(
     }
     // Used for bar chart
     val percentageProportions = remember(floatProportions) {
-        val maxValue = floatProportions.maxOrNull()!!
+        val maxValue = floatProportions.maxOrNull() ?: 0f
         floatProportions.map { it / maxValue }
     }
 

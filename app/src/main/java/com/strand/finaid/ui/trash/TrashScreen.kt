@@ -1,5 +1,6 @@
 package com.strand.finaid.ui.trash
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -28,6 +30,7 @@ import com.strand.finaid.R
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.domain.SavingsScreenUiState
 import com.strand.finaid.domain.TransactionScreenUiState
+import com.strand.finaid.ui.components.EmptyContentScreen
 import com.strand.finaid.ui.components.FullScreenError
 import com.strand.finaid.ui.components.FullScreenLoading
 import com.strand.finaid.ui.components.list_items.BaseItem
@@ -125,13 +128,18 @@ fun SavingsTrashScreen(
     onRestoreClick: (SavingsAccountUiState) -> Unit,
     onPermanentlyDeleteClick: (SavingsAccountUiState) -> Unit
 ) {
+
     Column(modifier = Modifier.fillMaxSize()) {
-        when (savingsAccounts) {
-            SavingsScreenUiState.Error -> { FullScreenError() }
-            SavingsScreenUiState.Loading -> { FullScreenLoading() }
-            is SavingsScreenUiState.Success -> {
+        when {
+            savingsAccounts.isError -> FullScreenError()
+            savingsAccounts.isLoading -> FullScreenLoading()
+            else -> {
                 if (savingsAccounts.savingsAccounts.isNullOrEmpty())
-                    Text(text = "Empty Content")
+                    EmptyContentScreen(
+                        id = R.drawable.trash,
+                        text = "Inget här än",
+                        supportingText = "Radera ett sparkonto så dyker det upp här"
+                    )
                 else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -215,12 +223,16 @@ fun TransactionsTrashScreen(
     onPermanentlyDeleteClick: (TransactionUiState) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        when (transactions) {
-            TransactionScreenUiState.Error -> { FullScreenError() }
-            TransactionScreenUiState.Loading -> { FullScreenLoading() }
-            is TransactionScreenUiState.Success -> {
+        when {
+            transactions.isError -> FullScreenError()
+            transactions.isLoading -> FullScreenLoading()
+            else -> {
                 if (transactions.transactions.isNullOrEmpty())
-                    Text(text = "Empty Content")
+                    EmptyContentScreen(
+                        id = R.drawable.trash,
+                        text = "Inget här än",
+                        supportingText = "Radera en transaktion så dyker den upp här"
+                    )
                 else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -308,7 +320,11 @@ fun CategoryTrashScreen(
             .padding(16.dp)
     ) {
         if (categories.isEmpty())
-            Text(text = "Empty content")
+            EmptyContentScreen(
+                id = R.drawable.trash,
+                text = "Inget här än",
+                supportingText = "Radera en kategori så dyker den upp här"
+            )
         else
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(categories) { deletedCategory ->

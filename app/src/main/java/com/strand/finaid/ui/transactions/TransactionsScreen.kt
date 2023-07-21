@@ -1,156 +1,90 @@
 package com.strand.finaid.ui.transactions
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.strand.finaid.R
-import com.strand.finaid.data.models.Category
 import com.strand.finaid.domain.TransactionScreenUiState
 import com.strand.finaid.ext.formatAmount
+import com.strand.finaid.ext.formatMonthYear
+import com.strand.finaid.ext.formatYear
 import com.strand.finaid.ext.rememberChartState
-import com.strand.finaid.ui.components.AnimatedBarchart
-import com.strand.finaid.ui.components.FullScreenError
-import com.strand.finaid.ui.components.FullScreenLoading
-import com.strand.finaid.ui.components.SegmentedButton
+import com.strand.finaid.ui.components.*
 import com.strand.finaid.ui.components.list_items.TransactionItem
+import kotlinx.coroutines.launch
 
 @Composable
-fun TransactionsScreen(
+fun ColumnScope.TransactionsScreen(
     viewModel: TransactionsViewModel = hiltViewModel(),
-    navigateToEditScreen: (String) -> Unit,
-    openSortSheet: () -> Unit,
-    filterRowListState: LazyListState = rememberLazyListState()
+    navigateToEditScreen: (String) -> Unit
 ) {
     val uiState: TransactionScreenUiState by viewModel.transactionsUiState.collectAsStateWithLifecycle()
-    val categories by viewModel.categories.collectAsStateWithLifecycle()
-    val selectedCategories by viewModel.selectedCategories.collectAsStateWithLifecycle()
-    val isDialogOpen = remember { mutableStateOf(false) }
-    val periods = viewModel.periods
-    val selectedPeriod by viewModel.periodFlow.collectAsStateWithLifecycle()
+    if (uiState.isError) {
+        FullScreenError()
+        return
+    }
 
-    TransactionsScreenDisplay(
-        uiState = uiState,
-        categories = categories,
-        selectedCategories = selectedCategories,
-        onToggleCategory = viewModel::toggleCategory,
-        onClearSelectedCategories = viewModel::clearSelectedCategories,
-        openSortSheet = openSortSheet,
-        navigateToEditScreen = navigateToEditScreen,
-        onDeleteClick = {
-            viewModel.setSelectedTransaction(it)
-            isDialogOpen.value = true
-        },
+    val periods = viewModel.periods
+    val graphPeriodState by viewModel.periodStateFlow.collectAsStateWithLifecycle()
+
+    val transactionsListState = rememberLazyListState()
+
+    TransactionsScreenContent(
+        isLoading = uiState.isLoading,
+        transactions = uiState.transactions ?: emptyList(),
+        groupedTransactions = uiState.groupedTransactions ?: emptyMap(),
+        onEditClick = navigateToEditScreen,
+        onDeleteClick = viewModel::onDeleteTransactionSwipe,
         onDuplicateClick = {
             viewModel.duplicateTransaction(transactionId = it, onSuccess = navigateToEditScreen)
         },
-        filterRowListState = filterRowListState,
+        transactionsListState = transactionsListState,
         periods = periods,
-        selectedPeriod = selectedPeriod,
-        onSetPeriod = viewModel::onSetPeriod
+        periodState = graphPeriodState,
+        onSetPeriod = viewModel::onSetPeriod,
+        incrementYear = viewModel::incrementYear,
+        decrementYear = viewModel::decrementYear,
+        incrementMonth = viewModel::incrementMonth,
+        decrementMonth = viewModel::decrementMonth
     )
-
-    if (isDialogOpen.value) {
-        AlertDialog(
-            onDismissRequest = { isDialogOpen.value = false },
-            title = { Text(text = stringResource(id = R.string.delete_transaction)) },
-            text = { Text(text = stringResource(id = R.string.transaction_will_be_moved_to_trash)) },
-            dismissButton = {
-                TextButton(onClick = { isDialogOpen.value = false }) {
-                    Text(text = stringResource(id = R.string.cancel))
-                }
-            },
-            confirmButton = {
-                FilledTonalButton(onClick = {
-                    viewModel.onConfirmDeleteTransactionClick()
-                    isDialogOpen.value = false
-                }) {
-                    Text(text = stringResource(id = R.string.delete))
-                }
-            }
-        )
-    }
-}
-
-@Composable
-private fun TransactionsScreenDisplay(
-    uiState: TransactionScreenUiState,
-    categories: List<Category>,
-    selectedCategories: List<Category>,
-    onToggleCategory: (Category) -> Unit,
-    onClearSelectedCategories: () -> Unit,
-    openSortSheet: () -> Unit,
-    navigateToEditScreen: (String) -> Unit,
-    onDeleteClick: (TransactionUiState) -> Unit,
-    onDuplicateClick: (String) -> Unit,
-    filterRowListState: LazyListState,
-    periods: List<Int>,
-    selectedPeriod: Period,
-    onSetPeriod: (Int) -> Unit
-) {
-    Crossfade(targetState = uiState) { screen ->
-        when (screen) {
-            TransactionScreenUiState.Error -> { FullScreenError() }
-            TransactionScreenUiState.Loading -> { FullScreenLoading() }
-            is TransactionScreenUiState.Success -> {
-                if (screen.transactions.isNullOrEmpty())
-                    Text(text = "Empty Content")
-                else {
-                    TransactionsScreenContent(
-                        transactions = screen.transactions,
-                        categories = categories,
-                        selectedCategories = selectedCategories,
-                        onToggleCategory = onToggleCategory,
-                        onClearSelectedCategories = onClearSelectedCategories,
-                        openSortSheet = openSortSheet,
-                        onEditClick = navigateToEditScreen,
-                        onDeleteClick = onDeleteClick,
-                        onDuplicateClick = onDuplicateClick,
-                        filterRowListState = filterRowListState,
-                        periods = periods,
-                        selectedPeriod = selectedPeriod,
-                        onSetPeriod = onSetPeriod
-                    )
-                }
-            }
-        }
-    }
 }
 
 @Composable
 private fun TransactionsScreenContent(
+    isLoading: Boolean,
     transactions: List<TransactionUiState>,
-    categories: List<Category>,
-    selectedCategories: List<Category>,
-    onToggleCategory: (Category) -> Unit,
-    onClearSelectedCategories: () -> Unit,
-    openSortSheet: () -> Unit,
+    groupedTransactions: Map<String, List<TransactionUiState>>,
     onEditClick: (String) -> Unit,
-    onDeleteClick: (TransactionUiState) -> Unit,
+    onDeleteClick: (String) -> Unit,
     onDuplicateClick: (String) -> Unit,
-    filterRowListState: LazyListState,
+    transactionsListState: LazyListState,
     periods: List<Int>,
-    selectedPeriod: Period,
-    onSetPeriod: (Int) -> Unit
+    periodState: PeriodState,
+    onSetPeriod: (Int) -> Unit,
+    incrementYear: () -> Unit,
+    decrementYear: () -> Unit,
+    incrementMonth: () -> Unit,
+    decrementMonth: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        state = transactionsListState,
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         item {
@@ -164,93 +98,42 @@ private fun TransactionsScreenContent(
                 proportions = chartState.percentageProportions,
                 colors = chartState.colors,
                 periods = periods,
-                selectedPeriod = selectedPeriod,
-                onSetPeriod = onSetPeriod
+                periodState = periodState,
+                onSetPeriod = onSetPeriod,
+                incrementYear = incrementYear,
+                decrementYear = decrementYear,
+                incrementMonth = incrementMonth,
+                decrementMonth = decrementMonth
             )
         }
-        item {
-            FilterRow(
-                openSortSheet = openSortSheet,
-                categories = categories,
-                selectedCategories = selectedCategories,
-                onToggleCategory = onToggleCategory,
-                onClearSelectedCategories = onClearSelectedCategories,
-                listState = filterRowListState
-            )
-        }
-        items(transactions, key = { it.id }) { transactionItem ->
-            TransactionItem(
-                modifier = Modifier.animateItemPlacement(),
-                transaction = transactionItem,
-                onEditClick = onEditClick,
-                onDeleteClick = onDeleteClick,
-                onDuplicateClick = onDuplicateClick
-            )
-        }
-        item { Spacer(modifier = Modifier.height(128.dp)) }
-    }
-}
-
-
-@Composable
-private fun FilterRow(
-    openSortSheet: () -> Unit,
-    categories: List<Category>,
-    selectedCategories: List<Category>,
-    onToggleCategory: (Category) -> Unit,
-    onClearSelectedCategories: () -> Unit,
-    listState: LazyListState
-) {
-    LazyRow(
-        state = listState,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        stickyHeader {
-            Row(
-                modifier = Modifier.background(
-                    brush = Brush.horizontalGradient(
-                        0.95f to MaterialTheme.colorScheme.background,
-                        1f to Color.Transparent,
-                    )
-                )
-            ) {
-                Spacer(modifier = Modifier.size(8.dp))
-                if (selectedCategories.isNotEmpty()) {
-                    IconButton(onClick = onClearSelectedCategories, modifier = Modifier.size(32.dp)) {
-                        Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+        if (transactions.isEmpty() && !isLoading)
+            item { EmptyContentScreen(id = R.drawable.lost_keys, text = "Inga transaktioner än", size = 150.dp) }
+        else
+            groupedTransactions.forEach { (dateHeader, transactions) ->
+                stickyHeader {
+                    Row(modifier = Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .fillMaxWidth()) {
+                        Text(
+                            text = dateHeader,
+                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
+                            style = MaterialTheme.typography.titleMedium
+                        )
                     }
                 }
-                IconButton(onClick = openSortSheet, modifier = Modifier.size(32.dp)) {
-                    Icon(imageVector = Icons.Default.Sort, contentDescription = null)
+
+                items(transactions, key = { it.id }) { transactionItem ->
+                    TransactionItem(
+                        modifier = Modifier.animateItemPlacement(),
+                        transaction = transactionItem,
+                        onEditClick = onEditClick,
+                        onDeleteClick = onDeleteClick,
+                        onDuplicateClick = onDuplicateClick
+                    )
                 }
             }
-        }
 
-        items(categories, key = { it.id }) { category ->
-            val selected by remember(selectedCategories) { mutableStateOf(category in selectedCategories) }
-            FilterChip(
-                selected = category in selectedCategories,
-                onClick = { onToggleCategory(category) },
-                label = { Text(text = category.name) },
-                leadingIcon = {
-                    if (selected)
-                        Icon(
-                            imageVector = Icons.Default.Done,
-                            contentDescription = null,
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    else
-                        Icon(
-                            imageVector = Icons.Default.Circle,
-                            contentDescription = null,
-                            modifier = Modifier.size(FilterChipDefaults.IconSize),
-                            tint = category.color
-                        )
-                }
-            )
-        }
-        item { Spacer(modifier = Modifier.width(8.dp)) }
+        item { Spacer(modifier = Modifier.height(128.dp)) }
     }
 }
 
@@ -260,8 +143,12 @@ private fun TransactionGraph(
     proportions: List<Float>,
     colors: List<Color>,
     periods: List<Int>,
-    selectedPeriod: Period,
-    onSetPeriod: (Int) -> Unit
+    periodState: PeriodState,
+    onSetPeriod: (Int) -> Unit,
+    incrementYear: () -> Unit,
+    decrementYear: () -> Unit,
+    incrementMonth: () -> Unit,
+    decrementMonth: () -> Unit,
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Card(
@@ -270,10 +157,11 @@ private fun TransactionGraph(
             SegmentedButton(
                 modifier = Modifier.padding(12.dp),
                 items = periods.map { id -> stringResource(id = id) },
-                selectedIndex = selectedPeriod.ordinal,
+                selectedIndex = periodState.period.ordinal,
                 indexChanged = onSetPeriod
             )
         }
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -287,14 +175,27 @@ private fun TransactionGraph(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "${displayValue.formatAmount()} kr", style = MaterialTheme.typography.headlineLarge)
-                Row {
-                    FilledIconButton(onClick = { /*TODO*/ }) {
-                        Icon(imageVector = Icons.Default.ChevronLeft, contentDescription = null)
+                Column {
+                    val dateText = when (periodState.period) {
+                        Period.Month -> periodState.selectedMonth.formatMonthYear()
+                        Period.Year -> periodState.selectedYear.formatYear()
+                        Period.Total -> ""
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    FilledIconButton(onClick = { /*TODO*/ }) {
-                        Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
+                    Text(text = "${displayValue.formatAmount()} kr", style = MaterialTheme.typography.headlineMedium)
+                    Text(text = dateText, style = MaterialTheme.typography.bodySmall)
+                }
+                
+                if (periodState.period != Period.Total) {
+                    Row {
+                        val decrement = if (periodState.period == Period.Year) decrementYear else decrementMonth
+                        val increment = if (periodState.period == Period.Year) incrementYear else incrementMonth
+                        FilledIconButton(onClick = decrement) {
+                            Icon(imageVector = Icons.Default.ChevronLeft, contentDescription = null)
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        FilledIconButton(onClick = increment) {
+                            Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
+                        }
                     }
                 }
             }

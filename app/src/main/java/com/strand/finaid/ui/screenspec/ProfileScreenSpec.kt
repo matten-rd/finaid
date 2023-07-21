@@ -4,84 +4,73 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import com.google.accompanist.navigation.animation.composable
 import com.strand.finaid.R
-import com.strand.finaid.ui.navigation.materialSharedAxisZIn
-import com.strand.finaid.ui.navigation.materialSharedAxisZOut
+import com.strand.finaid.ui.navigation.materialSharedAxisXIn
+import com.strand.finaid.ui.navigation.materialSharedAxisXOut
 import com.strand.finaid.ui.profile.ProfileScreen
-import kotlinx.coroutines.CoroutineScope
 
 object ProfileScreenSpec : ScreenSpec {
     override val route: String = "main/profile"
 
-    @Composable
-    override fun TopBar(
-        navController: NavController,
-        navBackStackEntry: NavBackStackEntry,
-        bottomSheetState: ModalBottomSheetState,
-        coroutineScope: CoroutineScope,
-        scrollBehavior: TopAppBarScrollBehavior
-    ) {
-        TopAppBar(
-            title = { Text(text = stringResource(id = R.string.screen_profile)) },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = null)
-                }
-            }
-        )
-    }
-
-    @Composable
-    override fun Content(
-        navController: NavController,
-        navBackStackEntry: NavBackStackEntry,
-        bottomSheetState: ModalBottomSheetState,
-        coroutineScope: CoroutineScope
-    ) {
-        Column {
-            ProfileScreen(
-                navigateToTrash = { navController.navigate(TrashScreenSpec.route) }
-            )
-        }
-    }
-
     override val enterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
         get() = {
             when (initialState.destination.route) {
-                TrashScreenSpec.route -> super.enterTransition(this)
-                else -> materialSharedAxisZIn(forward = true)//slideIntoContainer(AnimatedContentScope.SlideDirection.Up)
-            }
-        }
-
-    override val popEnterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
-        get() = {
-            when (initialState.destination.route) {
-                TrashScreenSpec.route -> super.popEnterTransition(this)
-                else -> materialSharedAxisZIn(forward = true)//slideIntoContainer(AnimatedContentScope.SlideDirection.Down)
+                TrashScreenSpec.route,
+                ExportDataScreenSpec.route -> materialSharedAxisXIn(forward = false)
+                else -> materialSharedAxisXIn(forward = true)
             }
         }
 
     override val exitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
         get() = {
             when (targetState.destination.route) {
-                TrashScreenSpec.route -> super.exitTransition(this)
-                else -> materialSharedAxisZOut(forward = false)//slideOutOfContainer(AnimatedContentScope.SlideDirection.Up)
+                TrashScreenSpec.route,
+                ExportDataScreenSpec.route -> materialSharedAxisXOut(forward = true)
+                else -> materialSharedAxisXOut(forward = false)
             }
         }
 
-    override val popExitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
-        get() = {
-            when (targetState.destination.route) {
-                TrashScreenSpec.route -> super.popExitTransition(this)
-                else -> materialSharedAxisZOut(forward = false)//slideOutOfContainer(AnimatedContentScope.SlideDirection.Down)
+}
+
+fun NavGraphBuilder.profileScreen(
+    navController: NavController
+) {
+    composable(
+        route = ProfileScreenSpec.route,
+        arguments = ProfileScreenSpec.arguments,
+        enterTransition = ProfileScreenSpec.enterTransition,
+        exitTransition = ProfileScreenSpec.exitTransition
+    ) {
+        Scaffold(
+            topBar = {
+                LargeTopAppBar(
+                    title = { Text(text = stringResource(id = R.string.settings)) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                        }
+                    }
+                )
+            },
+            contentWindowInsets = WindowInsets(0,0,0,0)
+        ) { innerPadding ->
+            Column(modifier = Modifier.padding(innerPadding)) {
+                ProfileScreen(
+                    navigateToTrash = { navController.navigate(TrashScreenSpec.route) },
+                    navigateToExport = { navController.navigate(ExportDataScreenSpec.route) }
+                )
             }
         }
+    }
 }

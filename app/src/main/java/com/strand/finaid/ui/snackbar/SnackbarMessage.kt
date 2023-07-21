@@ -8,21 +8,24 @@ sealed class SnackbarMessage {
 
     class StringSnackbar(
         val message: String,
+        val withDismissAction: Boolean = true,
         val actionLabel: String? = null,
         val actionPerformed: () -> Unit = {}
     ): SnackbarMessage()
 
     class ResourceSnackbar(
         @StringRes val message: Int,
-        val actionLabel: String? = null,
+        val withDismissAction: Boolean = true,
+        @StringRes val actionLabel: Int? = null,
         val actionPerformed: () -> Unit = {}
     ): SnackbarMessage()
 
     companion object {
         fun SnackbarMessage.toMessage(resources: Resources): StringSnackbar {
             return when (this) {
-                is StringSnackbar -> StringSnackbar(this.message, this.actionLabel, this.actionPerformed)
-                is ResourceSnackbar -> StringSnackbar(resources.getString(this.message), this.actionLabel, this.actionPerformed)
+                is StringSnackbar -> StringSnackbar(this.message, this.withDismissAction, this.actionLabel, this.actionPerformed)
+                is ResourceSnackbar -> StringSnackbar(resources.getString(this.message), this.withDismissAction,
+                    this.actionLabel?.let { resources.getString(it) }, this.actionPerformed)
             }
         }
 

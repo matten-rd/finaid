@@ -6,31 +6,32 @@ import com.strand.finaid.data.mappers.asTransactionUiState
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.data.models.Transaction
 import com.strand.finaid.data.repository.TransactionsRepository
+import com.strand.finaid.ext.toDate
 import com.strand.finaid.ui.transactions.Period
+import com.strand.finaid.ui.transactions.PeriodState
 import com.strand.finaid.ui.transactions.SortOrder
 import com.strand.finaid.ui.transactions.TransactionUiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.time.LocalDate
-import java.time.ZoneId
-import java.util.*
 import javax.inject.Inject
 import kotlin.math.absoluteValue
 
-sealed interface TransactionScreenUiState {
-    data class Success(val transactions: List<TransactionUiState>?) : TransactionScreenUiState
-    object Error : TransactionScreenUiState
-    object Loading : TransactionScreenUiState
-}
+data class TransactionScreenUiState(
+    val transactions: List<TransactionUiState>? = null,
+    val groupedTransactions: Map<String, List<TransactionUiState>>? = null,
+    val isLoading: Boolean = true,
+    val isError: Boolean = false
+)
 
-class TransactionScreenUiStateUseCase @Inject constructor(
+class TransactionsUseCase @Inject constructor(
     private val transactionsRepository: TransactionsRepository
 ) {
     operator fun invoke(
         deleted: Boolean = false,
         sortOrder: SortOrder = SortOrder.Date,
-        period: Period = Period.Total,
-        selectedCategories: List<Category> = emptyList()
+        periodState: PeriodState = PeriodState(),
+        selectedCategories: List<Category> = emptyList(),
+        searchQuery: String = ""
     ): Flow<TransactionScreenUiState> {
         val transactionsStream: Flow<List<Transaction>> =
             if (deleted) {
@@ -39,8 +40,8 @@ class TransactionScreenUiStateUseCase @Inject constructor(
                 transactionsRepository.getTransactionEntitiesStream()
             }
 
-        val startOfMonth = Date.from(LocalDate.now().withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant())
-        val startOfYear = Date.from(LocalDate.now().withDayOfYear(1).atStartOfDay(ZoneId.systemDefault()).toInstant())
+        val startOfMonth = periodState.selectedMonth.withDayOfMonth(1)
+        val startOfYear = periodState.selectedYear.withDayOfYear(1)
 
         return transactionsStream
             .asResult()
@@ -53,23 +54,30 @@ class TransactionScreenUiStateUseCase @Inject constructor(
                             else
                                 true
                         }?.filter {
-                            when(period) {
-                                Period.Month -> it.date >= startOfMonth
-                                Period.Year -> it.date >= startOfYear
+                            when(periodState.period) {
+                                Period.Month -> it.date >= startOfMonth.toDate() && it.date < startOfMonth.plusMonths(1).toDate()
+                                Period.Year -> it.date >= startOfYear.toDate() && it.date < startOfYear.plusYears(1).toDate()
                                 Period.Total -> true
                             }
+                        }?.filter {
+                            if (searchQuery.isNotEmpty())
+                                it.memo.contains(searchQuery, ignoreCase = true)
+                            else
+                                true
                         }
 
                         val sortedTransactions = when(sortOrder) {
                             SortOrder.Date -> transactions?.sortedByDescending { it.date }
                             SortOrder.Sum -> transactions?.sortedByDescending { it.amount.absoluteValue }
                             SortOrder.Name -> transactions?.sortedBy { it.memo }
-                        }
+                        }?.map { it.asTransactionUiState() }
 
-                        TransactionScreenUiState.Success(sortedTransactions?.map { it.asTransactionUiState() })
+                        val groupedTransactions = sortedTransactions?.groupBy { it.dateMonthYear }
+
+                        TransactionScreenUiState(sortedTransactions, groupedTransactions, isLoading = false, isError = false)
                     }
-                    Result.Loading -> TransactionScreenUiState.Loading
-                    is Result.Error -> TransactionScreenUiState.Error
+                    Result.Loading -> TransactionScreenUiState(null, null, isLoading = true, isError = false)
+                    is Result.Error -> TransactionScreenUiState(null, null, isLoading = false, isError = true)
                 }
             }
     }

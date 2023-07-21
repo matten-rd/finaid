@@ -20,13 +20,8 @@ import com.strand.finaid.ui.components.textfield.FinaidTextField
 @Composable
 fun AddEditSavingsScreen(
     viewModel: AddEditSavingsViewModel = hiltViewModel(),
-    savingsAccountId: String,
     navigateUp: () -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.initialize(savingsAccountId)
-    }
-
     val uiState = viewModel.uiState
 
     if (viewModel.isDeleteSavingsAccountDialogOpen) {

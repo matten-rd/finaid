@@ -29,14 +29,9 @@ import java.time.LocalDate
 @Composable
 fun AddEditTransactionScreen(
     viewModel: AddEditTransactionViewModel = hiltViewModel(),
-    transactionId: String,
     openSheet: () -> Unit,
     navigateUp: () -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.initialize(transactionId)
-    }
-
     val transactionType by viewModel.transactionType
     val uiState = viewModel.uiState
 

@@ -4,10 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
@@ -24,8 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.flowlayout.FlowMainAxisAlignment
-import com.google.accompanist.flowlayout.FlowRow
 
 @Composable
 internal fun ColorPicker(
@@ -38,13 +33,12 @@ internal fun ColorPicker(
     Column(modifier = modifier) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            mainAxisAlignment = FlowMainAxisAlignment.SpaceBetween,
-            lastLineMainAxisAlignment = FlowMainAxisAlignment.Center,
-            mainAxisSpacing = 8.dp,
-            crossAxisSpacing = 8.dp
+            horizontalArrangement = Arrangement.SpaceBetween,
+            maxItemsInEachRow = 5
         ) {
             items.distinct().forEach { color ->
                 ColorItem(
+                    modifier = Modifier.padding(vertical = 4.dp),
                     disabled = color in disabledColors,
                     selected = color == selectedColor,
                     color = color,

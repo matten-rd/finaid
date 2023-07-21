@@ -2,10 +2,10 @@ package com.strand.finaid.ui.trash
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material3.SheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -18,8 +18,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TrashBottomSheet(
     viewModel: TrashViewModel,
-    bottomSheetState: ModalBottomSheetState,
-    scope: CoroutineScope
+    onClose: () -> Unit
 ) {
     BaseBottomSheet {
         Column(modifier = Modifier.navigationBarsPadding()) {
@@ -32,7 +31,7 @@ fun TrashBottomSheet(
                     TrashType.Transactions -> viewModel.setIsTransactionRestoreDialogOpen(true)
                     TrashType.Categories -> viewModel.setIsCategoryRestoreDialogOpen(true)
                 }
-                scope.launch { bottomSheetState.hide() }
+                onClose()
             }
             IconListItem(
                 icon = Icons.Default.DeleteForever,
@@ -43,7 +42,7 @@ fun TrashBottomSheet(
                     TrashType.Transactions -> viewModel.setIsTransactionDeleteDialogOpen(true)
                     TrashType.Categories -> viewModel.setIsCategoryDeleteDialogOpen(true)
                 }
-                scope.launch { bottomSheetState.hide() }
+                onClose()
             }
         }
     }

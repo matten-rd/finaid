@@ -13,7 +13,7 @@ import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.domain.SavingsScreenUiState
 import com.strand.finaid.domain.SavingsScreenUiStateUseCase
 import com.strand.finaid.domain.TransactionScreenUiState
-import com.strand.finaid.domain.TransactionScreenUiStateUseCase
+import com.strand.finaid.domain.TransactionsUseCase
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.savings.SavingsAccountUiState
 import com.strand.finaid.ui.snackbar.SnackbarManager
@@ -55,7 +55,7 @@ class TrashViewModel @Inject constructor(
     private val categoriesRepository: CategoriesRepository,
     private val transactionsRepository: TransactionsRepository,
     private val savingsRepository: SavingsRepository,
-    transactionScreenUiStateUseCase: TransactionScreenUiStateUseCase,
+    transactionsUseCase: TransactionsUseCase,
     savingsScreenUiStateUseCase: SavingsScreenUiStateUseCase
 ) : FinaidViewModel(logService) {
 
@@ -125,11 +125,11 @@ class TrashViewModel @Inject constructor(
         trashTransactionsUiState = trashTransactionsUiState.copy(selectedTransaction = newValue)
     }
 
-    val transactionsUiState: StateFlow<TransactionScreenUiState> = transactionScreenUiStateUseCase(deleted = true)
+    val transactionsUiState: StateFlow<TransactionScreenUiState> = transactionsUseCase(deleted = true)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = TransactionScreenUiState.Loading
+            initialValue = TransactionScreenUiState(isLoading = true)
         )
 
     fun restoreTransactionFromTrash(transaction: TransactionUiState) {
@@ -166,7 +166,7 @@ class TrashViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SavingsScreenUiState.Loading
+            initialValue = SavingsScreenUiState(isLoading = true)
         )
 
     fun restoreSavingsAccountFromTrash(savingsAccount: SavingsAccountUiState) {

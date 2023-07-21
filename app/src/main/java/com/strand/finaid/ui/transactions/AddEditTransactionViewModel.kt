@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.strand.finaid.R
 import com.strand.finaid.data.mappers.asAddEditTransactionUiState
@@ -12,10 +13,12 @@ import com.strand.finaid.data.models.Category
 import com.strand.finaid.data.network.LogService
 import com.strand.finaid.data.repository.CategoriesRepository
 import com.strand.finaid.data.repository.TransactionsRepository
+import com.strand.finaid.domain.GetTransactionColorsUseCase
 import com.strand.finaid.ext.asHexCode
 import com.strand.finaid.ext.idFromParameter
 import com.strand.finaid.ui.FinaidViewModel
 import com.strand.finaid.ui.screenspec.TransactionDefaultId
+import com.strand.finaid.ui.screenspec.TransactionId
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,8 +64,10 @@ enum class TransactionType(val title: String) {
 @HiltViewModel
 class AddEditTransactionViewModel @Inject constructor(
     logService: LogService,
+    savedStateHandle: SavedStateHandle,
     private val categoriesRepository: CategoriesRepository,
-    private val transactionsRepository: TransactionsRepository
+    private val transactionsRepository: TransactionsRepository,
+    getTransactionColorsUseCase: GetTransactionColorsUseCase
 ) : FinaidViewModel(logService) {
 
     val transactionTypes = TransactionType.values().map { it.title }
@@ -73,8 +78,8 @@ class AddEditTransactionViewModel @Inject constructor(
     fun onTransactionTypeChange(newValue: Int) {
         val newType = TransactionType.values()[newValue]
         addEditCategoryDialogUiState = when (newType) {
-            TransactionType.Income -> addEditCategoryDialogUiState.copy(availableColors = incomeColors)
-            TransactionType.Expense -> addEditCategoryDialogUiState.copy(availableColors = expenseColors)
+            TransactionType.Income -> addEditCategoryDialogUiState.copy(availableColors = transactionColors.incomeColors)
+            TransactionType.Expense -> addEditCategoryDialogUiState.copy(availableColors = transactionColors.expenseColors)
         }
         transactionType.value = newType
     }
@@ -93,10 +98,12 @@ class AddEditTransactionViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    private val transactionId: String = savedStateHandle[TransactionId] ?: TransactionDefaultId
+
     var isEditMode by mutableStateOf(false)
         private set
 
-    fun initialize(transactionId: String) {
+    init {
         viewModelScope.launch(showErrorExceptionHandler) {
             if (transactionId != TransactionDefaultId) {
                 isEditMode = true
@@ -140,19 +147,11 @@ class AddEditTransactionViewModel @Inject constructor(
         deleteCategoryDialogUiState = deleteCategoryDialogUiState.copy(isOpen = isOpen, category = category)
     }
 
-    private val incomeColors = listOf(
-        Income1, Income2, Income3, Income4, Income5,
-        Income6, Income7, Income8, Income9, Income10
-    )
-
-    private val expenseColors = listOf(
-        Expense1, Expense2, Expense3, Expense4, Expense5,
-        Expense6, Expense7, Expense8, Expense9, Expense10
-    )
+    private val transactionColors = getTransactionColorsUseCase()
 
     var addEditCategoryDialogUiState by mutableStateOf(
             AddEditCategoryDialogUiState(
-                availableColors = expenseColors,
+                availableColors = transactionColors.expenseColors,
                 disabledColors = (incomeCategories.value + expenseCategories.value).map { it.color }
             ))
         private set
@@ -178,7 +177,7 @@ class AddEditTransactionViewModel @Inject constructor(
 
     fun dismissDialog() {
         addEditCategoryDialogUiState = addEditCategoryDialogUiState
-            .copy(isOpen = false, isEdit = false, color = null, isColorError = false, name = "")
+            .copy(id = UUID.randomUUID().toString(), isOpen = false, isEdit = false, color = null, isColorError = false, name = "")
     }
 
     fun addTransactionCategory() {
@@ -241,7 +240,7 @@ class AddEditTransactionViewModel @Inject constructor(
 
     fun deleteTransaction(transactionId: String) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            transactionsRepository.moveTransactionToTrash(transactionId =  transactionId)
+            transactionsRepository.moveTransactionToTrash(transactionId = transactionId)
         }
     }
 }

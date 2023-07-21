@@ -7,11 +7,11 @@ import androidx.compose.animation.core.*
  * Material Motion Constants
  */
 private const val DefaultMotionDuration = 300
-private const val ProgressThreshold = 0.35f
-// 35% of specified value
+private const val ProgressThreshold = 0.30f
+// 30% of specified value
 private val Int.ForOutgoing: Int
     get() = (this * ProgressThreshold).toInt()
-// 65% of specified value
+// 70% of specified value
 private val Int.ForIncoming: Int
     get() = this - this.ForOutgoing
 
@@ -84,40 +84,42 @@ fun materialSharedAxisZOut(
 )
 
 /**
- * Material Elevation Scale
+ * Material Shared Axis X
  */
-fun materialElevationScaleIn(
-    initialAlpha: Float = 0.85f,
-    initialScale: Float = 0.85f,
+fun materialSharedAxisXIn(
+    forward: Boolean,
     durationMillis: Int = DefaultMotionDuration,
-): EnterTransition = fadeIn(
-    animationSpec = tween(
-        durationMillis = durationMillis,
-        easing = LinearEasing
-    ),
-    initialAlpha = initialAlpha
-) + scaleIn(
+): EnterTransition = slideInHorizontally(
     animationSpec = tween(
         durationMillis = durationMillis,
         easing = FastOutSlowInEasing
     ),
-    initialScale = initialScale
+    initialOffsetX = { fullWidth ->
+        if (forward) fullWidth*3/16 else -fullWidth*3/16
+    }
+) + fadeIn(
+    animationSpec = tween(
+        durationMillis = durationMillis.ForIncoming,
+        delayMillis = durationMillis.ForOutgoing,
+        easing = LinearOutSlowInEasing
+    )
 )
 
-fun materialElevationScaleOut(
-    targetAlpha: Float = 0.85f,
-    targetScale: Float = 0.85f,
+fun materialSharedAxisXOut(
+    forward: Boolean,
     durationMillis: Int = DefaultMotionDuration,
-): ExitTransition = fadeOut(
-    animationSpec = tween(
-        durationMillis = durationMillis,
-        easing = LinearEasing
-    ),
-    targetAlpha = targetAlpha
-) + scaleOut(
+): ExitTransition = slideOutHorizontally(
     animationSpec = tween(
         durationMillis = durationMillis,
         easing = FastOutSlowInEasing
     ),
-    targetScale = targetScale
+    targetOffsetX = { fullWidth ->
+        if (forward) -fullWidth*3/16 else fullWidth*3/16
+    }
+) + fadeOut(
+    animationSpec = tween(
+        durationMillis = durationMillis.ForOutgoing,
+        delayMillis = 0,
+        easing = FastOutLinearInEasing
+    )
 )

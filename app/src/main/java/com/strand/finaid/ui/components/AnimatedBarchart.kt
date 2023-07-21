@@ -28,7 +28,7 @@ fun AnimatedBarchart(
     val percentAnimate by transition.animateFloat(
         transitionSpec = {
             tween(
-                delayMillis = 500,
+                delayMillis = 0,
                 durationMillis = 900,
                 easing = LinearOutSlowInEasing
             )

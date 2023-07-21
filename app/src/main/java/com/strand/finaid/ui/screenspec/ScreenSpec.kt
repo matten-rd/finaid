@@ -1,14 +1,13 @@
 package com.strand.finaid.ui.screenspec
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import com.strand.finaid.ui.navigation.materialSharedAxisXIn
+import com.strand.finaid.ui.navigation.materialSharedAxisXOut
 import kotlinx.coroutines.CoroutineScope
 
 sealed interface ScreenSpec {
@@ -30,16 +31,9 @@ sealed interface ScreenSpec {
             SearchScreenSpec,
             AddEditTransactionScreenSpec,
             AddEditSavingsScreenSpec,
-            TrashScreenSpec
+            TrashScreenSpec,
+            ExportDataScreenSpec
         ).associateBy { it.route }
-
-        val subScreens: List<ScreenSpec> = listOf(
-            ProfileScreenSpec,
-            SearchScreenSpec,
-            AddEditTransactionScreenSpec,
-            AddEditSavingsScreenSpec,
-            TrashScreenSpec
-        )
     }
 
     val route: String
@@ -47,74 +41,16 @@ sealed interface ScreenSpec {
     val arguments: List<NamedNavArgument>
         get() = emptyList()
 
+
     val enterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
         get() = {
-            slideIntoContainer(
-                AnimatedContentScope.SlideDirection.Left,
-                animationSpec = tween(
-                    durationMillis = 300,
-                    easing = LinearEasing
-                )
-            )
-        }
-
-    val popEnterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
-        get() = {
-            slideIntoContainer(
-                AnimatedContentScope.SlideDirection.Right,
-                animationSpec = tween(
-                    durationMillis = 300,
-                    easing = LinearEasing
-                )
-            )
+            fadeIn(animationSpec = tween(300))
         }
 
     val exitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
         get() = {
-            slideOutOfContainer(
-                AnimatedContentScope.SlideDirection.Left,
-                animationSpec = tween(
-                    durationMillis = 300,
-                    easing = LinearEasing
-                )
-            )
+            fadeOut(animationSpec = tween(300))
         }
-
-    val popExitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
-        get() = {
-            slideOutOfContainer(
-                AnimatedContentScope.SlideDirection.Right,
-                animationSpec = tween(
-                    durationMillis = 300,
-                    easing = LinearEasing
-                )
-            )
-        }
-
-    @Composable
-    fun TopBar(
-        navController: NavController,
-        navBackStackEntry: NavBackStackEntry,
-        bottomSheetState: ModalBottomSheetState,
-        coroutineScope: CoroutineScope,
-        scrollBehavior: TopAppBarScrollBehavior
-    )
-
-    @Composable
-    fun Content(
-        navController: NavController,
-        navBackStackEntry: NavBackStackEntry,
-        bottomSheetState: ModalBottomSheetState,
-        coroutineScope: CoroutineScope
-    )
-
-    @Composable
-    fun BottomSheetContent(
-        bottomSheetState: ModalBottomSheetState,
-        navBackStackEntry: NavBackStackEntry,
-        coroutineScope: CoroutineScope
-    ) { Spacer(modifier = Modifier.height(1.dp)) }
-
 }
 
 sealed interface BottomNavScreenSpec : ScreenSpec {
@@ -129,8 +65,5 @@ sealed interface BottomNavScreenSpec : ScreenSpec {
 
     @get:StringRes
     val resourceId: Int
-
-    @Composable
-    fun Fab(navController: NavController)
 
 }

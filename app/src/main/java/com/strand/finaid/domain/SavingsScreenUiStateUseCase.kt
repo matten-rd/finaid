@@ -10,11 +10,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-sealed interface SavingsScreenUiState {
-    data class Success(val savingsAccounts: List<SavingsAccountUiState>?) : SavingsScreenUiState
-    object Error : SavingsScreenUiState
-    object Loading : SavingsScreenUiState
-}
+
+data class SavingsScreenUiState(
+    val savingsAccounts: List<SavingsAccountUiState>? = null,
+    val isLoading: Boolean = true,
+    val isError: Boolean = false
+)
 
 class SavingsScreenUiStateUseCase @Inject constructor(
     private val savingsRepository: SavingsRepository
@@ -31,10 +32,10 @@ class SavingsScreenUiStateUseCase @Inject constructor(
             .map { result: Result<List<SavingsAccount>> ->
                 when (result) {
                     is Result.Success -> {
-                        SavingsScreenUiState.Success(result.data?.map { it.asSavingsAccountUiState() })
+                        SavingsScreenUiState(result.data?.map { it.asSavingsAccountUiState() }, isLoading = false, isError = false)
                     }
-                    Result.Loading -> SavingsScreenUiState.Loading
-                    is Result.Error -> SavingsScreenUiState.Error
+                    Result.Loading -> SavingsScreenUiState(null, isLoading = true, isError = false)
+                    is Result.Error -> SavingsScreenUiState(null, isLoading = false, isError = true)
                 }
             }
     }

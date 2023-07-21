@@ -5,12 +5,14 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.MoneyOff
 import com.strand.finaid.data.local.entities.TransactionEntity
 import com.strand.finaid.data.models.Transaction
+import com.strand.finaid.ext.formatDayMonthYear
+import com.strand.finaid.ext.formatMonthYear
+import com.strand.finaid.ext.toDate
+import com.strand.finaid.ext.toLocalDate
 import com.strand.finaid.ui.transactions.AddEditTransactionUiState
 import com.strand.finaid.ui.transactions.TransactionType
 import com.strand.finaid.ui.transactions.TransactionUiState
-import java.text.SimpleDateFormat
 import java.time.Instant
-import java.time.ZoneId
 import java.util.*
 import kotlin.math.absoluteValue
 
@@ -22,7 +24,8 @@ fun Transaction.asTransactionUiState(): TransactionUiState {
         amount = amount,
         memo = memo,
         category = category.name,
-        date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
+        date = date.formatDayMonthYear(),
+        dateMonthYear = date.formatMonthYear()
     )
 }
 
@@ -33,7 +36,7 @@ fun Transaction.asAddEditTransactionUiState(): AddEditTransactionUiState {
         amount = amount.absoluteValue.toString(),
         incomeCategory = if (getTransactionType() == TransactionType.Income) category else null,
         expenseCategory = if (getTransactionType() == TransactionType.Expense) category else null,
-        date = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        date = date.toLocalDate()
     )
 }
 
@@ -54,7 +57,7 @@ fun AddEditTransactionUiState.asTransaction(transactionType: TransactionType) : 
                 TransactionType.Income -> incomeCategory!!
                 TransactionType.Expense -> expenseCategory!!
             },
-            date = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+            date = date.toDate(),
             lastModified = Date.from(Instant.now()),
             deleted = deleted
         )

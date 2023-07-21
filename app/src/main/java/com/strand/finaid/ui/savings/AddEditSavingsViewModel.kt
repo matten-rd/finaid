@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.strand.finaid.R
 import com.strand.finaid.data.mappers.asAddEditSavingsAccountUiState
@@ -12,6 +13,7 @@ import com.strand.finaid.data.network.LogService
 import com.strand.finaid.data.repository.SavingsRepository
 import com.strand.finaid.ext.idFromParameter
 import com.strand.finaid.ui.FinaidViewModel
+import com.strand.finaid.ui.screenspec.SavingsAccountId
 import com.strand.finaid.ui.screenspec.SavingsDefaultAccountId
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.theme.*
@@ -32,13 +34,16 @@ data class AddEditSavingsAccountUiState(
 @HiltViewModel
 class AddEditSavingsViewModel @Inject constructor(
     logService: LogService,
+    savedStateHandle: SavedStateHandle,
     private val savingsRepository: SavingsRepository
 ) : FinaidViewModel(logService) {
+
+    private val savingsAccountId: String = savedStateHandle[SavingsAccountId] ?: SavingsDefaultAccountId
 
     var isEditMode by mutableStateOf(false)
         private set
 
-    fun initialize(savingsAccountId: String) {
+    init {
         viewModelScope.launch(showErrorExceptionHandler) {
             if (savingsAccountId != SavingsDefaultAccountId) {
                 isEditMode = true

@@ -71,14 +71,17 @@ private fun HomeScreenDisplay(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
                 HomeScreenCard(
                     header = stringResource(id = R.string.your_savings),
                     amount = uiState.savingsAccountSum,
                     onShowMoreClick = onNavigateToSavings
                 ) {
-                    uiState.savingsAccounts.forEach { savingsAccount ->
-                        HomeScreenSavingsAccountItem(savingsAccount = savingsAccount)
+                    uiState.savingsAccounts.forEachIndexed { idx, savingsAccount ->
+                        HomeScreenSavingsAccountItem(
+                            savingsAccount = savingsAccount,
+                            isFirst = idx == 0,
+                            isLast = idx == uiState.savingsAccounts.size - 1
+                        )
                     }
                 }
 
@@ -87,8 +90,12 @@ private fun HomeScreenDisplay(
                     amount = uiState.transactionSum,
                     onShowMoreClick = onNavigateToTransactions
                 ) {
-                    uiState.transactions.forEach { transaction ->
-                        HomeScreenTransactionItem(transaction = transaction)
+                    uiState.transactions.forEachIndexed { idx, transaction ->
+                        HomeScreenTransactionItem(
+                            transaction = transaction,
+                            isFirst = idx == 0,
+                            isLast = idx == uiState.transactions.size - 1
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -130,7 +137,9 @@ private fun HomeScreenCard(
                 }
             }
 
-            content()
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                content()
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

@@ -1,22 +1,21 @@
 package com.strand.finaid.ui.transactions
 
 import androidx.annotation.StringRes
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewModelScope
 import com.strand.finaid.R
-import com.strand.finaid.data.models.Category
 import com.strand.finaid.data.network.LogService
-import com.strand.finaid.data.repository.CategoriesRepository
 import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.domain.TransactionScreenUiState
-import com.strand.finaid.domain.TransactionScreenUiStateUseCase
+import com.strand.finaid.domain.TransactionsUseCase
 import com.strand.finaid.ui.FinaidViewModel
+import com.strand.finaid.ui.snackbar.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.util.*
 import javax.inject.Inject
 
@@ -27,7 +26,8 @@ data class TransactionUiState(
     val amount: Int,
     val memo: String,
     val category: String,
-    val date: String
+    val date: String,
+    val dateMonthYear: String
 )
 
 enum class SortOrder(@StringRes val titleId: Int) {
@@ -42,73 +42,60 @@ enum class Period(@StringRes val periodId: Int) {
     Total(R.string.total)
 }
 
+data class PeriodState(
+    val period: Period = Period.Total,
+    val selectedYear: LocalDate = LocalDate.now(),
+    val selectedMonth: LocalDate = LocalDate.now()
+)
+
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
     logService: LogService,
-    private val categoriesRepository: CategoriesRepository,
     private val transactionsRepository: TransactionsRepository,
-    transactionsScreenUiStateUseCase: TransactionScreenUiStateUseCase
+    transactionsUseCase: TransactionsUseCase
 ) : FinaidViewModel(logService) {
 
     val periods = Period.values().map { it.periodId }
-    private val _periodFlow = MutableStateFlow(Period.Total)
-    val periodFlow = _periodFlow.asStateFlow()
+
+    private val _periodStateFlow = MutableStateFlow(PeriodState())
+    val periodStateFlow = _periodStateFlow.asStateFlow()
 
     fun onSetPeriod(newValue: Int) {
         val newPeriod = Period.values()[newValue]
-        _periodFlow.value = newPeriod
+        _periodStateFlow.update { it.copy(period = newPeriod) }
     }
 
-    val possibleSortOrders = SortOrder.values().map { it.titleId }
-    private val _sortFlow = MutableStateFlow(SortOrder.Date)
-    val sortFlow = _sortFlow.asStateFlow()
-
-    fun onSetSortOrder(newValue: Int) {
-        val newSortOrder = SortOrder.values()[newValue]
-        _sortFlow.value = newSortOrder
+    fun incrementYear() {
+        _periodStateFlow.update { it.copy(selectedYear = it.selectedYear.plusYears(1)) }
+    }
+    fun decrementYear() {
+        _periodStateFlow.update { it.copy(selectedYear = it.selectedYear.minusYears(1)) }
+    }
+    fun incrementMonth() {
+        _periodStateFlow.update { it.copy(selectedMonth = it.selectedMonth.plusMonths(1)) }
+    }
+    fun decrementMonth() {
+        _periodStateFlow.update { it.copy(selectedMonth = it.selectedMonth.minusMonths(1)) }
     }
 
-    private val _selectedCategories = MutableStateFlow(emptyList<Category>())
-    val selectedCategories = _selectedCategories.asStateFlow()
+    val transactionsUiState = periodStateFlow.flatMapLatest {
+        transactionsUseCase(periodState = it)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = TransactionScreenUiState(isLoading = true)
+    )
 
-    fun toggleCategory(category: Category) {
-        _selectedCategories.update {
-            if (category in it) { it - category } else { it + category }
-        }
-    }
-
-    fun clearSelectedCategories() {
-        _selectedCategories.update { emptyList() }
-    }
-
-    val transactionsUiState: StateFlow<TransactionScreenUiState> =
-        combine(sortFlow, periodFlow, selectedCategories) { sortOrder, period, selected ->
-            Triple(sortOrder, period, selected)
-        }.flatMapLatest { (sortOrder, period, selected) ->
-            transactionsScreenUiStateUseCase(sortOrder = sortOrder, period = period, selectedCategories = selected)
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = TransactionScreenUiState.Loading
-        )
-
-
-    val categories: StateFlow<List<Category>> = categoriesRepository.getCategoriesStream()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-
-    private val selectedTransaction = mutableStateOf<TransactionUiState?>(null)
-
-    fun setSelectedTransaction(transaction: TransactionUiState) {
-        selectedTransaction.value = transaction
-    }
-
-    fun onConfirmDeleteTransactionClick() {
+    fun onDeleteTransactionSwipe(transactionId: String) {
         viewModelScope.launch(showErrorExceptionHandler) {
-            transactionsRepository.moveTransactionToTrash(transactionId = selectedTransaction.value!!.id)
+            transactionsRepository.moveTransactionToTrash(transactionId = transactionId)
+        }
+        viewModelScope.launch(showErrorExceptionHandler) {
+            SnackbarManager.showMessage(R.string.transaction_removed, false, R.string.undo) {
+                viewModelScope.launch {
+                    transactionsRepository.restoreTransactionFromTrash(transactionId = transactionId)
+                }
+            }
         }
     }
 

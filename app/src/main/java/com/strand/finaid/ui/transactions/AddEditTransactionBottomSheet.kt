@@ -3,8 +3,7 @@ package com.strand.finaid.ui.transactions
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,14 +17,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.strand.finaid.R
 import com.strand.finaid.data.models.Category
 import com.strand.finaid.ui.components.BaseBottomSheet
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 @Composable
 fun CategoryBottomSheet(
     viewModel: AddEditTransactionViewModel,
-    bottomSheetState: ModalBottomSheetState,
-    scope: CoroutineScope
+    onClose: () -> Unit
 ) {
     val transactionType by viewModel.transactionType
     val incomeCategories by viewModel.incomeCategories.collectAsStateWithLifecycle()
@@ -42,15 +38,15 @@ fun CategoryBottomSheet(
         onCategorySelected = onCategorySelected,
         onCreateCategoryClick = {
             viewModel.setIsAddEditCategoryDialogOpen(true)
-            scope.launch { bottomSheetState.hide() }
+            onClose()
         },
         onDeleteCategoryClick = { category ->
             viewModel.setConfirmDeleteCategoryAlertDialogUiState(isOpen = true, category = category)
-            scope.launch { bottomSheetState.hide() }
+            onClose()
         },
         onEditCategoryClick = { category ->
             viewModel.setEditCategoryDialog(category)
-            scope.launch { bottomSheetState.hide() }
+            onClose()
         }
     )
 }
@@ -68,17 +64,19 @@ private fun CategoryBottomSheetContent(
     BaseBottomSheet(title = stringResource(id = R.string.select_category)) {
         Column(
             modifier = Modifier
-                .padding(horizontal = 8.dp)
+                .padding(horizontal = 12.dp)
                 .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (options.isNotEmpty())
-                    options.forEach { category ->
+                    options.forEachIndexed { index, category ->
                         CategoryItem(
                             category = category,
                             onCategorySelected = onCategorySelected,
                             isSelected = category == selectedCategory,
+                            isFirst = index == 0,
+                            isLast = index == options.size - 1,
                             onDeleteCategoryClick = onDeleteCategoryClick,
                             onEditCategoryClick = onEditCategoryClick
                         )
@@ -111,22 +109,30 @@ private fun CategoryItem(
     category: Category,
     onCategorySelected: (Category) -> Unit,
     isSelected: Boolean,
+    isFirst: Boolean,
+    isLast: Boolean,
     onDeleteCategoryClick: (Category) -> Unit,
     onEditCategoryClick: (Category) -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    val modifier = Modifier
+    var modifier = Modifier
         .fillMaxWidth()
         .height(48.dp)
-        .clip(CircleShape)
-        .clickable { onCategorySelected(category) }
+
+    modifier = when {
+        isSelected || (isFirst && isLast) -> modifier.clip(RoundedCornerShape(12.dp))
+        isFirst -> modifier.clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 4.dp, bottomEnd = 4.dp))
+        isLast -> modifier.clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 12.dp, bottomEnd = 12.dp))
+        else -> modifier.clip(RoundedCornerShape(4.dp))
+    }
+    modifier = modifier.clickable { onCategorySelected(category) }
 
     Row(
         modifier =
         if (isSelected)
-            modifier.background(MaterialTheme.colorScheme.secondaryContainer)
+            modifier.background(MaterialTheme.colorScheme.tertiaryContainer)
         else
-            modifier,
+            modifier.background(MaterialTheme.colorScheme.surface),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

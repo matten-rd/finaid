@@ -1,6 +1,5 @@
 package com.strand.finaid.ui.transactions
 
-import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -9,10 +8,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.strand.finaid.R
+import com.strand.finaid.ext.formatDayMonthYear
+import com.strand.finaid.ext.toLocalDate
+import com.strand.finaid.ext.toMillis
 import com.strand.finaid.ui.components.BaseBottomSheet
 import com.strand.finaid.ui.components.SegmentedButton
 import com.strand.finaid.ui.components.textfield.FinaidTextField
@@ -25,15 +26,21 @@ fun DateTextField(
     currentDate: LocalDate,
     onDateChange: (LocalDate) -> Unit
 ) {
-    val datePicker = rememberDatePicker(currentDate = currentDate, onDateChange = onDateChange)
+    val openDialog = remember { mutableStateOf(false) }
 
     ReadonlyTextField(
         modifier = modifier,
-        value = currentDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+        value = currentDate.formatDayMonthYear(),
         label = stringResource(id = R.string.select_date),
         leadingIcon = { Icon(imageVector = Icons.Default.DateRange, contentDescription = null) }
     ) {
-        datePicker.show()
+        openDialog.value = true
+    }
+
+    if (openDialog.value) {
+        FinaidDatePicker(initialDate = currentDate, onDateChange = onDateChange) {
+            openDialog.value = false
+        }
     }
 }
 
@@ -42,6 +49,7 @@ fun ReadonlyTextField(
     modifier: Modifier = Modifier,
     value: String,
     label: String = "",
+    supportingText: String = "",
     colors: TextFieldColors = TextFieldDefaults.textFieldColors(),
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
@@ -54,6 +62,7 @@ fun ReadonlyTextField(
             value = value,
             onValueChange = {},
             label = label,
+            supportingText = supportingText,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
             colors = colors
@@ -69,17 +78,36 @@ fun ReadonlyTextField(
 }
 
 @Composable
-private fun rememberDatePicker(currentDate: LocalDate, onDateChange: (LocalDate) -> Unit): DatePickerDialog {
-    val context = LocalContext.current
-    val datePickerDialog = DatePickerDialog(
-        context,
-        R.style.DatePickerDialogTheme,
-        { _, year: Int, month: Int, dayOfMonth: Int ->
-            onDateChange(LocalDate.of(year, month+1, dayOfMonth))
+fun FinaidDatePicker(
+    initialDate: LocalDate,
+    onDateChange: (LocalDate) -> Unit,
+    closeDialog: () -> Unit
+) {
+    val initialDateMillis = initialDate.toMillis()
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
+    val confirmEnabled = remember { derivedStateOf { datePickerState.selectedDateMillis != null } }
+
+    DatePickerDialog(
+        onDismissRequest = closeDialog,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onDateChange(datePickerState.selectedDateMillis!!.toLocalDate())
+                    closeDialog()
+                },
+                enabled = confirmEnabled.value
+            ) {
+                Text("OK")
+            }
         },
-        currentDate.year, currentDate.monthValue-1, currentDate.dayOfMonth
-    )
-    return remember(currentDate) { datePickerDialog }
+        dismissButton = {
+            TextButton(onClick = closeDialog) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
+    }
 }
 
 

@@ -3,24 +3,28 @@ package com.strand.finaid.ui.screenspec
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NamedNavArgument
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
-import androidx.navigation.navArgument
+import androidx.navigation.*
+import com.google.accompanist.navigation.animation.composable
 import com.strand.finaid.R
-import com.strand.finaid.ui.navigation.materialSharedAxisZIn
-import com.strand.finaid.ui.navigation.materialSharedAxisZOut
+import com.strand.finaid.ui.components.FinaidMainTopAppBar
+import com.strand.finaid.ui.navigation.materialSharedAxisXIn
+import com.strand.finaid.ui.navigation.materialSharedAxisXOut
 import com.strand.finaid.ui.savings.AddEditSavingsScreen
 import com.strand.finaid.ui.savings.AddEditSavingsViewModel
+import com.strand.finaid.ui.transactions.TransactionsScreen
 import kotlinx.coroutines.CoroutineScope
 
 object AddEditSavingsScreenSpec : ScreenSpec {
@@ -29,61 +33,53 @@ object AddEditSavingsScreenSpec : ScreenSpec {
     override val arguments: List<NamedNavArgument>
         get() = listOf(navArgument(SavingsAccountId) { defaultValue = SavingsDefaultAccountId })
 
-    @Composable
-    override fun TopBar(
-        navController: NavController,
-        navBackStackEntry: NavBackStackEntry,
-        bottomSheetState: ModalBottomSheetState,
-        coroutineScope: CoroutineScope,
-        scrollBehavior: TopAppBarScrollBehavior
-    ) {
-        val viewModel: AddEditSavingsViewModel = hiltViewModel(navBackStackEntry)
-        SmallTopAppBar(
-            title = { Text(text = stringResource(id = if (viewModel.isEditMode) R.string.edit_savingsaccount else R.string.add_savingsaccount)) },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = null)
-                }
-            },
-            actions = {
-                if (viewModel.isEditMode)
-                    IconButton(onClick = { viewModel.setIsDeleteSavingsAccountDialogOpen(true) }) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = null)
-                    }
-            }
-        )
-    }
-
-    @Composable
-    override fun Content(
-        navController: NavController,
-        navBackStackEntry: NavBackStackEntry,
-        bottomSheetState: ModalBottomSheetState,
-        coroutineScope: CoroutineScope
-    ) {
-        val viewModel: AddEditSavingsViewModel = hiltViewModel()
-        Column {
-            AddEditSavingsScreen(
-                viewModel = viewModel,
-                savingsAccountId = navBackStackEntry.arguments?.getString(SavingsAccountId) ?: SavingsDefaultAccountId,
-                navigateUp = { navController.navigateUp() }
-            )
-        }
-    }
-
     override val enterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
-        get() = { materialSharedAxisZIn(forward = true) }
+        get() = { materialSharedAxisXIn(forward = true) }
 
     override val exitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
-        get() = { materialSharedAxisZOut(forward = false) }
+        get() = { materialSharedAxisXOut(forward = false) }
 
-    override val popEnterTransition: AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition?
-        get() = { materialSharedAxisZIn(forward = true) }
-
-    override val popExitTransition: AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition?
-        get() = { materialSharedAxisZOut(forward = false) }
 }
 
 const val SavingsAccountId = "SavingsAccountId"
 const val SavingsDefaultAccountId = "-2"
 private const val SavingsAccountIdArg = "?$SavingsAccountId={$SavingsAccountId}"
+
+fun NavGraphBuilder.addEditSavingsScreen(
+    navController: NavController
+) {
+    composable(
+        route = AddEditSavingsScreenSpec.route,
+        arguments = AddEditSavingsScreenSpec.arguments,
+        enterTransition = AddEditSavingsScreenSpec.enterTransition,
+        exitTransition = AddEditSavingsScreenSpec.exitTransition
+    ) {
+        val viewModel: AddEditSavingsViewModel = hiltViewModel()
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = stringResource(id = if (viewModel.isEditMode) R.string.edit_savingsaccount else R.string.add_savingsaccount)) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                        }
+                    },
+                    actions = {
+                        if (viewModel.isEditMode)
+                            IconButton(onClick = { viewModel.setIsDeleteSavingsAccountDialogOpen(true) }) {
+                                Icon(imageVector = Icons.Default.Delete, contentDescription = null)
+                            }
+                    }
+                )
+            },
+            contentWindowInsets = WindowInsets(0,0,0,0)
+        ) { innerPadding ->
+            Column(modifier = Modifier.padding(innerPadding)) {
+                AddEditSavingsScreen(
+                    viewModel = viewModel,
+                    navigateUp = { navController.navigateUp() }
+                )
+            }
+        }
+    }
+}

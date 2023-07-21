@@ -8,6 +8,7 @@ import com.strand.finaid.data.models.Transaction
 import com.strand.finaid.data.repository.TransactionsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.*
 import javax.inject.Inject
 
 class TransactionsRepositoryImpl @Inject constructor(
@@ -20,6 +21,9 @@ class TransactionsRepositoryImpl @Inject constructor(
     override fun getDeletedTransactionsStream(): Flow<List<Transaction>> =
         transactionsDao.getDeletedTransactionEntitiesStream()
             .map { it.map(TransactionEntity::asTransaction) }
+
+    override suspend fun getTransactionEntitiesUpToDate(toDate: Date): List<Transaction> =
+        transactionsDao.getTransactionEntitiesUpToDate(toDate = toDate).map { it.asTransaction() }
 
     override suspend fun getTransactionById(transactionId: String): Transaction =
         transactionsDao.getTransactionEntityById(transactionId).asTransaction()

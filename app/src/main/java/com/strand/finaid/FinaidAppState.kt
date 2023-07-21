@@ -1,11 +1,7 @@
 package com.strand.finaid
 
 import android.content.res.Resources
-import androidx.compose.material.ModalBottomSheetState
-import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -15,6 +11,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.strand.finaid.ui.screenspec.BottomNavScreenSpec
+import com.strand.finaid.ui.screenspec.SavingsScreenSpec
+import com.strand.finaid.ui.screenspec.ScreenSpec
+import com.strand.finaid.ui.screenspec.TransactionsScreenSpec
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import com.strand.finaid.ui.snackbar.SnackbarMessage.Companion.toMessage
 import kotlinx.coroutines.CoroutineScope
@@ -27,8 +26,7 @@ class FinaidAppState(
     val navController: NavHostController,
     private val snackbarManager: SnackbarManager,
     private val resources: Resources,
-    val coroutineScope: CoroutineScope,
-    val bottomSheetState: ModalBottomSheetState
+    val coroutineScope: CoroutineScope
 ) {
     init {
         coroutineScope.launch {
@@ -37,12 +35,13 @@ class FinaidAppState(
                 val snackbarResult = snackbarHostState
                     .showSnackbar(
                         message = data.message,
-                        withDismissAction = true,
+                        withDismissAction = data.withDismissAction,
                         actionLabel = data.actionLabel,
+                        duration = if (data.actionLabel == null) SnackbarDuration.Short else SnackbarDuration.Long
                     )
 
                 if (snackbarResult == SnackbarResult.ActionPerformed) {
-                    data.actionPerformed
+                    data.actionPerformed()
                 }
             }
         }
@@ -57,6 +56,9 @@ class FinaidAppState(
     val isBottomNavScreen: Boolean
         @Composable get() = currentDestination?.route in BottomNavScreenSpec.bottomNavItems.map { it.route }
 
+    val isFabVisible: Boolean
+        @Composable get() = currentDestination?.route in listOf(SavingsScreenSpec.route, TransactionsScreenSpec.route)
+
 }
 
 @Composable
@@ -65,10 +67,9 @@ fun rememberAppState(
     navController: NavHostController = rememberAnimatedNavController(),
     snackbarManager: SnackbarManager = SnackbarManager,
     resources: Resources = resources(),
-    coroutineScope: CoroutineScope = rememberCoroutineScope(),
-    bottomSheetState: ModalBottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden, skipHalfExpanded = true)
+    coroutineScope: CoroutineScope = rememberCoroutineScope()
 ) = remember(snackbarHostState) {
-    FinaidAppState(snackbarHostState, navController, snackbarManager, resources, coroutineScope, bottomSheetState)
+    FinaidAppState(snackbarHostState, navController, snackbarManager, resources, coroutineScope)
 }
 
 @Composable

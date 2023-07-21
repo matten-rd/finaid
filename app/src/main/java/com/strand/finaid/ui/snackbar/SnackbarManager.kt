@@ -9,8 +9,13 @@ object SnackbarManager {
     private val messages: MutableStateFlow<SnackbarMessage?> = MutableStateFlow(null)
     val snackbarMessages: StateFlow<SnackbarMessage?> get() = messages.asStateFlow()
 
-    fun showMessage(@StringRes message: Int, actionLabel: String? = null, onActionPerformed: () -> Unit = {}) {
-        messages.value = SnackbarMessage.ResourceSnackbar(message, actionLabel, onActionPerformed)
+    fun showMessage(
+        @StringRes message: Int,
+        withDismissAction: Boolean = true,
+        @StringRes actionLabel: Int? = null,
+        onActionPerformed: () -> Unit = {}
+    ) {
+        messages.value = SnackbarMessage.ResourceSnackbar(message, withDismissAction, actionLabel, onActionPerformed)
     }
 
     fun showMessage(message: SnackbarMessage) {

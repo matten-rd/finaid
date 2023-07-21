@@ -46,27 +46,36 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        multiDexEnabled true
+
     }
 
     buildTypes {
         release {
+            // Set both to false for now since enabling R8 breaks Apache POI used for exporting data
+            // Haven't found proguard-rules that completely fixes this issue yet
+            shrinkResources false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
+        debug {
+            minifyEnabled false
+        }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '11'
     }
     buildFeatures {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion compose_version
+        kotlinCompilerExtensionVersion = "1.4.7"
     }
     packagingOptions {
         resources {
@@ -80,14 +89,14 @@ kapt {
 }
 
 dependencies {
+    implementation 'androidx.multidex:multidex:2.0.1'
 
-    implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'com.google.android.material:material:1.9.0'
     implementation "androidx.compose.ui:ui:$compose_version"
-    implementation 'androidx.compose.material3:material3:1.0.1'
+    implementation 'androidx.compose.material3:material3:1.1.1'
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
-    implementation 'androidx.activity:activity-compose:1.6.1'
-    implementation 'androidx.room:room-common:2.4.3'
+    implementation 'androidx.activity:activity-compose:1.7.2'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
@@ -110,6 +119,7 @@ dependencies {
 
     // Room
     def room_version = "2.4.3"
+    implementation "androidx.room:room-common:$room_version"
     implementation "androidx.room:room-runtime:$room_version"
     // To use Kotlin annotation processing tool (kapt)
     kapt "androidx.room:room-compiler:$room_version"
@@ -127,15 +137,16 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx'
 
     // Hilt
+    def hilt_version = "2.46.1"
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
-    implementation 'com.google.dagger:hilt-android:2.42'
-    kapt 'com.google.dagger:hilt-compiler:2.42'
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt 'com.google.dagger:hilt-compiler:2.46.1'
     // For instrumentation tests
-    androidTestImplementation  'com.google.dagger:hilt-android-testing:2.42'
-    kaptAndroidTest 'com.google.dagger:hilt-compiler:2.42'
+    androidTestImplementation  "com.google.dagger:hilt-android-testing:$hilt_version"
+    kaptAndroidTest "com.google.dagger:hilt-compiler:$hilt_version"
     // For local unit tests
-    testImplementation 'com.google.dagger:hilt-android-testing:2.42'
-    kaptTest 'com.google.dagger:hilt-compiler:2.42'
+    testImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
+    kaptTest "com.google.dagger:hilt-compiler:$hilt_version"
 
     implementation("androidx.paging:paging-runtime:3.1.1")
     implementation("androidx.paging:paging-compose:1.0.0-alpha17")
@@ -143,7 +154,12 @@ dependencies {
 
     def accompanist_version = "0.24.10-beta"
     implementation "com.google.accompanist:accompanist-navigation-animation:$accompanist_version"
-    implementation "com.google.accompanist:accompanist-flowlayout:$accompanist_version"
     implementation "com.google.accompanist:accompanist-pager:$accompanist_version"
     implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist_version"
+    implementation "com.google.accompanist:accompanist-permissions:$accompanist_version"
+
+    implementation "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5"
+
+    implementation 'org.apache.poi:poi:5.2.3'
+    implementation 'org.apache.poi:poi-ooxml:5.2.3'
 }
