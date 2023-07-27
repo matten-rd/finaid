@@ -10,24 +10,28 @@ import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.domain.TransactionScreenUiState
 import com.strand.finaid.domain.TransactionsUseCase
 import com.strand.finaid.ui.FinaidViewModel
+import com.strand.finaid.ui.components.charts.PeriodStateHolder
 import com.strand.finaid.ui.snackbar.SnackbarManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.LocalDate
 import java.util.*
 import javax.inject.Inject
 
 data class TransactionUiState(
     val id: String,
     val icon: ImageVector,
-    val color: Color,
     val amount: Int,
     val memo: String,
-    val category: String,
+    val category: CategoryUiState,
     val date: String,
     val dateMonthYear: String
+)
+
+data class CategoryUiState(
+    val color: Color,
+    val name: String
 )
 
 enum class SortOrder(@StringRes val titleId: Int) {
@@ -36,17 +40,6 @@ enum class SortOrder(@StringRes val titleId: Int) {
     Name(R.string.name)
 }
 
-enum class Period(@StringRes val periodId: Int) {
-    Month(R.string.month),
-    Year(R.string.year),
-    Total(R.string.total)
-}
-
-data class PeriodState(
-    val period: Period = Period.Total,
-    val selectedYear: LocalDate = LocalDate.now(),
-    val selectedMonth: LocalDate = LocalDate.now()
-)
 
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
@@ -55,30 +48,9 @@ class TransactionsViewModel @Inject constructor(
     transactionsUseCase: TransactionsUseCase
 ) : FinaidViewModel(logService) {
 
-    val periods = Period.values().map { it.periodId }
+    val periodStateHolder = PeriodStateHolder()
 
-    private val _periodStateFlow = MutableStateFlow(PeriodState())
-    val periodStateFlow = _periodStateFlow.asStateFlow()
-
-    fun onSetPeriod(newValue: Int) {
-        val newPeriod = Period.values()[newValue]
-        _periodStateFlow.update { it.copy(period = newPeriod) }
-    }
-
-    fun incrementYear() {
-        _periodStateFlow.update { it.copy(selectedYear = it.selectedYear.plusYears(1)) }
-    }
-    fun decrementYear() {
-        _periodStateFlow.update { it.copy(selectedYear = it.selectedYear.minusYears(1)) }
-    }
-    fun incrementMonth() {
-        _periodStateFlow.update { it.copy(selectedMonth = it.selectedMonth.plusMonths(1)) }
-    }
-    fun decrementMonth() {
-        _periodStateFlow.update { it.copy(selectedMonth = it.selectedMonth.minusMonths(1)) }
-    }
-
-    val transactionsUiState = periodStateFlow.flatMapLatest {
+    val transactionsUiState = periodStateHolder.periodStateFlow.flatMapLatest {
         transactionsUseCase(periodState = it)
     }.stateIn(
         scope = viewModelScope,
@@ -99,7 +71,7 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-    fun duplicateTransaction(transactionId: String, onSuccess: (String) -> Unit) {
+    fun onDuplicateTransactionSwipe(transactionId: String, onSuccess: (String) -> Unit) {
         viewModelScope.launch(showErrorExceptionHandler) {
             var transaction = transactionsRepository.getTransactionById(transactionId = transactionId)
             transaction = transaction.copy(

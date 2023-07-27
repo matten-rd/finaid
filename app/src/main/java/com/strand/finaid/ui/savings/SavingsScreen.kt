@@ -15,14 +15,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.strand.finaid.R
 import com.strand.finaid.domain.SavingsScreenUiState
 import com.strand.finaid.ext.formatAmount
 import com.strand.finaid.ext.rememberChartState
-import com.strand.finaid.ui.components.AnimatedBarchart
 import com.strand.finaid.ui.components.EmptyContentScreen
 import com.strand.finaid.ui.components.FullScreenError
+import com.strand.finaid.ui.components.charts.AnimatedBarchart
 import com.strand.finaid.ui.components.list_items.SavingsAccountItem
-import com.strand.finaid.R
 
 @Composable
 fun SavingsScreen(
@@ -65,7 +65,7 @@ private fun SavingsScreenContent(
                 )
                 SavingsGraph(
                     displayValue = savingsAccounts.sumOf { it.amount },
-                    proportions = chartState.percentageProportions,
+                    values = chartState.values,
                     colors = chartState.colors
                 )
             }
@@ -84,7 +84,7 @@ private fun SavingsScreenContent(
 @Composable
 private fun SavingsGraph(
     displayValue: Int,
-    proportions: List<Float>,
+    values: List<Int>,
     colors: List<Color>
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -107,7 +107,7 @@ private fun SavingsGraph(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .fillMaxSize(),
-                proportions = proportions,
+                values = values,
                 colors = colors
             )
         }

@@ -10,6 +10,7 @@ import com.strand.finaid.ext.formatMonthYear
 import com.strand.finaid.ext.toDate
 import com.strand.finaid.ext.toLocalDate
 import com.strand.finaid.ui.transactions.AddEditTransactionUiState
+import com.strand.finaid.ui.transactions.CategoryUiState
 import com.strand.finaid.ui.transactions.TransactionType
 import com.strand.finaid.ui.transactions.TransactionUiState
 import java.time.Instant
@@ -20,10 +21,9 @@ fun Transaction.asTransactionUiState(): TransactionUiState {
     return TransactionUiState(
         id = id,
         icon = if (amount > 0) Icons.Default.AttachMoney else Icons.Default.MoneyOff,
-        color = category.color,
         amount = amount,
         memo = memo,
-        category = category.name,
+        category = CategoryUiState(color = category.color, name = category.name),
         date = date.formatDayMonthYear(),
         dateMonthYear = date.formatMonthYear()
     )

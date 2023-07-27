@@ -7,8 +7,8 @@ import com.strand.finaid.data.models.Category
 import com.strand.finaid.data.models.Transaction
 import com.strand.finaid.data.repository.TransactionsRepository
 import com.strand.finaid.ext.toDate
-import com.strand.finaid.ui.transactions.Period
-import com.strand.finaid.ui.transactions.PeriodState
+import com.strand.finaid.ui.components.charts.Period
+import com.strand.finaid.ui.components.charts.PeriodState
 import com.strand.finaid.ui.transactions.SortOrder
 import com.strand.finaid.ui.transactions.TransactionUiState
 import kotlinx.coroutines.flow.Flow

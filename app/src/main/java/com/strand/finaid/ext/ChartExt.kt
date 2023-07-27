@@ -3,6 +3,8 @@ package com.strand.finaid.ext
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import com.strand.finaid.ui.transactions.CategoryUiState
+import com.strand.finaid.ui.transactions.TransactionUiState
 import kotlin.math.absoluteValue
 
 fun <E> List<E>.extractProportions(selector: (E) -> Int): List<Float> {
@@ -11,8 +13,7 @@ fun <E> List<E>.extractProportions(selector: (E) -> Int): List<Float> {
 }
 
 data class ChartState(
-    val floatProportions: List<Float>,
-    val percentageProportions: List<Float>,
+    val values: List<Int>,
     val colors: List<Color>
 )
 
@@ -22,28 +23,45 @@ fun <T> rememberChartState(
     colors: (T) -> Color,
     amounts: (T) -> Int
 ): ChartState {
-    val proportions = remember(items) { items.extractProportions { amounts(it).absoluteValue } }
+    val values = remember(items) { items.map { amounts(it) } }
     val allColors = remember(items) { items.map { colors(it) } }
-    val uniqueColors = remember(allColors) { allColors.distinct() }
 
-    // Used for circle chart
-    val floatProportions = remember(proportions, allColors) {
-        (allColors zip proportions).groupBy { it.first }.mapKeys { entry ->
-            entry.value.sumOf { it.second.toDouble() }
-        }.keys.toList().map { it.toFloat() }
-    }
-    // Used for bar chart
-    val percentageProportions = remember(floatProportions) {
-        val maxValue = floatProportions.maxOrNull() ?: 0f
-        floatProportions.map { it / maxValue }
+    val valuesByColor = remember(items) {
+        (allColors zip values).groupBy { it.first }.mapValues { (_, value) ->
+            value.sumOf { it.second.absoluteValue }
+        }
     }
 
-    return remember(floatProportions, percentageProportions, uniqueColors) {
+    return remember(valuesByColor) {
         ChartState(
-            floatProportions = floatProportions,
-            percentageProportions = percentageProportions,
-            colors = uniqueColors
+            values = valuesByColor.values.toList(),
+            colors = valuesByColor.keys.toList()
         )
     }
+}
 
+data class TransactionChartState(
+    val values: List<Int>,
+    val categories: List<CategoryUiState>
+)
+
+@Composable
+fun rememberTransactionChartState(
+    transactions: List<TransactionUiState>
+): TransactionChartState {
+    val values = remember(transactions) { transactions.map { it.amount } }
+    val categories = remember(transactions) { transactions.map { it.category } }
+
+    val valuesByCategory = remember(transactions) {
+        (categories zip values).groupBy { it.first }.mapValues { (_, value) ->
+            value.sumOf { it.second.absoluteValue }
+        }
+    }
+
+    return remember(valuesByCategory) {
+        TransactionChartState(
+            values = valuesByCategory.values.toList(),
+            categories = valuesByCategory.keys.toList()
+        )
+    }
 }

@@ -1,4 +1,4 @@
-package com.strand.finaid.ui.components
+package com.strand.finaid.ui.components.charts
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.strand.finaid.ext.extractProportions
 
 private const val DividerLengthInDegrees = 1.8f
 
@@ -20,10 +21,14 @@ private const val DividerLengthInDegrees = 1.8f
  */
 @Composable
 fun AnimatedCircle(
-    proportions: List<Float>,
+    values: List<Int>,
     colors: List<Color>,
     modifier: Modifier = Modifier
 ) {
+    val proportions = remember(values) {
+        values.extractProportions { it }
+    }
+
     val currentState = remember(proportions) {
         MutableTransitionState(AnimatedCircleProgress.START)
             .apply { targetState = AnimatedCircleProgress.END }

@@ -5,18 +5,12 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.outlined.CurrencyExchange
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -25,10 +19,6 @@ import com.strand.finaid.R
 import com.strand.finaid.ui.components.FinaidMainTopAppBar
 import com.strand.finaid.ui.navigation.*
 import com.strand.finaid.ui.transactions.TransactionsScreen
-import com.strand.finaid.ui.transactions.TransactionsSortBottomSheet
-import com.strand.finaid.ui.transactions.TransactionsViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 object TransactionsScreenSpec : BottomNavScreenSpec {
     override val icon: ImageVector = Icons.Outlined.CurrencyExchange

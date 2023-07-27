@@ -62,9 +62,9 @@ fun TransactionItem(
         dismissContent = {
             BaseItem(
                 icon = transaction.icon,
-                color = transaction.color,
+                color = transaction.category.color,
                 header = transaction.memo,
-                subhead = "${transaction.date} \u2022 ${transaction.category}",
+                subhead = "${transaction.date} \u2022 ${transaction.category.name}",
                 amount = transaction.amount,
                 onClick = { onEditClick(transaction.id) }
             )
@@ -208,9 +208,9 @@ fun HomeScreenTransactionItem(
 ) {
     HomeScreenBaseListItem(
         icon = transaction.icon,
-        color = transaction.color,
+        color = transaction.category.color,
         header = transaction.memo,
-        subhead = "${transaction.date} \u2022 ${transaction.category}",
+        subhead = "${transaction.date} \u2022 ${transaction.category.name}",
         amount = transaction.amount,
         isFirst = isFirst,
         isLast = isLast

@@ -1,4 +1,4 @@
-package com.strand.finaid.ui.components
+package com.strand.finaid.ui.components.charts
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -9,16 +9,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import com.strand.finaid.ext.extractProportions
 
 /**
  * A bar chart that animates when loading.
  */
 @Composable
 fun AnimatedBarchart(
-    proportions: List<Float>,
+    values: List<Int>,
     colors: List<Color>,
     modifier: Modifier = Modifier
 ) {
+    val proportions = remember(values) {
+        val percentageProportions = values.extractProportions { it }
+        val maxValue = percentageProportions.maxOrNull() ?: 1f
+        percentageProportions.map { it / maxValue }
+    }
+
     val currentState = remember(proportions) {
         MutableTransitionState(AnimatedBarchartProgress.START)
             .apply { targetState = AnimatedBarchartProgress.END }
