@@ -80,7 +80,7 @@ private fun HomeScreenDisplay(
                         HomeScreenSavingsAccountItem(
                             savingsAccount = savingsAccount,
                             isFirst = idx == 0,
-                            isLast = idx == uiState.savingsAccounts.size - 1
+                            isLast = idx == uiState.savingsAccounts.lastIndex
                         )
                     }
                 }
@@ -94,7 +94,7 @@ private fun HomeScreenDisplay(
                         HomeScreenTransactionItem(
                             transaction = transaction,
                             isFirst = idx == 0,
-                            isLast = idx == uiState.transactions.size - 1
+                            isLast = idx == uiState.transactions.lastIndex
                         )
                     }
                 }

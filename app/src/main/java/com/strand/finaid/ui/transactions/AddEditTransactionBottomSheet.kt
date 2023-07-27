@@ -76,7 +76,7 @@ private fun CategoryBottomSheetContent(
                             onCategorySelected = onCategorySelected,
                             isSelected = category == selectedCategory,
                             isFirst = index == 0,
-                            isLast = index == options.size - 1,
+                            isLast = index == options.lastIndex,
                             onDeleteCategoryClick = onDeleteCategoryClick,
                             onEditCategoryClick = onEditCategoryClick
                         )
